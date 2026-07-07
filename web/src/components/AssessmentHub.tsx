@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { createClient, withBasePath } from "@/lib/supabase/client";
 import {
   ensureProfile,
@@ -14,6 +15,7 @@ import { getSectionCompletion } from "@/lib/scoring";
 import type { Responses } from "@/lib/types";
 
 export default function AssessmentHub() {
+  const router = useRouter();
   const [responses, setResponses] = useState<Responses>({});
   const [loading, setLoading] = useState(true);
   const [allComplete, setAllComplete] = useState(false);
@@ -27,7 +29,7 @@ export default function AssessmentHub() {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      setLoading(false);
+      router.replace(withBasePath("/login"));
       return;
     }
 
@@ -62,7 +64,7 @@ export default function AssessmentHub() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     loadProgress();

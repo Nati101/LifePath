@@ -1,13 +1,19 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import ProfileMenu from "@/components/ProfileMenu";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { normalizeAvatar } from "@/lib/avatars";
+import { isAuthPage, normalizeAppPath } from "@/lib/navigation";
 import { withBasePath } from "@/lib/supabase/client";
 
 export default function Header() {
+  const pathname = usePathname();
   const { user, isLoading } = useCurrentUser();
+  const onAuthPage = isAuthPage(pathname);
+  const appPath = normalizeAppPath(pathname);
+  const showAuthenticatedNav = Boolean(user) && !onAuthPage;
   const displayName = user?.fullName?.trim() || "Account";
 
   return (
@@ -25,7 +31,7 @@ export default function Header() {
         <nav className="flex items-center gap-3 sm:gap-4">
           {isLoading ? (
             <span className="h-9 w-24" aria-hidden />
-          ) : user ? (
+          ) : showAuthenticatedNav ? (
             <>
               <Link
                 href={withBasePath("/assessment")}
@@ -33,7 +39,7 @@ export default function Header() {
               >
                 Sections
               </Link>
-              {user.role === "admin" && (
+              {user?.role === "admin" && (
                 <Link
                   href={withBasePath("/admin")}
                   className="text-[14px] font-medium text-muted transition-colors hover:text-foreground"
@@ -42,12 +48,25 @@ export default function Header() {
                 </Link>
               )}
               <ProfileMenu
-                avatarEmoji={normalizeAvatar(user.avatarEmoji)}
+                avatarEmoji={normalizeAvatar(user?.avatarEmoji)}
                 displayName={displayName}
                 settingsHref={withBasePath("/account")}
                 signOutHref={withBasePath("/auth/signout")}
               />
             </>
+          ) : onAuthPage ? (
+            appPath.startsWith("/login") ? (
+              <Link href={withBasePath("/register")} className="btn-secondary-sm">
+                Get started
+              </Link>
+            ) : (
+              <Link
+                href={withBasePath("/login")}
+                className="text-[14px] font-medium text-muted transition-colors hover:text-foreground"
+              >
+                Sign in
+              </Link>
+            )
           ) : (
             <>
               <Link

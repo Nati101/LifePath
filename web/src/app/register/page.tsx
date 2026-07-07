@@ -3,11 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useRedirectIfAuthenticated } from "@/hooks/useRedirectIfAuthenticated";
 import { createClient, withBasePath } from "@/lib/supabase/client";
 import { ensureProfile } from "@/lib/assessment/persistence";
 
 export default function RegisterPage() {
   const router = useRouter();
+  useRedirectIfAuthenticated("/assessment");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

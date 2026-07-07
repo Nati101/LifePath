@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 import AssessmentShell from "@/components/AssessmentShell";
 import ProgressBar from "@/components/ProgressBar";
 import ScaleLegend from "@/components/ScaleLegend";
@@ -51,6 +53,8 @@ function findFirstIncompleteStep(items: AssessmentItem[], responses: Responses) 
 }
 
 export default function SectionFlow({ section }: SectionFlowProps) {
+  const router = useRouter();
+  const ready = useAuthGuard();
   const config = getConfig();
   const items = useMemo(() => getSectionItems(section), [section]);
   const sectionInfo = config.sections[section];
@@ -80,8 +84,7 @@ export default function SectionFlow({ section }: SectionFlowProps) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      setLoading(false);
-      setSaveError("Please sign in to save your progress.");
+      router.replace(withBasePath("/login"));
       return;
     }
 
@@ -110,11 +113,20 @@ export default function SectionFlow({ section }: SectionFlowProps) {
     } finally {
       setLoading(false);
     }
-  }, [items, section]);
+  }, [items, section, router]);
 
   useEffect(() => {
+    if (!ready) return;
     loadSession();
-  }, [loadSession]);
+  }, [loadSession, ready]);
+
+  if (!ready || loading) {
+    return (
+      <div className="page-shell justify-center">
+        <p className="text-sm text-muted">Loading…</p>
+      </div>
+    );
+  }
 
   const handleSaveResponse = async (itemId: string, rating: number) => {
     const next = { ...responses, [itemId]: rating };
