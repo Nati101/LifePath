@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { Session } from "@supabase/supabase-js";
 import GuestLanding from "@/components/GuestLanding";
 import LoggedInHome from "@/components/LoggedInHome";
-import { getAuthenticatedUser } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/client";
 
 export default function HomePageClient() {
@@ -20,27 +20,25 @@ export default function HomePageClient() {
   >({ status: "loading" });
 
   useEffect(() => {
+    const supabase = createClient();
     let cancelled = false;
 
-    async function load() {
-      const supabase = createClient();
-      const user = await getAuthenticatedUser(supabase);
-
-      if (!user) {
+    async function syncFromSession(session: Session | null) {
+      if (!session?.user) {
         if (!cancelled) setState({ status: "guest" });
         return;
       }
 
-      const [{ data: profile }, { data: session }] = await Promise.all([
+      const [{ data: profile }, { data: assessmentSession }] = await Promise.all([
         supabase
           .from("profiles")
           .select("role, full_name, avatar_emoji")
-          .eq("id", user.id)
+          .eq("id", session.user.id)
           .single(),
         supabase
           .from("assessment_sessions")
           .select("status")
-          .eq("user_id", user.id)
+          .eq("user_id", session.user.id)
           .maybeSingle(),
       ]);
 
@@ -48,17 +46,26 @@ export default function HomePageClient() {
         setState({
           status: "authed",
           fullName: profile?.full_name ?? null,
-          sessionStatus: session?.status ?? null,
+          sessionStatus: assessmentSession?.status ?? null,
           isAdmin: profile?.role === "admin",
           avatarEmoji: profile?.avatar_emoji ?? null,
         });
       }
     }
 
-    void load();
+    void supabase.auth.getSession().then(({ data: { session } }) => {
+      void syncFromSession(session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      void syncFromSession(session);
+    });
 
     return () => {
       cancelled = true;
+      subscription.unsubscribe();
     };
   }, []);
 

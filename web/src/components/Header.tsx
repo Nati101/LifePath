@@ -1,54 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import ProfileMenu from "@/components/ProfileMenu";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { normalizeAvatar } from "@/lib/avatars";
-import { getAuthenticatedUser } from "@/lib/auth/guards";
-import { createClient, withBasePath } from "@/lib/supabase/client";
+import { withBasePath } from "@/lib/supabase/client";
 
 export default function Header() {
-  const [userState, setUserState] = useState<{
-    role: string | null;
-    fullName: string | null;
-    avatarEmoji: string | null;
-  } | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      const supabase = createClient();
-      const user = await getAuthenticatedUser(supabase);
-
-      if (!user) {
-        if (!cancelled) setUserState(null);
-        return;
-      }
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role, full_name, avatar_emoji")
-        .eq("id", user.id)
-        .single();
-
-      if (!cancelled) {
-        setUserState({
-          role: profile?.role ?? null,
-          fullName: profile?.full_name ?? null,
-          avatarEmoji: profile?.avatar_emoji ?? null,
-        });
-      }
-    }
-
-    void load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const displayName = userState?.fullName?.trim() || "Account";
+  const { user, isLoading } = useCurrentUser();
+  const displayName = user?.fullName?.trim() || "Account";
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-card">
@@ -63,7 +23,9 @@ export default function Header() {
         </Link>
 
         <nav className="flex items-center gap-3 sm:gap-4">
-          {userState ? (
+          {isLoading ? (
+            <span className="h-9 w-24" aria-hidden />
+          ) : user ? (
             <>
               <Link
                 href={withBasePath("/assessment")}
@@ -71,7 +33,7 @@ export default function Header() {
               >
                 Sections
               </Link>
-              {userState.role === "admin" && (
+              {user.role === "admin" && (
                 <Link
                   href={withBasePath("/admin")}
                   className="text-[14px] font-medium text-muted transition-colors hover:text-foreground"
@@ -80,7 +42,7 @@ export default function Header() {
                 </Link>
               )}
               <ProfileMenu
-                avatarEmoji={normalizeAvatar(userState.avatarEmoji)}
+                avatarEmoji={normalizeAvatar(user.avatarEmoji)}
                 displayName={displayName}
                 settingsHref={withBasePath("/account")}
                 signOutHref={withBasePath("/auth/signout")}
