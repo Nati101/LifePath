@@ -1,42 +1,10 @@
-import { getSectionCompletion } from "@/lib/scoring";
-import { createClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { AdminDashboardData, AdminStudent, StudentStatus } from "@/lib/admin/dashboardTypes";
 import { normalizeAvatar } from "@/lib/avatars";
+import { getSectionCompletion } from "@/lib/scoring";
 import type { Responses } from "@/lib/types";
 
-export type StudentStatus = "completed" | "in_progress" | "not_started";
-
-export interface AdminStudent {
-  id: string;
-  email: string;
-  fullName: string | null;
-  avatarEmoji: string;
-  classId: string | null;
-  className: string | null;
-  advisorId: string | null;
-  advisorName: string | null;
-  status: StudentStatus;
-  progressPercent: number;
-  topPath: string | null;
-  topPathScore: number | null;
-  createdAt: string;
-}
-
-export interface AdminFilterOption {
-  id: string;
-  name: string;
-}
-
-export interface AdminDashboardData {
-  students: AdminStudent[];
-  classes: AdminFilterOption[];
-  advisors: AdminFilterOption[];
-  stats: {
-    total: number;
-    completed: number;
-    inProgress: number;
-    notStarted: number;
-  };
-}
+export type { AdminDashboardData, AdminFilterOption, AdminStudent, StudentStatus } from "@/lib/admin/dashboardTypes";
 
 function buildResponsesMap(
   rows: { user_id: string; item_id: string; rating: number }[],
@@ -67,9 +35,9 @@ function resolveStatus(
   return "not_started";
 }
 
-export async function getDashboardData(): Promise<AdminDashboardData> {
-  const supabase = await createClient();
-
+export async function fetchDashboardData(
+  supabase: SupabaseClient,
+): Promise<AdminDashboardData> {
   const [
     { data: students },
     { data: sessions },
@@ -138,8 +106,7 @@ export async function getDashboardData(): Promise<AdminDashboardData> {
 
   return {
     students: studentRows,
-    classes:
-      classes?.map((row) => ({ id: row.id, name: row.name })) ?? [],
+    classes: classes?.map((row) => ({ id: row.id, name: row.name })) ?? [],
     advisors:
       advisors?.map((row) => ({
         id: row.id,

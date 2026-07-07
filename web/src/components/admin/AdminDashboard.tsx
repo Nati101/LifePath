@@ -7,7 +7,7 @@ import type {
   AdminDashboardData,
   AdminStudent,
   StudentStatus,
-} from "@/lib/admin/getDashboardData";
+} from "@/lib/admin/dashboardTypes";
 
 interface AdminDashboardProps {
   data: AdminDashboardData;
@@ -78,7 +78,7 @@ function StudentRow({ student }: { student: AdminStudent }) {
         )}
       </td>
       <td className="admin-row__action">
-        <Link href={withBasePath(`/admin/students/${student.id}`)} className="admin-link">
+        <Link href={withBasePath(`/admin/student?id=${student.id}`)} className="admin-link">
           View
         </Link>
       </td>
@@ -91,7 +91,7 @@ function StudentCard({ student }: { student: AdminStudent }) {
 
   return (
     <Link
-      href={withBasePath(`/admin/students/${student.id}`)}
+      href={withBasePath(`/admin/student?id=${student.id}`)}
       className="admin-student-card"
     >
       <div className="admin-student-card__header">

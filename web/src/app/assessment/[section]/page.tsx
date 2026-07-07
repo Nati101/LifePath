@@ -3,6 +3,15 @@ import SectionFlow from "@/components/SectionFlow";
 import { isValidSection } from "@/data/instructions";
 import type { SectionKey } from "@/lib/types";
 
+export function generateStaticParams() {
+  return [
+    { section: "interests" },
+    { section: "strengths" },
+    { section: "drivers" },
+    { section: "conditions" },
+  ];
+}
+
 export default async function SectionPage({
   params,
 }: {

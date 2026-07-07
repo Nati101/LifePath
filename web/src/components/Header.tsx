@@ -1,30 +1,54 @@
+"use client";
+
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
-import { withBasePath } from "@/lib/supabase/client";
+import { useEffect, useState } from "react";
 import ProfileMenu from "@/components/ProfileMenu";
 import { normalizeAvatar } from "@/lib/avatars";
+import { getAuthenticatedUser } from "@/lib/auth/guards";
+import { createClient, withBasePath } from "@/lib/supabase/client";
 
-export default async function Header() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export default function Header() {
+  const [userState, setUserState] = useState<{
+    role: string | null;
+    fullName: string | null;
+    avatarEmoji: string | null;
+  } | null>(null);
 
-  let role: string | null = null;
-  let fullName: string | null = null;
-  let avatarEmoji: string | null = null;
-  if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role, full_name, avatar_emoji")
-      .eq("id", user.id)
-      .single();
-    role = profile?.role ?? null;
-    fullName = profile?.full_name ?? null;
-    avatarEmoji = profile?.avatar_emoji ?? null;
-  }
+  useEffect(() => {
+    let cancelled = false;
 
-  const displayName = fullName?.trim() || "Account";
+    async function load() {
+      const supabase = createClient();
+      const user = await getAuthenticatedUser(supabase);
+
+      if (!user) {
+        if (!cancelled) setUserState(null);
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role, full_name, avatar_emoji")
+        .eq("id", user.id)
+        .single();
+
+      if (!cancelled) {
+        setUserState({
+          role: profile?.role ?? null,
+          fullName: profile?.full_name ?? null,
+          avatarEmoji: profile?.avatar_emoji ?? null,
+        });
+      }
+    }
+
+    void load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const displayName = userState?.fullName?.trim() || "Account";
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-card">
@@ -38,42 +62,44 @@ export default async function Header() {
           </span>
         </Link>
 
-        {user ? (
-          <nav className="flex items-center gap-1 text-[14px] font-medium text-muted sm:gap-2">
-            {role === "admin" && (
+        <nav className="flex items-center gap-3 sm:gap-4">
+          {userState ? (
+            <>
               <Link
-                href={withBasePath("/admin")}
-                className="hidden px-3 py-2 transition-colors hover:text-foreground sm:inline"
+                href={withBasePath("/assessment")}
+                className="text-[14px] font-medium text-muted transition-colors hover:text-foreground"
               >
-                Admin
+                Sections
               </Link>
-            )}
-            <Link
-              href={withBasePath("/assessment")}
-              className="px-3 py-2 transition-colors hover:text-foreground"
-            >
-              Sections
-            </Link>
-            <ProfileMenu
-              avatarEmoji={normalizeAvatar(avatarEmoji)}
-              displayName={displayName}
-              settingsHref={withBasePath("/account")}
-              signOutAction={withBasePath("/auth/signout")}
-            />
-          </nav>
-        ) : (
-          <nav className="flex items-center gap-3">
-            <Link
-              href={withBasePath("/login")}
-              className="px-2 py-2 text-[14px] font-medium text-muted transition-colors hover:text-foreground"
-            >
-              Sign in
-            </Link>
-            <Link href={withBasePath("/register")} className="btn-primary-sm">
-              Get started
-            </Link>
-          </nav>
-        )}
+              {userState.role === "admin" && (
+                <Link
+                  href={withBasePath("/admin")}
+                  className="text-[14px] font-medium text-muted transition-colors hover:text-foreground"
+                >
+                  Admin
+                </Link>
+              )}
+              <ProfileMenu
+                avatarEmoji={normalizeAvatar(userState.avatarEmoji)}
+                displayName={displayName}
+                settingsHref={withBasePath("/account")}
+                signOutHref={withBasePath("/auth/signout")}
+              />
+            </>
+          ) : (
+            <>
+              <Link
+                href={withBasePath("/login")}
+                className="text-[14px] font-medium text-muted transition-colors hover:text-foreground"
+              >
+                Sign in
+              </Link>
+              <Link href={withBasePath("/register")} className="btn-secondary-sm">
+                Get started
+              </Link>
+            </>
+          )}
+        </nav>
       </div>
     </header>
   );

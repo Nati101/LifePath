@@ -39,6 +39,32 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000)
 
+## Deploy to GitHub Pages
+
+The site is published at **https://nati101.github.io/LifePath/** via GitHub Actions.
+
+### One-time setup
+
+1. In your GitHub repo (**Settings → Secrets and variables → Actions**), add:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+2. In **Supabase → Authentication → URL configuration**, set:
+   - **Site URL:** `https://nati101.github.io/LifePath`
+   - **Redirect URLs:** `https://nati101.github.io/LifePath/auth/callback/`
+
+3. In **GitHub → Settings → Pages**, set source to **GitHub Actions** (if not already).
+
+Pushes to `main` rebuild and deploy automatically.
+
+### Local production preview (GitHub Pages build)
+
+```bash
+cd web
+BUILD_STATIC=1 NEXT_PUBLIC_BASE_PATH=/LifePath NEXT_PUBLIC_SITE_URL=https://nati101.github.io/LifePath npm run build
+npx serve out
+```
+
 ## Deploy under `example.com/test`
 
 Set these environment variables:

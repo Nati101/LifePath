@@ -26,4 +26,8 @@ Open [http://localhost:3000](http://localhost:3000).
 
 - **Frontend:** Next.js 16, React, Tailwind CSS v4
 - **Backend:** Supabase (Auth, Postgres, RLS)
-- **Deploy:** Vercel (supports `NEXT_PUBLIC_BASE_PATH` for subdirectory hosting)
+- **Hosting:** GitHub Pages (static export) or Vercel (full server features)
+
+## GitHub Pages
+
+See [`web/README.md`](web/README.md#deploy-to-github-pages) for Supabase redirect URLs and GitHub Actions secrets.

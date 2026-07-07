@@ -9,7 +9,7 @@ interface ProfileMenuProps {
   avatarEmoji: AvatarEmoji;
   displayName: string;
   settingsHref: string;
-  signOutAction: string;
+  signOutHref: string;
 }
 
 function SettingsIcon() {
@@ -51,7 +51,7 @@ export default function ProfileMenu({
   avatarEmoji,
   displayName,
   settingsHref,
-  signOutAction,
+  signOutHref,
 }: ProfileMenuProps) {
   const [open, setOpen] = useState(false);
   const [canHover, setCanHover] = useState(false);
@@ -144,16 +144,15 @@ export default function ProfileMenu({
 
           <div className="profile-menu-divider" />
 
-          <form action={signOutAction} method="post" role="none">
-            <button
-              type="submit"
-              role="menuitem"
-              className="profile-menu-item profile-menu-item-danger"
-            >
-              <LogOutIcon />
-              <span>Log out</span>
-            </button>
-          </form>
+          <Link
+            href={signOutHref}
+            role="menuitem"
+            className="profile-menu-item profile-menu-item-danger"
+            onClick={() => setOpen(false)}
+          >
+            <LogOutIcon />
+            <span>Log out</span>
+          </Link>
         </div>
       </div>
     </div>

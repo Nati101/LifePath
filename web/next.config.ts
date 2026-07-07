@@ -8,6 +8,11 @@ const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 const nextConfig: NextConfig = {
   basePath,
   assetPrefix: basePath || undefined,
+  output: process.env.BUILD_STATIC === "1" ? "export" : undefined,
+  trailingSlash: process.env.BUILD_STATIC === "1",
+  images: {
+    unoptimized: process.env.BUILD_STATIC === "1",
+  },
   // Parent lockfile at ~/package-lock.json confuses Turbopack; pin this app.
   outputFileTracingRoot: projectRoot,
   turbopack: {
