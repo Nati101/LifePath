@@ -1,0 +1,150 @@
+import { getSectionCompletion } from "@/lib/scoring";
+import { createClient } from "@/lib/supabase/server";
+import { normalizeAvatar } from "@/lib/avatars";
+import type { Responses } from "@/lib/types";
+
+export type StudentStatus = "completed" | "in_progress" | "not_started";
+
+export interface AdminStudent {
+  id: string;
+  email: string;
+  fullName: string | null;
+  avatarEmoji: string;
+  classId: string | null;
+  className: string | null;
+  advisorId: string | null;
+  advisorName: string | null;
+  status: StudentStatus;
+  progressPercent: number;
+  topPath: string | null;
+  topPathScore: number | null;
+  createdAt: string;
+}
+
+export interface AdminFilterOption {
+  id: string;
+  name: string;
+}
+
+export interface AdminDashboardData {
+  students: AdminStudent[];
+  classes: AdminFilterOption[];
+  advisors: AdminFilterOption[];
+  stats: {
+    total: number;
+    completed: number;
+    inProgress: number;
+    notStarted: number;
+  };
+}
+
+function buildResponsesMap(
+  rows: { user_id: string; item_id: string; rating: number }[],
+): Map<string, Responses> {
+  const map = new Map<string, Responses>();
+  for (const row of rows) {
+    const existing = map.get(row.user_id) ?? {};
+    existing[row.item_id] = row.rating;
+    map.set(row.user_id, existing);
+  }
+  return map;
+}
+
+function overallProgress(responses: Responses): number {
+  const completion = getSectionCompletion(responses);
+  const values = Object.values(completion);
+  if (values.length === 0) return 0;
+  return Math.round((values.reduce((sum, value) => sum + value, 0) / values.length) * 100);
+}
+
+function resolveStatus(
+  sessionStatus: string | undefined,
+  progressPercent: number,
+  hasResponses: boolean,
+): StudentStatus {
+  if (sessionStatus === "completed" || progressPercent >= 100) return "completed";
+  if (sessionStatus || hasResponses || progressPercent > 0) return "in_progress";
+  return "not_started";
+}
+
+export async function getDashboardData(): Promise<AdminDashboardData> {
+  const supabase = await createClient();
+
+  const [
+    { data: students },
+    { data: sessions },
+    { data: results },
+    { data: classes },
+    { data: advisors },
+    { data: responseRows },
+  ] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("id, email, full_name, avatar_emoji, class_id, advisor_id, class_name, created_at")
+      .eq("role", "student")
+      .order("created_at", { ascending: false }),
+    supabase.from("assessment_sessions").select("user_id, status, completed_at"),
+    supabase.from("results").select("user_id, top_paths, computed_at"),
+    supabase.from("classes").select("id, name").order("name"),
+    supabase
+      .from("profiles")
+      .select("id, full_name, email")
+      .eq("role", "admin")
+      .order("full_name"),
+    supabase.from("responses").select("user_id, item_id, rating"),
+  ]);
+
+  const sessionMap = new Map(sessions?.map((session) => [session.user_id, session]) ?? []);
+  const resultMap = new Map(results?.map((result) => [result.user_id, result]) ?? []);
+  const classMap = new Map(classes?.map((row) => [row.id, row.name]) ?? []);
+  const advisorMap = new Map(
+    advisors?.map((row) => [row.id, row.full_name?.trim() || row.email]) ?? [],
+  );
+  const responsesMap = buildResponsesMap(responseRows ?? []);
+
+  const studentRows: AdminStudent[] =
+    students?.map((student) => {
+      const session = sessionMap.get(student.id);
+      const result = resultMap.get(student.id);
+      const responses = responsesMap.get(student.id) ?? {};
+      const progressPercent = overallProgress(responses);
+      const topPath = result?.top_paths?.[0];
+      const className =
+        (student.class_id && classMap.get(student.class_id)) || student.class_name || null;
+
+      return {
+        id: student.id,
+        email: student.email,
+        fullName: student.full_name,
+        avatarEmoji: normalizeAvatar(student.avatar_emoji),
+        classId: student.class_id,
+        className,
+        advisorId: student.advisor_id,
+        advisorName: student.advisor_id ? advisorMap.get(student.advisor_id) ?? null : null,
+        status: resolveStatus(session?.status, progressPercent, Object.keys(responses).length > 0),
+        progressPercent,
+        topPath: topPath?.path ?? null,
+        topPathScore: topPath?.overall ?? null,
+        createdAt: student.created_at,
+      };
+    }) ?? [];
+
+  const stats = {
+    total: studentRows.length,
+    completed: studentRows.filter((student) => student.status === "completed").length,
+    inProgress: studentRows.filter((student) => student.status === "in_progress").length,
+    notStarted: studentRows.filter((student) => student.status === "not_started").length,
+  };
+
+  return {
+    students: studentRows,
+    classes:
+      classes?.map((row) => ({ id: row.id, name: row.name })) ?? [],
+    advisors:
+      advisors?.map((row) => ({
+        id: row.id,
+        name: row.full_name?.trim() || row.email,
+      })) ?? [],
+    stats,
+  };
+}

@@ -1,0 +1,20 @@
+.DS_Store
+~$*
+
+# Next.js app
+web/node_modules/
+web/.next/
+web/out/
+web/build/
+web/.vercel/
+web/*.tsbuildinfo
+web/next-env.d.ts
+
+# Secrets — never commit
+web/.env
+web/.env.local
+web/.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
