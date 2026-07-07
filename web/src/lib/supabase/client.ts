@@ -10,6 +10,6 @@ export function getBasePath(): string {
 }
 
 export function withBasePath(path: string): string {
-  const base = getBasePath();
-  return `${base}${path}`;
+  // basePath is configured in next.config.ts; Next.js prefixes routes automatically.
+  return path.startsWith("/") ? path : `/${path}`;
 }
