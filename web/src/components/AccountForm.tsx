@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import AvatarSelector from "@/components/AvatarSelector";
 import { createClient } from "@/lib/supabase/client";
 import { normalizeAvatar, type AvatarEmoji } from "@/lib/avatars";
-import type { SelectOption } from "@/lib/account/options";
+import type { AdvisorOption, SelectOption } from "@/lib/account/options";
 
 interface AccountFormProps {
   userId: string;
@@ -16,7 +16,7 @@ interface AccountFormProps {
   advisorId: string | null;
   avatarEmoji: string | null;
   classes: SelectOption[];
-  advisors: SelectOption[];
+  advisors: AdvisorOption[];
 }
 
 export default function AccountForm({
@@ -27,7 +27,7 @@ export default function AccountForm({
   classId: initialClassId,
   advisorId: initialAdvisorId,
   avatarEmoji: initialAvatar,
-  classes,
+  classes: initialClasses,
   advisors,
 }: AccountFormProps) {
   const router = useRouter();
@@ -40,13 +40,50 @@ export default function AccountForm({
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [classes, setClasses] = useState<SelectOption[]>(initialClasses);
+  const [loadingClasses, setLoadingClasses] = useState(false);
 
   useEffect(() => {
     setFullName(initialName);
     setClassId(initialClassId ?? "");
     setAdvisorId(initialAdvisorId ?? "");
     setAvatarEmoji(normalizeAvatar(initialAvatar));
-  }, [initialName, initialClassId, initialAdvisorId, initialAvatar]);
+    setClasses(initialClasses);
+  }, [initialName, initialClassId, initialAdvisorId, initialAvatar, initialClasses]);
+
+  // When advisor changes, reload classes filtered by their school
+  useEffect(() => {
+    const selectedAdvisor = advisors.find((a) => a.id === advisorId);
+    
+    async function loadClasses() {
+      setLoadingClasses(true);
+      const supabase = createClient();
+      
+      try {
+        let query = supabase.from("classes").select("id, name").order("name");
+        
+        // If advisor has a school, filter by it
+        if (selectedAdvisor?.schoolId) {
+          query = query.eq("school_id", selectedAdvisor.schoolId);
+        }
+        
+        const { data } = await query;
+        const newClasses = (data ?? []).map((row) => ({ id: row.id, name: row.name }));
+        setClasses(newClasses);
+        
+        // If current class is not in the filtered list, clear it
+        if (classId && selectedAdvisor?.schoolId && !newClasses.some((c) => c.id === classId)) {
+          setClassId("");
+        }
+      } catch (error) {
+        console.error("Failed to load classes:", error);
+      } finally {
+        setLoadingClasses(false);
+      }
+    }
+    
+    void loadClasses();
+  }, [advisorId, advisors, classId]);
 
   const dirty =
     fullName.trim() !== initialName.trim() ||
@@ -165,8 +202,11 @@ export default function AccountForm({
                   setSaved(false);
                 }}
                 className="select-field"
+                disabled={loadingClasses}
               >
-                <option value="">Select a class</option>
+                <option value="">
+                  {loadingClasses ? "Loading classes..." : "Select a class"}
+                </option>
                 {classes.map((item) => (
                   <option key={item.id} value={item.id}>
                     {item.name}
@@ -174,7 +214,12 @@ export default function AccountForm({
                 ))}
               </select>
             </div>
-            {classes.length === 0 && (
+            {!loadingClasses && classes.length === 0 && advisorId && (
+              <p className="field-hint">
+                No classes available for this advisor&apos;s school. Ask your advisor to set up classes.
+              </p>
+            )}
+            {!loadingClasses && classes.length === 0 && !advisorId && (
               <p className="field-hint">Classes haven&apos;t been set up yet.</p>
             )}
           </div>
@@ -209,6 +254,11 @@ export default function AccountForm({
             {advisors.length === 0 && (
               <p className="field-hint">
                 Ask your teacher to create an admin account first.
+              </p>
+            )}
+            {advisors.length > 0 && (
+              <p className="field-hint">
+                Your advisor determines which classes you can select.
               </p>
             )}
           </div>
