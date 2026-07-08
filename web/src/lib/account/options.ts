@@ -3,7 +3,11 @@ export interface SelectOption {
   name: string;
 }
 
+export interface AdvisorOption extends SelectOption {
+  schoolId: string | null;
+}
+
 export interface AccountOptions {
   classes: SelectOption[];
-  advisors: SelectOption[];
+  advisors: AdvisorOption[];
 }

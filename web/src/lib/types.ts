@@ -72,4 +72,5 @@ export interface Profile {
   class_id: string | null;
   advisor_id: string | null;
   avatar_emoji: string | null;
+  school_id: string | null;
 }
