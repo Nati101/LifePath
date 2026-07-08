@@ -33,8 +33,11 @@ alter table public.classes
 alter table public.profiles
   add column if not exists school_id uuid references public.schools(id) on delete set null;
 
--- Update list_advisors function to include school_id
-create or replace function public.list_advisors()
+-- Drop and recreate list_advisors function to include school_id
+-- We must drop first because we're changing the return type
+drop function if exists public.list_advisors();
+
+create function public.list_advisors()
 returns table (id uuid, full_name text, school_id uuid)
 language sql
 security definer

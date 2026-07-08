@@ -19,13 +19,17 @@ Execute the `add_schools.sql` file in your Supabase SQL Editor:
 # The file is located at: web/supabase/add_schools.sql
 ```
 
-This will:
-- Create the `schools` table
+**Important**: Copy the entire contents of the file and run it as a single transaction in the Supabase SQL Editor.
+
+This migration will:
+- Create the `schools` table with RLS policies
 - Add `school_id` column to `classes` table
 - Add `school_id` column to `profiles` table
-- Update the `list_advisors()` function to include school information
+- Drop and recreate the `list_advisors()` function to include school information
 - Create a new `list_classes_by_school()` function
 - Seed a default school for testing
+
+**Note**: The function is dropped and recreated (not replaced) because we're changing its return type, which PostgreSQL doesn't allow with `CREATE OR REPLACE`.
 
 ### Step 2: Assign Schools to Advisors
 
