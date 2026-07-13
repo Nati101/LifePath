@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { Session } from "@supabase/supabase-js";
 import GuestLanding from "@/components/GuestLanding";
 import LoggedInHome from "@/components/LoggedInHome";
-import { createClient } from "@/lib/supabase/client";
+import { createClient, withBasePath } from "@/lib/supabase/client";
 
 export default function HomePageClient() {
+  const router = useRouter();
   const [state, setState] = useState<
     | { status: "loading" }
     | { status: "guest" }
@@ -42,6 +44,12 @@ export default function HomePageClient() {
           .maybeSingle(),
       ]);
 
+      // Redirect admins to admin dashboard
+      if (profile?.role === "admin" && !cancelled) {
+        router.replace(withBasePath("/admin"));
+        return;
+      }
+
       if (!cancelled) {
         setState({
           status: "authed",
@@ -67,7 +75,7 @@ export default function HomePageClient() {
       cancelled = true;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [router]);
 
   if (state.status === "loading") {
     return (
