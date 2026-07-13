@@ -69,14 +69,14 @@ export default function Header() {
                     href={withBasePath("/admin")}
                     className={`nav-link ${isActive("/admin") && !appPath.includes("/admin/manage") ? "nav-link-active" : ""}`}
                   >
-                    📊 Dashboard
+                    Dashboard
                   </Link>
                   {isSuperAdmin && (
                     <Link
                       href={withBasePath("/admin/manage")}
                       className={`nav-link ${isActive("/admin/manage") ? "nav-link-active" : ""}`}
                     >
-                      ⚙️ Manage
+                      Manage
                     </Link>
                   )}
                 </>
