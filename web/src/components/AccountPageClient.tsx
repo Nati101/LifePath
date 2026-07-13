@@ -41,7 +41,7 @@ export default function AccountPageClient() {
           .select("full_name, email, school_id, advisor_id, avatar_emoji")
           .eq("id", user.id)
           .single(),
-        getAccountOptions(supabase),
+        getAccountOptions(supabase, user.id),
       ]);
 
       if (cancelled) return;
