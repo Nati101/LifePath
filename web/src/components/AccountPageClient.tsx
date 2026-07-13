@@ -50,11 +50,6 @@ export default function AccountPageClient() {
 
       if (cancelled) return;
 
-      // Debug: log any errors
-      if (profileResponse.error) {
-        console.error("Profile fetch error:", profileResponse.error);
-      }
-
       const profileData = profileResponse.data;
       const schoolName = profileData?.schools && typeof profileData.schools === 'object' && 'name' in profileData.schools
         ? (profileData.schools as { name: string }).name
@@ -96,18 +91,6 @@ export default function AccountPageClient() {
   return (
     <div className="page-shell py-10 sm:py-12">
       <div className="page-content animate-fade-in mx-auto">
-        {/* DEBUG INFO - REMOVE AFTER TROUBLESHOOTING */}
-        <div className="mb-6 p-4 bg-yellow-100 border-2 border-yellow-500 rounded-lg">
-          <p className="font-bold text-lg mb-2">🐛 DEBUG INFO</p>
-          <p><strong>User ID:</strong> {profile.userId}</p>
-          <p><strong>Email:</strong> {profile.email}</p>
-          <p><strong>Role from DB:</strong> {profile.role}</p>
-          <p><strong>Is Super Admin:</strong> {profile.isSuperAdmin ? "Yes" : "No"}</p>
-          <p><strong>isAdmin variable:</strong> {isAdmin ? "true" : "false"}</p>
-          <p><strong>Rendering:</strong> {isAdmin ? "AdvisorAccountForm" : "AccountForm (Student)"}</p>
-        </div>
-        {/* END DEBUG INFO */}
-
         {isAdmin ? (
           <AdvisorAccountForm
             userId={profile.userId}
