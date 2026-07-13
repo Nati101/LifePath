@@ -37,7 +37,13 @@ export default function Header() {
                 href={withBasePath("/assessment")}
                 className="text-[14px] font-medium text-muted transition-colors hover:text-foreground"
               >
-                Sections
+                Part 1
+              </Link>
+              <Link
+                href={withBasePath("/part2")}
+                className="text-[14px] font-medium text-muted transition-colors hover:text-foreground"
+              >
+                Part 2
               </Link>
               {user?.role === "admin" && (
                 <Link
