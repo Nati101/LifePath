@@ -16,43 +16,62 @@ export default function Header() {
   const showAuthenticatedNav = Boolean(user) && !onAuthPage;
   const displayName = user?.fullName?.trim() || "Account";
 
+  const isActive = (path: string) => {
+    if (path === "/") return appPath === "/";
+    return appPath.startsWith(path);
+  };
+
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-card">
-      <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between px-5 sm:px-8">
-        <Link href={withBasePath("/")} className="flex items-center gap-2.5">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary">
-            <span className="h-2.5 w-2.5 rounded-full bg-white/90" />
+    <header className="sticky top-0 z-50 border-b border-border bg-card backdrop-blur-sm">
+      <div className="mx-auto flex h-16 w-full max-w-5xl items-center justify-between px-5 sm:px-8">
+        <Link href={withBasePath("/")} className="flex items-center gap-3">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/80 shadow-sm">
+            <span className="h-3 w-3 rounded-full bg-white/95" />
           </span>
-          <span className="text-[17px] font-semibold tracking-tight text-foreground">
+          <span className="text-[18px] font-bold tracking-tight text-foreground">
             LifePath
           </span>
         </Link>
 
-        <nav className="flex items-center gap-3 sm:gap-4">
+        <nav className="flex items-center gap-1 sm:gap-2">
           {isLoading ? (
-            <span className="h-9 w-24" aria-hidden />
+            <span className="h-9 w-32" aria-hidden />
           ) : showAuthenticatedNav ? (
             <>
               <Link
-                href={withBasePath("/assessment")}
-                className="text-[14px] font-medium text-muted transition-colors hover:text-foreground"
+                href={withBasePath("/")}
+                className={`nav-link ${isActive("/") && !appPath.includes("/assessment") && !appPath.includes("/part2") && !appPath.includes("/admin") && !appPath.includes("/account") && !appPath.includes("/results") ? "nav-link-active" : ""}`}
               >
-                Sections
+                Home
+              </Link>
+              <Link
+                href={withBasePath("/assessment")}
+                className={`nav-link ${isActive("/assessment") || isActive("/results") ? "nav-link-active" : ""}`}
+              >
+                Career Paths
+              </Link>
+              <Link
+                href={withBasePath("/part2")}
+                className={`nav-link ${isActive("/part2") ? "nav-link-active" : ""}`}
+              >
+                After High School
               </Link>
               {user?.role === "admin" && (
                 <Link
                   href={withBasePath("/admin")}
-                  className="text-[14px] font-medium text-muted transition-colors hover:text-foreground"
+                  className={`nav-link ${isActive("/admin") ? "nav-link-active" : ""}`}
                 >
                   Admin
                 </Link>
               )}
-              <ProfileMenu
-                avatarEmoji={normalizeAvatar(user?.avatarEmoji)}
-                displayName={displayName}
-                settingsHref={withBasePath("/account")}
-                signOutHref={withBasePath("/auth/signout")}
-              />
+              <div className="ml-2 sm:ml-3">
+                <ProfileMenu
+                  avatarEmoji={normalizeAvatar(user?.avatarEmoji)}
+                  displayName={displayName}
+                  settingsHref={withBasePath("/account")}
+                  signOutHref={withBasePath("/auth/signout")}
+                />
+              </div>
             </>
           ) : onAuthPage ? (
             appPath.startsWith("/login") ? (
