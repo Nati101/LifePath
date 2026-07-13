@@ -17,11 +17,11 @@ export default function AccountPageClient() {
     email: string;
     fullName: string;
     displayName: string;
-    classId: string | null;
+    schoolId: string | null;
     advisorId: string | null;
     avatarEmoji: string | null;
   } | null>(null);
-  const [options, setOptions] = useState<AccountOptions>({ classes: [], advisors: [] });
+  const [options, setOptions] = useState<AccountOptions>({ schools: [], advisors: [] });
 
   useEffect(() => {
     let cancelled = false;
@@ -38,10 +38,10 @@ export default function AccountPageClient() {
       const [{ data: profileData }, accountOptions] = await Promise.all([
         supabase
           .from("profiles")
-          .select("full_name, email, class_id, advisor_id, avatar_emoji")
+          .select("full_name, email, school_id, advisor_id, avatar_emoji")
           .eq("id", user.id)
           .single(),
-        getAccountOptions(supabase, user.id),
+        getAccountOptions(supabase),
       ]);
 
       if (cancelled) return;
@@ -51,7 +51,7 @@ export default function AccountPageClient() {
         email: profileData?.email ?? user.email ?? "",
         fullName: profileData?.full_name ?? "",
         displayName: profileData?.full_name?.trim() || user.email || "Your account",
-        classId: profileData?.class_id ?? null,
+        schoolId: profileData?.school_id ?? null,
         advisorId: profileData?.advisor_id ?? null,
         avatarEmoji: profileData?.avatar_emoji ?? null,
       });
@@ -82,10 +82,10 @@ export default function AccountPageClient() {
           email={profile.email}
           fullName={profile.fullName}
           displayName={profile.displayName}
-          classId={profile.classId}
+          schoolId={profile.schoolId}
           advisorId={profile.advisorId}
           avatarEmoji={profile.avatarEmoji}
-          classes={options.classes}
+          schools={options.schools}
           advisors={options.advisors}
         />
 
