@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import AssessmentShell from "@/components/AssessmentShell";
-import ScaleGrid from "@/components/ScaleGrid";
+import ScaleLegend from "@/components/ScaleLegend";
+import StatementCard from "@/components/StatementCard";
 import { getPart2Config, getPart2SectionOrder } from "@/lib/part2-scoring";
 import { withBasePath } from "@/lib/supabase/client";
 import type { Part2AssessmentItem, Part2Responses, Part2SectionKey } from "@/lib/part2-types";
@@ -36,6 +37,7 @@ export default function Part2SectionFlow({
   const isComplete = answered === items.length;
   const currentSectionIndex = sectionOrder.indexOf(section);
   const isLastSection = currentSectionIndex === sectionOrder.length - 1;
+  const currentAnswered = responses[currentItem?.id] != null;
 
   const handleAnswer = async (rating: number) => {
     if (!currentItem || saving) return;
@@ -47,18 +49,21 @@ export default function Part2SectionFlow({
     // Auto-advance to next question
     if (currentIndex < items.length - 1) {
       await onNavigate(section, currentIndex + 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
   const handlePrevious = () => {
     if (currentIndex > 0) {
       void onNavigate(section, currentIndex - 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
   const handleNext = () => {
     if (currentIndex < items.length - 1) {
       void onNavigate(section, currentIndex + 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
@@ -73,85 +78,28 @@ export default function Part2SectionFlow({
 
   if (!currentItem) {
     return (
-      <div className="page-shell centered">
-        <p className="text-[15px] text-muted">Loading…</p>
+      <div className="page-shell justify-center">
+        <p className="text-sm text-muted">Loading…</p>
       </div>
     );
   }
 
   return (
-    <AssessmentShell>
-      <div className="assessment-container">
-        {/* Header */}
-        <div className="assessment-header">
-          <div className="mb-6 flex items-center justify-between">
-            <Link
-              href={withBasePath("/part2")}
-              className="text-[14px] font-medium text-primary hover:underline"
-            >
-              ← Back to Part 2
-            </Link>
-            <span className="text-[13px] text-muted">
-              Part 2: My Path After High School
-            </span>
-          </div>
-
-          <h1 className="mb-2 text-[1.5rem] font-semibold tracking-tight sm:text-[1.75rem]">
-            {sectionInfo.label}
-          </h1>
-          <p className="mb-6 text-[15px] text-muted">{sectionInfo.subtitle}</p>
-
-          <div className="mb-3">
-            <div className="mb-2 flex items-center justify-between text-[13px]">
-              <span className="font-medium text-foreground">
-                Question {currentIndex + 1} of {items.length}
-              </span>
-              <span className="text-muted">
-                {answered} answered ({percent}%)
-              </span>
-            </div>
-            <div className="h-1 overflow-hidden rounded-full bg-border/80">
-              <div
-                className="h-full rounded-full bg-primary transition-all duration-500 ease-out"
-                style={{ width: `${Math.max(percent, 1)}%` }}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Question Card */}
-        <div className="question-card">
-          <p className="question-text">{currentItem.text}</p>
-
-          <div className="mt-8">
-            <ScaleGrid
-              mode="select"
-              value={responses[currentItem.id] ?? null}
-              onChange={handleAnswer}
-            />
-          </div>
-        </div>
-
-        {/* Navigation */}
-        <div className="assessment-footer">
-          <button
-            onClick={handlePrevious}
-            disabled={currentIndex === 0 || saving}
-            className="btn-secondary"
-          >
-            Previous
-          </button>
-
+    <AssessmentShell
+      footer={
+        <div className="mx-auto flex w-full max-w-sm flex-col items-center gap-3">
           {!isComplete ? (
             <button
+              type="button"
               onClick={handleNext}
-              disabled={currentIndex >= items.length - 1 || saving}
+              disabled={!currentAnswered || saving || currentIndex >= items.length - 1}
               className="btn-primary"
             >
-              Next
+              {saving ? "Saving…" : currentIndex === items.length - 1 ? "Finish section" : "Continue"}
             </button>
           ) : (
             <button
+              type="button"
               onClick={handleComplete}
               disabled={saving}
               className="btn-primary"
@@ -159,13 +107,72 @@ export default function Part2SectionFlow({
               {isLastSection ? "View Results" : "Next Section"}
             </button>
           )}
+          <div className="flex w-full items-center justify-between text-[13px]">
+            <button
+              type="button"
+              onClick={handlePrevious}
+              disabled={currentIndex === 0}
+              className="cursor-pointer font-medium text-muted transition-colors hover:text-foreground disabled:pointer-events-none disabled:opacity-0"
+            >
+              Back
+            </button>
+            <Link
+              href={withBasePath("/part2")}
+              className="font-medium text-muted transition-colors hover:text-foreground"
+            >
+              Part 2 overview
+            </Link>
+            <span className="tabular-nums text-muted-light">
+              {answered}/{items.length}
+            </span>
+          </div>
+        </div>
+      }
+    >
+      <div className="animate-fade-in">
+        <p className="mb-4 text-[12px] font-semibold tracking-wide text-primary uppercase">
+          {sectionInfo.label}
+        </p>
+
+        <div className="mb-6">
+          <div className="mb-2 flex items-center justify-between text-[13px]">
+            <span className="font-medium text-foreground">
+              Question {currentIndex + 1} of {items.length}
+            </span>
+            <span className="text-muted">{percent}%</span>
+          </div>
+          <div className="h-1.5 overflow-hidden rounded-full bg-border/80">
+            <div
+              className="h-full rounded-full bg-primary transition-all duration-500 ease-out"
+              style={{ width: `${Math.max(percent, 1)}%` }}
+            />
+          </div>
         </div>
 
-        {/* Progress indicator */}
+        <h1 className="my-7 px-1 text-center text-[22px] font-semibold leading-snug tracking-tight text-foreground sm:my-8 sm:text-[24px]">
+          {sectionInfo.subtitle}
+        </h1>
+
+        <ScaleLegend />
+
+        <div className="space-y-4">
+          <StatementCard
+            statement={currentItem.text}
+            value={responses[currentItem.id] ?? null}
+            onChange={handleAnswer}
+          />
+        </div>
+
+        {!currentAnswered && (
+          <p className="mt-8 text-center text-[13px] text-muted-light">
+            Answer to continue
+          </p>
+        )}
+
         {isComplete && (
-          <div className="mt-4 text-center text-[13px] text-primary">
-            ✓ Section complete
-          </div>
+          <p className="mt-6 text-center text-[13px] font-medium text-primary">
+            ✓ Section complete — {isLastSection ? "click to view results" : "continue to next section"}
+          </p>
         )}
       </div>
     </AssessmentShell>
