@@ -89,6 +89,8 @@ export default function AccountPageClient() {
         {/* DEBUG INFO - REMOVE AFTER TROUBLESHOOTING */}
         <div className="mb-6 p-4 bg-yellow-100 border-2 border-yellow-500 rounded-lg">
           <p className="font-bold text-lg mb-2">🐛 DEBUG INFO</p>
+          <p><strong>User ID:</strong> {profile.userId}</p>
+          <p><strong>Email:</strong> {profile.email}</p>
           <p><strong>Role from DB:</strong> {profile.role}</p>
           <p><strong>Is Super Admin:</strong> {profile.isSuperAdmin ? "Yes" : "No"}</p>
           <p><strong>isAdmin variable:</strong> {isAdmin ? "true" : "false"}</p>
