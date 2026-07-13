@@ -5,18 +5,18 @@ import { useRouter } from "next/navigation";
 import AvatarSelector from "@/components/AvatarSelector";
 import { createClient } from "@/lib/supabase/client";
 import { normalizeAvatar, type AvatarEmoji } from "@/lib/avatars";
-import type { AdvisorOption, SelectOption } from "@/lib/account/options";
+import type { SelectOption } from "@/lib/account/options";
 
 interface AccountFormProps {
   userId: string;
   email: string;
   fullName: string;
   displayName: string;
-  classId: string | null;
+  schoolId: string | null;
   advisorId: string | null;
   avatarEmoji: string | null;
-  classes: SelectOption[];
-  advisors: AdvisorOption[];
+  schools: SelectOption[];
+  advisors: SelectOption[];
 }
 
 export default function AccountForm({
@@ -24,15 +24,15 @@ export default function AccountForm({
   email,
   fullName: initialName,
   displayName,
-  classId: initialClassId,
+  schoolId: initialSchoolId,
   advisorId: initialAdvisorId,
   avatarEmoji: initialAvatar,
-  classes: initialClasses,
+  schools,
   advisors,
 }: AccountFormProps) {
   const router = useRouter();
   const [fullName, setFullName] = useState(initialName);
-  const [classId, setClassId] = useState(initialClassId ?? "");
+  const [schoolId, setSchoolId] = useState(initialSchoolId ?? "");
   const [advisorId, setAdvisorId] = useState(initialAdvisorId ?? "");
   const [avatarEmoji, setAvatarEmoji] = useState<AvatarEmoji>(
     normalizeAvatar(initialAvatar),
@@ -40,54 +40,17 @@ export default function AccountForm({
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [classes, setClasses] = useState<SelectOption[]>(initialClasses);
-  const [loadingClasses, setLoadingClasses] = useState(false);
 
   useEffect(() => {
     setFullName(initialName);
-    setClassId(initialClassId ?? "");
+    setSchoolId(initialSchoolId ?? "");
     setAdvisorId(initialAdvisorId ?? "");
     setAvatarEmoji(normalizeAvatar(initialAvatar));
-    setClasses(initialClasses);
-  }, [initialName, initialClassId, initialAdvisorId, initialAvatar, initialClasses]);
-
-  // When advisor changes, reload classes filtered by their school
-  useEffect(() => {
-    const selectedAdvisor = advisors.find((a) => a.id === advisorId);
-    
-    async function loadClasses() {
-      setLoadingClasses(true);
-      const supabase = createClient();
-      
-      try {
-        let query = supabase.from("classes").select("id, name").order("name");
-        
-        // If advisor has a school, filter by it
-        if (selectedAdvisor?.schoolId) {
-          query = query.eq("school_id", selectedAdvisor.schoolId);
-        }
-        
-        const { data } = await query;
-        const newClasses = (data ?? []).map((row) => ({ id: row.id, name: row.name }));
-        setClasses(newClasses);
-        
-        // If current class is not in the filtered list, clear it
-        if (classId && selectedAdvisor?.schoolId && !newClasses.some((c) => c.id === classId)) {
-          setClassId("");
-        }
-      } catch (error) {
-        console.error("Failed to load classes:", error);
-      } finally {
-        setLoadingClasses(false);
-      }
-    }
-    
-    void loadClasses();
-  }, [advisorId, advisors, classId]);
+  }, [initialName, initialSchoolId, initialAdvisorId, initialAvatar]);
 
   const dirty =
     fullName.trim() !== initialName.trim() ||
-    classId !== (initialClassId ?? "") ||
+    schoolId !== (initialSchoolId ?? "") ||
     advisorId !== (initialAdvisorId ?? "") ||
     avatarEmoji !== normalizeAvatar(initialAvatar);
 
@@ -104,7 +67,7 @@ export default function AccountForm({
       return;
     }
 
-    const selectedClass = classes.find((item) => item.id === classId);
+    const selectedSchool = schools.find((item) => item.id === schoolId);
     const selectedAdvisor = advisors.find((item) => item.id === advisorId);
 
     const supabase = createClient();
@@ -112,9 +75,9 @@ export default function AccountForm({
       .from("profiles")
       .update({
         full_name: name,
-        class_id: classId || null,
+        school_id: schoolId || null,
         advisor_id: advisorId || null,
-        class_name: selectedClass?.name ?? null,
+        school_name: selectedSchool?.name ?? null,
         advisor: selectedAdvisor?.name ?? null,
         avatar_emoji: avatarEmoji,
       })
@@ -187,40 +150,37 @@ export default function AccountForm({
 
           <div className="form-divider" />
 
-          <p className="form-section-title">School</p>
+          <p className="form-section-title">School Information</p>
 
           <div className="form-field">
-            <label htmlFor="classId" className="field-label">
-              Class
+            <label htmlFor="schoolId" className="field-label">
+              School
             </label>
             <div className="select-wrap">
               <select
-                id="classId"
-                value={classId}
+                id="schoolId"
+                value={schoolId}
                 onChange={(e) => {
-                  setClassId(e.target.value);
+                  setSchoolId(e.target.value);
                   setSaved(false);
                 }}
                 className="select-field"
-                disabled={loadingClasses}
+                disabled={schools.length === 0}
               >
                 <option value="">
-                  {loadingClasses ? "Loading classes..." : "Select a class"}
+                  {schools.length === 0 ? "No schools available" : "Select a school"}
                 </option>
-                {classes.map((item) => (
+                {schools.map((item) => (
                   <option key={item.id} value={item.id}>
                     {item.name}
                   </option>
                 ))}
               </select>
             </div>
-            {!loadingClasses && classes.length === 0 && advisorId && (
+            {schools.length === 0 && (
               <p className="field-hint">
-                No classes available for this advisor&apos;s school. Ask your advisor to set up classes.
+                Schools haven&apos;t been set up yet. Contact your administrator.
               </p>
-            )}
-            {!loadingClasses && classes.length === 0 && !advisorId && (
-              <p className="field-hint">Classes haven&apos;t been set up yet.</p>
             )}
           </div>
 
@@ -254,11 +214,6 @@ export default function AccountForm({
             {advisors.length === 0 && (
               <p className="field-hint">
                 Ask your teacher to create an admin account first.
-              </p>
-            )}
-            {advisors.length > 0 && (
-              <p className="field-hint">
-                Your advisor determines which classes you can select.
               </p>
             )}
           </div>
