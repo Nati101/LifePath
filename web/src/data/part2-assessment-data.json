@@ -1,0 +1,295 @@
+{
+  "routeNames": {
+    "UD": "University Degree Route",
+    "CP": "College / Polytechnic Route",
+    "TA": "Trades / Apprenticeship Route",
+    "WF": "Work-First + Upgrade Route",
+    "GE": "Gap / Explore Route",
+    "EC": "Entrepreneur / Create Route"
+  },
+  "routeCodes": ["UD", "CP", "TA", "WF", "GE", "EC"],
+  "sections": {
+    "school_setup": {
+      "label": "Current School Setup",
+      "subtitle": "Your courses, grades, and habits",
+      "items": [
+        {
+          "id": "PHS-CR01",
+          "section": "school_setup",
+          "text": "My current classes keep several doors open (or I know what I could change next term to open doors).",
+          "factor": "AR"
+        },
+        {
+          "id": "PHS-CR02",
+          "section": "school_setup",
+          "text": "My grades are high enough for at least a few programs or options I'm interested in.",
+          "factor": "AR"
+        },
+        {
+          "id": "PHS-CR03",
+          "section": "school_setup",
+          "text": "If I'm missing a required class (like math, science, or English), I know how I could take it later (upgrade/summer/night school).",
+          "factor": "AR"
+        },
+        {
+          "id": "PHS-CR04",
+          "section": "school_setup",
+          "text": "Most weeks, I can keep up with homework, tests, and due dates.",
+          "factor": "AR"
+        },
+        {
+          "id": "PHS-CR05",
+          "section": "school_setup",
+          "text": "Most weeks, I show up on time and stay organized enough for school, training, or a job.",
+          "factor": "AR"
+        }
+      ]
+    },
+    "training_style": {
+      "label": "Training Style & Length",
+      "subtitle": "What kind of training fits you",
+      "items": [
+        {
+          "id": "PHS-PS01",
+          "section": "training_style",
+          "text": "I'm open to exploring a 4+ year university degree.",
+          "factor": "UP"
+        },
+        {
+          "id": "PHS-PS02",
+          "section": "training_style",
+          "text": "I'm open to exploring a 1–3 year college/polytechnic program.",
+          "factor": "CP"
+        },
+        {
+          "id": "PHS-PS03",
+          "section": "training_style",
+          "text": "I'm open to exploring a trade or apprenticeship (earn while you learn).",
+          "factor": "TP"
+        },
+        {
+          "id": "PHS-PS04",
+          "section": "training_style",
+          "text": "I would rather start working soon and train/upgrade later.",
+          "factor": "WP"
+        },
+        {
+          "id": "PHS-PS05",
+          "section": "training_style",
+          "text": "I want a planned 'explore year' before I choose my next step.",
+          "factor": "GP"
+        },
+        {
+          "id": "PHS-PS06",
+          "section": "training_style",
+          "text": "I'm interested in building my own path (business, freelancing, content, or services).",
+          "factor": "EP"
+        }
+      ]
+    },
+    "life_factors": {
+      "label": "Life Factors",
+      "subtitle": "Real-life reasons that shape your route",
+      "items": [
+        {
+          "id": "PHS-LF01",
+          "section": "life_factors",
+          "text": "I need income soon after high school.",
+          "factor": "NI"
+        },
+        {
+          "id": "PHS-LF02",
+          "section": "life_factors",
+          "text": "Paying for training right away would be hard for me.",
+          "factor": "CB"
+        },
+        {
+          "id": "PHS-LF03",
+          "section": "life_factors",
+          "text": "I'm willing to spend time and money on training if it leads to better long-term options.",
+          "factor": "WI"
+        },
+        {
+          "id": "PHS-LF04",
+          "section": "life_factors",
+          "text": "Right now, it's hard for me to feel motivated about school or training.",
+          "factor": "LM"
+        },
+        {
+          "id": "PHS-LF05",
+          "section": "life_factors",
+          "text": "I can stick with a big goal for months (even when it gets boring or hard).",
+          "factor": "LF"
+        },
+        {
+          "id": "PHS-LF06",
+          "section": "life_factors",
+          "text": "Right now, my responsibilities (family, work, or life) would make years of post-secondary schooling hard.",
+          "factor": "RL"
+        },
+        {
+          "id": "PHS-LF07",
+          "section": "life_factors",
+          "text": "I have at least one support that helps me stay on track (a person, a routine, or a tool).",
+          "factor": "SS"
+        },
+        {
+          "id": "PHS-LF08A",
+          "section": "life_factors",
+          "text": "If needed, I can travel/commute to school or work.",
+          "factor": "TR"
+        },
+        {
+          "id": "PHS-LF08B",
+          "section": "life_factors",
+          "text": "If it opens good options, I would be willing to travel/commute or move.",
+          "factor": "TR"
+        },
+        {
+          "id": "PHS-LF09",
+          "section": "life_factors",
+          "text": "I can choose a next step even if I'm not 100% sure yet.",
+          "factor": "BP"
+        },
+        {
+          "id": "PHS-LF10",
+          "section": "life_factors",
+          "text": "I learn best when I can practice and do hands-on learning.",
+          "factor": "HO"
+        }
+      ]
+    },
+    "exploration": {
+      "label": "Exploration & Next Steps",
+      "subtitle": "What you've done and what you're ready to do",
+      "items": [
+        {
+          "id": "PHS-EX01",
+          "section": "exploration",
+          "text": "In the past 6–8 weeks, I've done at least 1 step to explore options (examples: searched programs/careers, watched a video, asked someone, visited a website, attended a session).",
+          "factor": "EX"
+        },
+        {
+          "id": "PHS-EX02",
+          "section": "exploration",
+          "text": "I can name 1-2 adults I could talk to for guidance (counselor/counsellor, teacher, coach, family friend, mentor).",
+          "factor": "HS"
+        },
+        {
+          "id": "PHS-EX03",
+          "section": "exploration",
+          "text": "I can name 2–3 areas I'm curious about (even if I'm not sure yet).",
+          "factor": "EX"
+        },
+        {
+          "id": "PHS-EX04",
+          "section": "exploration",
+          "text": "I can think of more than one possible next step (even if they're just ideas).",
+          "factor": "BP"
+        },
+        {
+          "id": "PHS-EX05",
+          "section": "exploration",
+          "text": "When I'm stuck, I'm willing to reach out for help.",
+          "factor": "HS"
+        },
+        {
+          "id": "PHS-EX06",
+          "section": "exploration",
+          "text": "I can follow a simple weekly plan for 4 weeks (example: 2 small tasks per week).",
+          "factor": "PL"
+        },
+        {
+          "id": "PHS-EX07",
+          "section": "exploration",
+          "text": "Most days, I can reliably get to school or work (transportation plan).",
+          "factor": "TR"
+        },
+        {
+          "id": "PHS-EX08",
+          "section": "exploration",
+          "text": "My weekly schedule has enough time for training or work (evenings/weekends if needed).",
+          "factor": "SF"
+        },
+        {
+          "id": "PHS-EX09",
+          "section": "exploration",
+          "text": "Right now, my energy is steady enough for the level of school/work I'm planning (or I know I need a lighter plan first).",
+          "factor": "EB"
+        }
+      ]
+    }
+  },
+  "factorWeights": {
+    "AR": { "UD": 0.20, "CP": 0.12, "TA": 0.03, "WF": -0.03, "GE": -0.05, "EC": 0.02 },
+    "UP": { "UD": 0.22, "CP": 0, "TA": 0, "WF": 0, "GE": 0, "EC": 0 },
+    "CP": { "UD": 0, "CP": 0.22, "TA": 0, "WF": 0, "GE": 0, "EC": 0 },
+    "TP": { "UD": 0, "CP": 0, "TA": 0.22, "WF": 0, "GE": 0, "EC": 0 },
+    "WP": { "UD": 0, "CP": 0, "TA": 0, "WF": 0.22, "GE": 0, "EC": 0.06 },
+    "GP": { "UD": 0, "CP": 0, "TA": 0, "WF": 0, "GE": 0.22, "EC": 0 },
+    "EP": { "UD": 0, "CP": 0, "TA": 0, "WF": 0, "GE": 0, "EC": 0.24 },
+    "NI": { "UD": -0.08, "CP": -0.03, "TA": 0.06, "WF": 0.18, "GE": 0.04, "EC": 0.06 },
+    "CB": { "UD": -0.07, "CP": -0.03, "TA": 0.04, "WF": 0.06, "GE": 0.04, "EC": 0.02 },
+    "WI": { "UD": 0.10, "CP": 0.06, "TA": 0, "WF": -0.03, "GE": -0.03, "EC": 0.02 },
+    "LM": { "UD": -0.06, "CP": -0.05, "TA": -0.03, "WF": 0.03, "GE": 0.05, "EC": -0.03 },
+    "LF": { "UD": 0.08, "CP": 0.06, "TA": 0.05, "WF": 0.03, "GE": -0.05, "EC": 0.05 },
+    "RL": { "UD": 0, "CP": 0, "TA": 0, "WF": 0.08, "GE": 0.04, "EC": 0 },
+    "SS": { "UD": 0.06, "CP": 0.06, "TA": 0.06, "WF": 0.05, "GE": 0, "EC": 0.05 },
+    "TR": { "UD": 0.04, "CP": 0.04, "TA": 0.04, "WF": 0.03, "GE": -0.04, "EC": 0 },
+    "HO": { "UD": -0.03, "CP": 0.02, "TA": 0.08, "WF": 0.04, "GE": 0, "EC": 0.03 },
+    "EX": { "UD": 0.04, "CP": 0.04, "TA": 0.04, "WF": 0.03, "GE": 0.06, "EC": 0.04 },
+    "HS": { "UD": 0.04, "CP": 0.04, "TA": 0.04, "WF": 0.03, "GE": 0.03, "EC": 0.03 },
+    "PL": { "UD": 0.04, "CP": 0.04, "TA": 0.03, "WF": 0.03, "GE": 0.04, "EC": 0.04 },
+    "SF": { "UD": 0, "CP": 0, "TA": 0.03, "WF": 0.04, "GE": 0, "EC": 0.02 },
+    "EB": { "UD": 0.03, "CP": 0.03, "TA": 0.03, "WF": 0.03, "GE": -0.03, "EC": 0.02 },
+    "BP": { "UD": 0.04, "CP": 0.04, "TA": 0.03, "WF": 0.03, "GE": 0.05, "EC": 0.04 }
+  },
+  "factorNames": {
+    "AR": "Academic Readiness",
+    "UP": "University Preference",
+    "CP": "College/Poly Preference",
+    "TP": "Trades Preference",
+    "WP": "Work-First Preference",
+    "GP": "Gap/Explore Preference",
+    "EP": "Entrepreneur Preference",
+    "NI": "Need Income Soon",
+    "CB": "Cost Barrier",
+    "WI": "Willing to Invest in Training",
+    "LM": "Low Motivation Right Now",
+    "LF": "Long-Term Follow-Through",
+    "RL": "Responsibilities Load",
+    "SS": "Support & Structure",
+    "TR": "Transportation",
+    "HO": "Hands-On Learning",
+    "EX": "Exposure & Research",
+    "HS": "Help-Seeking",
+    "PL": "Planning",
+    "SF": "Schedule Flexibility",
+    "EB": "Energy Bandwidth",
+    "BP": "Backup Plan"
+  },
+  "thresholds": {
+    "high": 75,
+    "medium": 55,
+    "tieGap": 5
+  },
+  "fitLabels": {
+    "high": "High Fit",
+    "medium": "Medium Fit",
+    "low": "Low Fit"
+  },
+  "routeDescriptions": {
+    "University Degree Route": "4+ year university program leading to a bachelor's degree or higher. Focus on academic learning, theory, and research.",
+    "College / Polytechnic Route": "1–3 year diploma or certificate program. Hands-on training for specific careers with work placements.",
+    "Trades / Apprenticeship Route": "Earn while you learn through apprenticeship or trade certification. Hands-on skilled work in construction, mechanics, etc.",
+    "Work-First + Upgrade Route": "Start working soon, gain experience, and upgrade skills through part-time training or certificates.",
+    "Gap / Explore Route": "Planned time to explore options, work, volunteer, or travel before committing to a training path.",
+    "Entrepreneur / Create Route": "Build your own business, freelance career, or create content/services independently."
+  },
+  "scale": [
+    { "value": 1, "label": "Not true for me right now" },
+    { "value": 2, "label": "A little true / sometimes" },
+    { "value": 3, "label": "Mostly true / often" },
+    { "value": 4, "label": "Very true / almost always" }
+  ]
+}

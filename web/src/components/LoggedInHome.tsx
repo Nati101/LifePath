@@ -30,18 +30,38 @@ export default function LoggedInHome({
         <h1 className="mb-3 text-[28px] font-semibold tracking-tight text-foreground">
           Welcome back{firstName ? `, ${firstName}` : ""}
         </h1>
-        <p className="mb-10 text-[16px] leading-relaxed text-muted">
+        <p className="mb-8 text-[16px] leading-relaxed text-muted">
           {completed
-            ? "Your assessment is complete."
+            ? "Your assessment is complete. Continue with Part 2."
             : "Pick up where you left off."}
         </p>
 
-        <Link
-          href={withBasePath(completed ? "/results" : "/assessment")}
-          className="btn-primary"
-        >
-          {completed ? "View results" : "Continue"}
-        </Link>
+        <div className="mx-auto max-w-md space-y-6">
+          <div className="rounded-[20px] bg-card p-5 shadow-[var(--shadow)]">
+            <h2 className="mb-2 text-[17px] font-semibold">Part 1: LifePath Career Assessment</h2>
+            <p className="mb-4 text-[14px] text-muted">
+              Discover your strongest career paths based on interests, strengths, and drivers.
+            </p>
+            <Link
+              href={withBasePath(completed ? "/results" : "/assessment")}
+              className="btn-primary block"
+            >
+              {completed ? "View Part 1 Results" : "Continue Part 1"}
+            </Link>
+          </div>
+
+          {completed && (
+            <div className="rounded-[20px] bg-card p-5 shadow-[var(--shadow)]">
+              <h2 className="mb-2 text-[17px] font-semibold">Part 2: My Path After High School</h2>
+              <p className="mb-4 text-[14px] text-muted">
+                Get personalized post-secondary route recommendations and next steps.
+              </p>
+              <Link href={withBasePath("/part2")} className="btn-secondary block">
+                Go to Part 2
+              </Link>
+            </div>
+          )}
+        </div>
 
         <div className="mt-8 flex flex-col items-center gap-4 text-[15px]">
           <Link href={withBasePath("/account")} className="font-medium text-muted">
