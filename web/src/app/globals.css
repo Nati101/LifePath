@@ -17,3 +17,13 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
+
+@layer components {
+  .nav-link {
+    @apply px-3 py-2 text-[14px] font-medium text-muted rounded-lg transition-all duration-200 hover:text-foreground hover:bg-background/50;
+  }
+  
+  .nav-link-active {
+    @apply text-foreground bg-background/80;
+  }
+}
