@@ -39,10 +39,10 @@ export default function AccountPageClient() {
         return;
       }
 
-      const [{ data: profileData }, accountOptions] = await Promise.all([
+      const [profileResponse, accountOptions] = await Promise.all([
         supabase
           .from("profiles")
-          .select("full_name, email, school_id, school_name, advisor_id, avatar_emoji, role, is_super_admin")
+          .select("full_name, email, school_id, advisor_id, avatar_emoji, role, is_super_admin, schools(name)")
           .eq("id", user.id)
           .single(),
         getAccountOptions(supabase, user.id),
@@ -50,13 +50,23 @@ export default function AccountPageClient() {
 
       if (cancelled) return;
 
+      // Debug: log any errors
+      if (profileResponse.error) {
+        console.error("Profile fetch error:", profileResponse.error);
+      }
+
+      const profileData = profileResponse.data;
+      const schoolName = profileData?.schools && typeof profileData.schools === 'object' && 'name' in profileData.schools
+        ? (profileData.schools as { name: string }).name
+        : null;
+
       setProfile({
         userId: user.id,
         email: profileData?.email ?? user.email ?? "",
         fullName: profileData?.full_name ?? "",
         displayName: profileData?.full_name?.trim() || user.email || "Your account",
         schoolId: profileData?.school_id ?? null,
-        schoolName: profileData?.school_name ?? null,
+        schoolName: schoolName,
         advisorId: profileData?.advisor_id ?? null,
         avatarEmoji: profileData?.avatar_emoji ?? null,
         role: profileData?.role ?? "student",
