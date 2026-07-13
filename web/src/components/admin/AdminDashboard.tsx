@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import { createClient, withBasePath } from "@/lib/supabase/client";
+import { useMemo, useState } from "react";
+import { withBasePath } from "@/lib/supabase/client";
 import type {
   AdminDashboardData,
   AdminStudent,
@@ -124,27 +124,6 @@ export default function AdminDashboard({ data }: AdminDashboardProps) {
   const [classFilter, setClassFilter] = useState("all");
   const [advisorFilter, setAdvisorFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState<StudentStatus | "all">("all");
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
-
-  // Check if user is super admin
-  useEffect(() => {
-    async function checkSuperAdmin() {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("is_super_admin")
-        .eq("id", user.id)
-        .single();
-
-      if (profile?.is_super_admin) {
-        setIsSuperAdmin(true);
-      }
-    }
-    void checkSuperAdmin();
-  }, []);
 
   const filteredStudents = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -171,20 +150,10 @@ export default function AdminDashboard({ data }: AdminDashboardProps) {
   return (
     <div className="admin-page">
       <div className="admin-page__header">
-        <div>
-          <h1 className="admin-page__title">Admin dashboard</h1>
-          <p className="admin-page__subtitle">
-            Monitor student progress, filter by class or advisor, and review results.
-          </p>
-        </div>
-        {isSuperAdmin && (
-          <Link
-            href={withBasePath("/admin/manage")}
-            className="mt-4 inline-block rounded-lg bg-primary px-4 py-2 text-[14px] font-medium text-white transition-colors hover:bg-primary-dark"
-          >
-            ⚙️ Super Admin Management
-          </Link>
-        )}
+        <h1 className="admin-page__title">Admin dashboard</h1>
+        <p className="admin-page__subtitle">
+          Monitor student progress, filter by class or advisor, and review results.
+        </p>
       </div>
 
       <div className="admin-stat-grid">
