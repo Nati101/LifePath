@@ -72,4 +72,5 @@ export interface Profile {
   school_id: string | null;
   advisor_id: string | null;
   avatar_emoji: string | null;
+  is_super_admin: boolean;
 }
