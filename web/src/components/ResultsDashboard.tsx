@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { AssessmentResult, PathScore } from "@/lib/types";
 import { config } from "@/lib/scoring";
+import { pathDetails } from "@/data/path-details";
 
 interface ResultsDashboardProps {
   result: AssessmentResult;
@@ -16,15 +17,7 @@ interface PathDetailProps {
 
 function PathDetail({ path, rank }: PathDetailProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-
-  const sectionBreakdown = [
-    { label: "Interests", score: path.interests, color: "bg-blue-500" },
-    { label: "Strengths", score: path.strengths, color: "bg-green-500" },
-    { label: "Drivers", score: path.drivers, color: "bg-purple-500" },
-    { label: "Work Style & Environment", score: path.conditions, color: "bg-orange-500" },
-  ];
-
-  const maxScore = Math.max(...sectionBreakdown.map((s) => s.score));
+  const details = pathDetails[path.path];
 
   return (
     <div className="rounded-[20px] bg-card p-5 shadow-[var(--shadow)] sm:p-6">
@@ -55,7 +48,7 @@ function PathDetail({ path, rank }: PathDetailProps) {
         onClick={() => setIsExpanded(!isExpanded)}
         className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2 text-[13px] font-medium text-primary transition-colors hover:bg-primary/5"
       >
-        {isExpanded ? "Show less" : "See detailed breakdown"}
+        {isExpanded ? "Show less" : "Learn more about this path"}
         <svg
           className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""}`}
           fill="none"
@@ -66,44 +59,51 @@ function PathDetail({ path, rank }: PathDetailProps) {
         </svg>
       </button>
 
-      {isExpanded && (
-        <div className="mt-5 space-y-4 border-t border-border/50 pt-5 animate-fade-in">
-          <div className="mb-3">
-            <p className="text-[13px] font-medium text-muted">
-              Section Breakdown
-            </p>
-            <p className="mt-1 text-[12px] text-muted-light">
-              Strongest contributor: <span className="font-semibold text-primary">{path.topContributor}</span>
-            </p>
+      {isExpanded && details && (
+        <div className="mt-5 space-y-5 border-t border-border/50 pt-5 animate-fade-in">
+          <div>
+            <h4 className="mb-2 text-[13px] font-semibold text-foreground">What this path is about</h4>
+            <p className="text-[13px] leading-relaxed text-muted-light">{details.description}</p>
           </div>
 
-          {sectionBreakdown.map((section) => (
-            <div key={section.label}>
-              <div className="mb-2 flex items-center justify-between">
-                <span className="text-[13px] font-medium text-foreground">
-                  {section.label}
-                </span>
-                <span className="text-[13px] font-semibold tabular-nums text-foreground">
-                  {section.score}
-                </span>
-              </div>
-              <div className="h-2 overflow-hidden rounded-full bg-border/80">
-                <div
-                  className={`h-full rounded-full transition-all duration-700 ${
-                    section.score === maxScore && maxScore > 0
-                      ? "bg-primary"
-                      : "bg-primary/60"
-                  }`}
-                  style={{ width: `${section.score}%` }}
-                />
-              </div>
-            </div>
-          ))}
+          <div>
+            <h4 className="mb-2 text-[13px] font-semibold text-foreground">What you'll do</h4>
+            <ul className="space-y-1.5">
+              {details.whatYoullDo.map((item, i) => (
+                <li key={i} className="flex gap-2 text-[13px] leading-relaxed text-muted-light">
+                  <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-primary" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
 
-          <div className="mt-5 rounded-lg bg-muted/20 px-3 py-3 text-[12px] leading-relaxed text-muted-light">
-            <strong className="font-semibold text-foreground">What this means:</strong> Each
-            section measures different aspects. Your overall score combines all four, with the
-            strongest sections having the most influence on your fit for this path.
+          <div>
+            <h4 className="mb-2 text-[13px] font-semibold text-foreground">Example careers</h4>
+            <div className="flex flex-wrap gap-2">
+              {details.exampleCareers.map((career, i) => (
+                <span
+                  key={i}
+                  className="rounded-full bg-primary/10 px-3 py-1 text-[12px] font-medium text-primary"
+                >
+                  {career}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h4 className="mb-2 text-[13px] font-semibold text-foreground">Where you might work</h4>
+            <div className="flex flex-wrap gap-2">
+              {details.workEnvironments.map((env, i) => (
+                <span
+                  key={i}
+                  className="rounded-lg bg-muted/20 px-3 py-1 text-[12px] text-muted-light"
+                >
+                  {env}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
       )}
@@ -118,15 +118,7 @@ interface AllPathsDetailProps {
 
 function AllPathsDetail({ path, isTopPath }: AllPathsDetailProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-
-  const sectionBreakdown = [
-    { label: "Interests", score: path.interests },
-    { label: "Strengths", score: path.strengths },
-    { label: "Drivers", score: path.drivers },
-    { label: "Work Style & Environment", score: path.conditions },
-  ];
-
-  const maxScore = Math.max(...sectionBreakdown.map((s) => s.score));
+  const details = pathDetails[path.path];
 
   return (
     <div className="rounded-[16px] bg-card shadow-[var(--shadow)]">
@@ -158,36 +150,39 @@ function AllPathsDetail({ path, isTopPath }: AllPathsDetailProps) {
         </div>
       </button>
 
-      {isExpanded && (
-        <div className="space-y-3 border-t border-border/50 px-5 pb-4 pt-4 animate-fade-in">
-          <div className="mb-2">
-            <p className="text-[12px] text-muted-light">
-              Strongest contributor: <span className="font-semibold text-primary">{path.topContributor}</span>
-            </p>
+      {isExpanded && details && (
+        <div className="space-y-4 border-t border-border/50 px-5 pb-4 pt-4 animate-fade-in">
+          <div>
+            <p className="text-[12px] leading-relaxed text-muted-light">{details.description}</p>
           </div>
 
-          {sectionBreakdown.map((section) => (
-            <div key={section.label}>
-              <div className="mb-1.5 flex items-center justify-between">
-                <span className="text-[12px] font-medium text-foreground">
-                  {section.label}
+          <div>
+            <h4 className="mb-2 text-[12px] font-semibold text-foreground">Example careers</h4>
+            <div className="flex flex-wrap gap-1.5">
+              {details.exampleCareers.slice(0, 6).map((career, i) => (
+                <span
+                  key={i}
+                  className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-medium text-primary"
+                >
+                  {career}
                 </span>
-                <span className="text-[12px] font-semibold tabular-nums text-foreground">
-                  {section.score}
-                </span>
-              </div>
-              <div className="h-1.5 overflow-hidden rounded-full bg-border/80">
-                <div
-                  className={`h-full rounded-full transition-all duration-700 ${
-                    section.score === maxScore && maxScore > 0
-                      ? "bg-primary"
-                      : "bg-primary/60"
-                  }`}
-                  style={{ width: `${section.score}%` }}
-                />
-              </div>
+              ))}
             </div>
-          ))}
+          </div>
+
+          <div>
+            <h4 className="mb-2 text-[12px] font-semibold text-foreground">Where you might work</h4>
+            <div className="flex flex-wrap gap-1.5">
+              {details.workEnvironments.map((env, i) => (
+                <span
+                  key={i}
+                  className="rounded-lg bg-muted/20 px-2.5 py-0.5 text-[11px] text-muted-light"
+                >
+                  {env}
+                </span>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </div>
