@@ -1,11 +1,197 @@
 "use client";
 
-import type { AssessmentResult } from "@/lib/types";
+import { useState } from "react";
+import type { AssessmentResult, PathScore } from "@/lib/types";
 import { config } from "@/lib/scoring";
 
 interface ResultsDashboardProps {
   result: AssessmentResult;
   studentName?: string;
+}
+
+interface PathDetailProps {
+  path: PathScore;
+  rank: number;
+}
+
+function PathDetail({ path, rank }: PathDetailProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const sectionBreakdown = [
+    { label: "Interests", score: path.interests, color: "bg-blue-500" },
+    { label: "Strengths", score: path.strengths, color: "bg-green-500" },
+    { label: "Drivers", score: path.drivers, color: "bg-purple-500" },
+    { label: "Work Style & Environment", score: path.conditions, color: "bg-orange-500" },
+  ];
+
+  const maxScore = Math.max(...sectionBreakdown.map((s) => s.score));
+
+  return (
+    <div className="rounded-[20px] bg-card p-5 shadow-[var(--shadow)] sm:p-6">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <span className="text-[12px] font-semibold text-primary">#{rank}</span>
+          <h3 className="mt-0.5 text-[17px] font-semibold tracking-tight">{path.path}</h3>
+          <p className="mt-1.5 text-[14px] leading-relaxed text-muted">
+            {config.pathDescriptions[path.path]}
+          </p>
+        </div>
+        <div className="shrink-0 text-right">
+          <div className="text-[1.5rem] font-semibold tabular-nums tracking-tight text-primary">
+            {path.overall}
+          </div>
+          <div className="text-[12px] text-muted">{path.fitLevel}</div>
+        </div>
+      </div>
+
+      <div className="mt-4 h-1 overflow-hidden rounded-full bg-border/80">
+        <div
+          className="h-full rounded-full bg-primary transition-all duration-700"
+          style={{ width: `${path.overall}%` }}
+        />
+      </div>
+
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2 text-[13px] font-medium text-primary transition-colors hover:bg-primary/5"
+      >
+        {isExpanded ? "Show less" : "See detailed breakdown"}
+        <svg
+          className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {isExpanded && (
+        <div className="mt-5 space-y-4 border-t border-border/50 pt-5 animate-fade-in">
+          <div className="mb-3">
+            <p className="text-[13px] font-medium text-muted">
+              Section Breakdown
+            </p>
+            <p className="mt-1 text-[12px] text-muted-light">
+              Strongest contributor: <span className="font-semibold text-primary">{path.topContributor}</span>
+            </p>
+          </div>
+
+          {sectionBreakdown.map((section) => (
+            <div key={section.label}>
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-[13px] font-medium text-foreground">
+                  {section.label}
+                </span>
+                <span className="text-[13px] font-semibold tabular-nums text-foreground">
+                  {section.score}
+                </span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-border/80">
+                <div
+                  className={`h-full rounded-full transition-all duration-700 ${
+                    section.score === maxScore && maxScore > 0
+                      ? "bg-primary"
+                      : "bg-primary/60"
+                  }`}
+                  style={{ width: `${section.score}%` }}
+                />
+              </div>
+            </div>
+          ))}
+
+          <div className="mt-5 rounded-lg bg-muted/20 px-3 py-3 text-[12px] leading-relaxed text-muted-light">
+            <strong className="font-semibold text-foreground">What this means:</strong> Each
+            section measures different aspects. Your overall score combines all four, with the
+            strongest sections having the most influence on your fit for this path.
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface AllPathsDetailProps {
+  path: PathScore;
+  isTopPath: boolean;
+}
+
+function AllPathsDetail({ path, isTopPath }: AllPathsDetailProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const sectionBreakdown = [
+    { label: "Interests", score: path.interests },
+    { label: "Strengths", score: path.strengths },
+    { label: "Drivers", score: path.drivers },
+    { label: "Work Style & Environment", score: path.conditions },
+  ];
+
+  const maxScore = Math.max(...sectionBreakdown.map((s) => s.score));
+
+  return (
+    <div className="rounded-[16px] bg-card shadow-[var(--shadow)]">
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition-colors hover:bg-muted/10"
+      >
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          <span className="text-[14px] font-medium tracking-tight">{path.path}</span>
+          {isTopPath && (
+            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+              TOP 3
+            </span>
+          )}
+        </div>
+        <div className="flex shrink-0 items-center gap-4">
+          <div className="text-right">
+            <div className="text-[15px] font-semibold tabular-nums">{path.overall}</div>
+            <div className="text-[11px] text-muted">{path.fitLevel}</div>
+          </div>
+          <svg
+            className={`h-4 w-4 text-muted transition-transform ${isExpanded ? "rotate-180" : ""}`}
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+      </button>
+
+      {isExpanded && (
+        <div className="space-y-3 border-t border-border/50 px-5 pb-4 pt-4 animate-fade-in">
+          <div className="mb-2">
+            <p className="text-[12px] text-muted-light">
+              Strongest contributor: <span className="font-semibold text-primary">{path.topContributor}</span>
+            </p>
+          </div>
+
+          {sectionBreakdown.map((section) => (
+            <div key={section.label}>
+              <div className="mb-1.5 flex items-center justify-between">
+                <span className="text-[12px] font-medium text-foreground">
+                  {section.label}
+                </span>
+                <span className="text-[12px] font-semibold tabular-nums text-foreground">
+                  {section.score}
+                </span>
+              </div>
+              <div className="h-1.5 overflow-hidden rounded-full bg-border/80">
+                <div
+                  className={`h-full rounded-full transition-all duration-700 ${
+                    section.score === maxScore && maxScore > 0
+                      ? "bg-primary"
+                      : "bg-primary/60"
+                  }`}
+                  style={{ width: `${section.score}%` }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function ResultsDashboard({ result, studentName }: ResultsDashboardProps) {
@@ -35,36 +221,7 @@ export default function ResultsDashboard({ result, studentName }: ResultsDashboa
         </h2>
         <div className="space-y-3">
           {topPaths.map((path, i) => (
-            <div
-              key={path.path}
-              className="rounded-[20px] bg-card p-5 shadow-[var(--shadow)] sm:p-6"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0">
-                  <span className="text-[12px] font-semibold text-primary">
-                    #{i + 1}
-                  </span>
-                  <h3 className="mt-0.5 text-[17px] font-semibold tracking-tight">
-                    {path.path}
-                  </h3>
-                  <p className="mt-1.5 text-[14px] leading-relaxed text-muted">
-                    {config.pathDescriptions[path.path]}
-                  </p>
-                </div>
-                <div className="shrink-0 text-right">
-                  <div className="text-[1.5rem] font-semibold tabular-nums tracking-tight text-primary">
-                    {path.overall}
-                  </div>
-                  <div className="text-[12px] text-muted">{path.fitLevel}</div>
-                </div>
-              </div>
-              <div className="mt-4 h-1 overflow-hidden rounded-full bg-border/80">
-                <div
-                  className="h-full rounded-full bg-primary transition-all duration-700"
-                  style={{ width: `${path.overall}%` }}
-                />
-              </div>
-            </div>
+            <PathDetail key={path.path} path={path} rank={i + 1} />
           ))}
         </div>
       </section>
@@ -73,38 +230,13 @@ export default function ResultsDashboard({ result, studentName }: ResultsDashboa
         <h2 className="mb-4 text-[13px] font-semibold tracking-wide text-muted uppercase">
           All LifePath scores
         </h2>
-        <div className="overflow-hidden rounded-[20px] bg-card shadow-[var(--shadow)]">
-          <table className="w-full text-[14px]">
-            <thead>
-              <tr className="border-b border-border/70">
-                <th className="px-5 py-3 text-left text-[12px] font-medium text-muted">
-                  Path
-                </th>
-                <th className="px-5 py-3 text-right text-[12px] font-medium text-muted">
-                  Score
-                </th>
-                <th className="hidden px-5 py-3 text-right text-[12px] font-medium text-muted sm:table-cell">
-                  Fit
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {pathScores.map((p) => (
-                <tr
-                  key={p.path}
-                  className="border-b border-border/70 last:border-0"
-                >
-                  <td className="px-5 py-3.5 font-medium tracking-tight">{p.path}</td>
-                  <td className="px-5 py-3.5 text-right font-semibold tabular-nums">
-                    {p.overall}
-                  </td>
-                  <td className="hidden px-5 py-3.5 text-right text-muted sm:table-cell">
-                    {p.fitLevel}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="space-y-3">
+          {pathScores.map((path) => {
+            const isTopPath = topPaths.some((tp) => tp.path === path.path);
+            return (
+              <AllPathsDetail key={path.path} path={path} isTopPath={isTopPath} />
+            );
+          })}
         </div>
       </section>
 
