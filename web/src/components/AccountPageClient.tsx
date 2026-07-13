@@ -22,6 +22,7 @@ export default function AccountPageClient() {
     schoolName: string | null;
     advisorId: string | null;
     avatarEmoji: string | null;
+    profilePictureUrl: string | null;
     role: "student" | "admin";
     isSuperAdmin: boolean;
   } | null>(null);
@@ -42,7 +43,7 @@ export default function AccountPageClient() {
       const [profileResponse, accountOptions] = await Promise.all([
         supabase
           .from("profiles")
-          .select("full_name, email, school_id, advisor_id, avatar_emoji, role, is_super_admin, schools(name)")
+          .select("full_name, email, school_id, advisor_id, avatar_emoji, profile_picture_url, role, is_super_admin, schools(name)")
           .eq("id", user.id)
           .single(),
         getAccountOptions(supabase, user.id),
@@ -64,6 +65,7 @@ export default function AccountPageClient() {
         schoolName: schoolName,
         advisorId: profileData?.advisor_id ?? null,
         avatarEmoji: profileData?.avatar_emoji ?? null,
+        profilePictureUrl: profileData?.profile_picture_url ?? null,
         role: profileData?.role ?? "student",
         isSuperAdmin: profileData?.is_super_admin ?? false,
       });
@@ -100,6 +102,7 @@ export default function AccountPageClient() {
             schoolId={profile.schoolId}
             schoolName={profile.schoolName}
             avatarEmoji={profile.avatarEmoji}
+            profilePictureUrl={profile.profilePictureUrl}
             isSuperAdmin={profile.isSuperAdmin}
           />
         ) : (

@@ -15,6 +15,7 @@ interface AdvisorAccountFormProps {
   schoolId: string | null;
   schoolName: string | null;
   avatarEmoji: string | null;
+  profilePictureUrl: string | null;
   isSuperAdmin: boolean;
 }
 
@@ -26,6 +27,7 @@ export default function AdvisorAccountForm({
   schoolId,
   schoolName,
   avatarEmoji: initialAvatar,
+  profilePictureUrl: initialProfilePictureUrl,
   isSuperAdmin,
 }: AdvisorAccountFormProps) {
   const router = useRouter();
@@ -33,13 +35,95 @@ export default function AdvisorAccountForm({
   const [avatarEmoji, setAvatarEmoji] = useState<AvatarEmoji>(
     normalizeAvatar(initialAvatar),
   );
+  const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(initialProfilePictureUrl);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const dirty =
     fullName.trim() !== initialName.trim() ||
-    avatarEmoji !== normalizeAvatar(initialAvatar);
+    avatarEmoji !== normalizeAvatar(initialAvatar) ||
+    profilePictureUrl !== initialProfilePictureUrl;
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setError('Please upload an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image size should be less than 5MB');
+      return;
+    }
+
+    setUploadingImage(true);
+    setError('');
+    setSaved(false);
+
+    try {
+      const supabase = createClient();
+      
+      // Delete old profile picture if it exists
+      if (profilePictureUrl) {
+        const oldPath = profilePictureUrl.split('/').slice(-2).join('/');
+        await supabase.storage.from('profile-pictures').remove([oldPath]);
+      }
+
+      // Upload new image
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${userId}/${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError, data } = await supabase.storage
+        .from('profile-pictures')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) {
+        setError(uploadError.message);
+        setUploadingImage(false);
+        return;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('profile-pictures')
+        .getPublicUrl(fileName);
+
+      setProfilePictureUrl(publicUrl);
+      setUploadingImage(false);
+    } catch (err) {
+      setError('Failed to upload image');
+      setUploadingImage(false);
+    }
+  };
+
+  const handleRemoveImage = async () => {
+    if (!profilePictureUrl) return;
+
+    setUploadingImage(true);
+    setError('');
+    setSaved(false);
+
+    try {
+      const supabase = createClient();
+      const oldPath = profilePictureUrl.split('/').slice(-2).join('/');
+      
+      await supabase.storage.from('profile-pictures').remove([oldPath]);
+      setProfilePictureUrl(null);
+      setUploadingImage(false);
+    } catch (err) {
+      setError('Failed to remove image');
+      setUploadingImage(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,6 +144,7 @@ export default function AdvisorAccountForm({
       .update({
         full_name: name,
         avatar_emoji: avatarEmoji,
+        profile_picture_url: profilePictureUrl,
       })
       .eq("id", userId);
 
@@ -70,7 +155,7 @@ export default function AdvisorAccountForm({
     }
 
     await supabase.auth.updateUser({
-      data: { full_name: name, avatar_emoji: avatarEmoji },
+      data: { full_name: name, avatar_emoji: avatarEmoji, profile_picture_url: profilePictureUrl },
     });
 
     setLoading(false);
@@ -82,13 +167,74 @@ export default function AdvisorAccountForm({
     <div className="space-y-6">
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="text-center">
-          <AvatarSelector
-            value={avatarEmoji}
-            onChange={(emoji) => {
-              setAvatarEmoji(emoji);
-              setSaved(false);
-            }}
-          />
+          {/* Profile Picture or Avatar */}
+          <div className="relative inline-block">
+            {profilePictureUrl ? (
+              <div className="relative">
+                <img 
+                  src={profilePictureUrl} 
+                  alt="Profile" 
+                  className="h-32 w-32 rounded-full object-cover border-4 border-primary/20"
+                />
+                <button
+                  type="button"
+                  onClick={handleRemoveImage}
+                  disabled={uploadingImage}
+                  className="absolute bottom-0 right-0 rounded-full bg-danger p-2 text-white shadow-lg hover:bg-danger/90 transition-colors"
+                  title="Remove profile picture"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            ) : (
+              <AvatarSelector
+                value={avatarEmoji}
+                onChange={(emoji) => {
+                  setAvatarEmoji(emoji);
+                  setSaved(false);
+                }}
+              />
+            )}
+          </div>
+
+          {/* Upload Button */}
+          <div className="mt-4">
+            <label 
+              htmlFor="profile-picture-upload" 
+              className="inline-flex items-center gap-2 px-4 py-2 text-[14px] font-medium text-primary bg-primary/10 rounded-lg cursor-pointer hover:bg-primary/20 transition-colors"
+            >
+              {uploadingImage ? (
+                <>
+                  <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                  </svg>
+                  {profilePictureUrl ? 'Change' : 'Upload'} Profile Picture
+                </>
+              )}
+            </label>
+            <input
+              id="profile-picture-upload"
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              disabled={uploadingImage}
+              className="hidden"
+            />
+            <p className="mt-2 text-[13px] text-muted">
+              {profilePictureUrl ? 'Upload a new image to replace your current profile picture' : 'Upload an image (max 5MB) or keep using emoji avatar'}
+            </p>
+          </div>
+
           <h1 className="mt-5 text-[26px] font-semibold tracking-tight text-foreground">
             {displayName}
           </h1>

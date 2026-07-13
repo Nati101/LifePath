@@ -73,4 +73,5 @@ export interface Profile {
   advisor_id: string | null;
   avatar_emoji: string | null;
   is_super_admin: boolean;
+  profile_picture_url: string | null;
 }
