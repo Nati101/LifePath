@@ -128,7 +128,7 @@ export default function AdminStudentPageClient() {
             ) : (
               !allComplete && (
                 <p className="admin-detail-note">
-                  Results will appear here once all four sections are complete.
+                  Results will appear here once all nine career path sections are complete.
                 </p>
               )
             )}
