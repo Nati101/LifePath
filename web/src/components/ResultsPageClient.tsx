@@ -96,11 +96,11 @@ export default function ResultsPageClient() {
                   No results yet
                 </h1>
                 <p className="mb-2 text-[15px] leading-relaxed text-muted">
-                  Complete all four sections to unlock your LifePath snapshot.
+                  Complete all nine career path sections to unlock your LifePath snapshot.
                 </p>
                 {answeredCount > 0 && (
                   <p className="mb-8 text-[13px] text-muted-light">
-                    You&apos;ve answered {answeredCount} of 144 questions so far.
+                    You&apos;ve answered {answeredCount} of 36 questions so far.
                   </p>
                 )}
                 {answeredCount === 0 && <div className="mb-8" />}
@@ -119,10 +119,15 @@ export default function ResultsPageClient() {
         topPaths: result.top_paths,
         constructScores: result.construct_scores ?? {},
         sectionCompletion: {
-          interests: 1,
-          strengths: 1,
-          drivers: 1,
-          conditions: 1,
+          clinical_care: 1,
+          protection: 1,
+          learning_support: 1,
+          build_fix: 1,
+          stem_systems: 1,
+          business_leadership: 1,
+          creative: 1,
+          experience_service: 1,
+          outdoor_systems: 1,
         },
         allComplete: true,
       };

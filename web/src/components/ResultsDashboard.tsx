@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import type { AssessmentResult, PathScore } from "@/lib/types";
 import { config } from "@/lib/scoring";
 import { pathDetails } from "@/data/path-details";
+import { withBasePath } from "@/lib/supabase/client";
 
 interface ResultsDashboardProps {
   result: AssessmentResult;
@@ -287,6 +289,19 @@ export default function ResultsDashboard({ result, studentName }: ResultsDashboa
           ))}
         </ul>
       </section>
+
+      {/* Retake Assessment */}
+      <div className="text-center">
+        <Link
+          href={withBasePath("/assessment")}
+          className="btn-secondary inline-block"
+        >
+          Retake Assessment
+        </Link>
+        <p className="mt-3 text-[13px] text-muted">
+          Want to update your responses? You can retake any section.
+        </p>
+      </div>
     </div>
   );
 }
