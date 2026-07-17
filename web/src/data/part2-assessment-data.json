@@ -16,7 +16,7 @@
         {
           "id": "PHS-CR01",
           "section": "school_setup",
-          "text": "My current classes keep several doors open (or I know what I could change next term to open doors).",
+          "text": "I am willing to take more challenging high school courses if they keep more post-secondary options open for me.",
           "factor": "AR"
         },
         {
@@ -28,7 +28,7 @@
         {
           "id": "PHS-CR03",
           "section": "school_setup",
-          "text": "If I'm missing a required class (like math, science, or English), I know how I could take it later (upgrade/summer/night school).",
+          "text": "If I don't have the courses or marks I need, I am willing to upgrade to reach my post-secondary goals.",
           "factor": "AR"
         },
         {
@@ -52,19 +52,19 @@
         {
           "id": "PHS-PS01",
           "section": "training_style",
-          "text": "I'm open to exploring a 4+ year university degree.",
+          "text": "I am willing to pursue a 4+ year university degree if it helps me achieve my career goals.",
           "factor": "UP"
         },
         {
           "id": "PHS-PS02",
           "section": "training_style",
-          "text": "I'm open to exploring a 1–3 year college/polytechnic program.",
+          "text": "I'm interested in a college diploma or certificate program that takes less than four years to complete.",
           "factor": "CP"
         },
         {
           "id": "PHS-PS03",
           "section": "training_style",
-          "text": "I'm open to exploring a trade or apprenticeship (earn while you learn).",
+          "text": "I'm interested in a skilled trade or apprenticeship (earn while you learn).",
           "factor": "TP"
         },
         {
@@ -76,7 +76,7 @@
         {
           "id": "PHS-PS05",
           "section": "training_style",
-          "text": "I want a planned 'explore year' before I choose my next step.",
+          "text": "I want to take a planned gap year to explore my options before choosing my next step.",
           "factor": "GP"
         },
         {
@@ -166,7 +166,7 @@
         {
           "id": "PHS-EX01",
           "section": "exploration",
-          "text": "In the past 6–8 weeks, I've done at least 1 step to explore options (examples: searched programs/careers, watched a video, asked someone, visited a website, attended a session).",
+          "text": "In the past 8 weeks, I've taken at least one step to explore my future education or career options (searched programs/careers, watched a video, asked someone, visited a website, attended a session).",
           "factor": "EX"
         },
         {
@@ -196,7 +196,7 @@
         {
           "id": "PHS-EX06",
           "section": "exploration",
-          "text": "I can follow a simple weekly plan for 4 weeks (example: 2 small tasks per week).",
+          "text": "I can set a goal, make a plan, and follow through until it's finished.",
           "factor": "PL"
         },
         {

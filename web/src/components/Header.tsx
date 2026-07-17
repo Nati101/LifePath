@@ -99,7 +99,7 @@ export default function Header() {
                     href={withBasePath("/part2")}
                     className={`nav-link ${isActive("/part2") ? "nav-link-active" : ""}`}
                   >
-                    After High School
+                    My Plan
                   </Link>
                 </>
               )}

@@ -57,7 +57,7 @@ export default function Part2Page() {
       <div className="page-shell py-10 sm:py-12">
         <div className="page-content mx-auto max-w-2xl text-center">
           <h1 className="mb-4 text-[2rem] font-semibold tracking-tight">
-            Part 2: My Path After High School
+            My After High School Plan
           </h1>
           <p className="mb-8 text-[16px] leading-relaxed text-muted">
             Before starting Part 2, you need to complete Part 1 (LifePath Career Assessment).
@@ -75,7 +75,7 @@ export default function Part2Page() {
       <div className="page-content mx-auto max-w-2xl">
         <div className="text-center">
           <h1 className="mb-4 text-[2rem] font-semibold tracking-tight">
-            Part 2: My Path After High School
+            My After High School Plan
           </h1>
           <p className="mb-8 text-[16px] leading-relaxed text-muted">
             Plan your next steps after high school. Get personalized route recommendations based on your readiness, preferences, and life situation.
