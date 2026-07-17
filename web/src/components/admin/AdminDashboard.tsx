@@ -150,9 +150,13 @@ export default function AdminDashboard({ data }: AdminDashboardProps) {
   return (
     <div className="admin-page">
       <div className="admin-page__header">
-        <h1 className="admin-page__title">Admin dashboard</h1>
+        <h1 className="admin-page__title">
+          {data.scopedToAdvisor ? "My students" : "Admin dashboard"}
+        </h1>
         <p className="admin-page__subtitle">
-          Monitor student progress, filter by class or advisor, and review results.
+          {data.scopedToAdvisor
+            ? "Monitor progress and results for students assigned to you."
+            : "Monitor student progress, filter by class or advisor, and review results."}
         </p>
       </div>
 
@@ -211,19 +215,21 @@ export default function AdminDashboard({ data }: AdminDashboardProps) {
             ))}
           </select>
 
-          <select
-            value={advisorFilter}
-            onChange={(event) => setAdvisorFilter(event.target.value)}
-            className="select-field admin-toolbar__select"
-            aria-label="Filter by advisor"
-          >
-            <option value="all">All advisors</option>
-            {data.advisors.map((option) => (
-              <option key={option.id} value={option.id}>
-                {option.name}
-              </option>
-            ))}
-          </select>
+          {!data.scopedToAdvisor && (
+            <select
+              value={advisorFilter}
+              onChange={(event) => setAdvisorFilter(event.target.value)}
+              className="select-field admin-toolbar__select"
+              aria-label="Filter by advisor"
+            >
+              <option value="all">All advisors</option>
+              {data.advisors.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.name}
+                </option>
+              ))}
+            </select>
+          )}
 
           <select
             value={statusFilter}
