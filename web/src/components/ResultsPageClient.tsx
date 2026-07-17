@@ -138,6 +138,7 @@ export default function ResultsPageClient() {
             <ResultsDashboard
               result={assessmentResult}
               studentName={profile?.full_name ?? undefined}
+              allowRetake
             />
           </div>,
         );

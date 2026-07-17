@@ -67,8 +67,14 @@ export default function Part2AssessmentPageClient() {
         targetSection = sectionParam as Part2SectionKey;
       }
 
+      const sectionItems = getPart2SectionItems(targetSection);
+      const safeIndex =
+        targetSection === session.current_section
+          ? Math.min(Math.max(session.current_index, 0), Math.max(sectionItems.length - 1, 0))
+          : 0;
+
       setCurrentSection(targetSection);
-      setCurrentIndex(session.current_index);
+      setCurrentIndex(safeIndex);
       setLoading(false);
     }
 

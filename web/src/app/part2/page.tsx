@@ -5,7 +5,12 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { createClient, withBasePath } from "@/lib/supabase/client";
-import { hasPart1Completed, getPart2Session, getPart2Results } from "@/lib/part2-persistence";
+import {
+  hasPart1Completed,
+  getPart2Session,
+  getPart2Results,
+  resetPart2Assessment,
+} from "@/lib/part2-persistence";
 
 export default function Part2Page() {
   const ready = useAuthGuard({ admin: false });
@@ -14,14 +19,18 @@ export default function Part2Page() {
   const [part1Complete, setPart1Complete] = useState(false);
   const [part2Started, setPart2Started] = useState(false);
   const [part2Complete, setPart2Complete] = useState(false);
+  const [retaking, setRetaking] = useState(false);
+  const [retakeError, setRetakeError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!ready) return;
 
     async function load() {
       const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (!user) {
         router.replace(withBasePath("/login"));
         return;
@@ -33,7 +42,7 @@ export default function Part2Page() {
       if (part1Done) {
         const session = await getPart2Session(supabase, user.id);
         const results = await getPart2Results(supabase, user.id);
-        
+
         setPart2Started(!!session);
         setPart2Complete(!!results);
       }
@@ -43,6 +52,35 @@ export default function Part2Page() {
 
     void load();
   }, [ready, router]);
+
+  const handleRetake = async () => {
+    const confirmed = window.confirm(
+      "This will clear all your After High School Plan answers and results so you can start fresh. Continue?",
+    );
+    if (!confirmed) return;
+
+    setRetaking(true);
+    setRetakeError(null);
+
+    try {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        router.replace(withBasePath("/login"));
+        return;
+      }
+
+      await resetPart2Assessment(supabase, user.id);
+      router.push(withBasePath("/part2/assessment"));
+      router.refresh();
+    } catch (err) {
+      setRetakeError(err instanceof Error ? err.message : "Could not reset assessment");
+      setRetaking(false);
+    }
+  };
 
   if (!ready || loading) {
     return (
@@ -78,13 +116,14 @@ export default function Part2Page() {
             My After High School Plan
           </h1>
           <p className="mb-8 text-[16px] leading-relaxed text-muted">
-            Plan your next steps after high school. Get personalized route recommendations based on your readiness, preferences, and life situation.
+            Plan your next steps after high school. Get personalized route recommendations based on
+            your readiness, preferences, and life situation.
           </p>
         </div>
 
         <div className="space-y-4">
           <div className="rounded-[20px] bg-card p-6 shadow-[var(--shadow)]">
-            <h2 className="mb-3 text-[17px] font-semibold">What you'll discover</h2>
+            <h2 className="mb-3 text-[17px] font-semibold">What you&apos;ll discover</h2>
             <ul className="space-y-2">
               {[
                 "Which post-secondary routes fit your situation best",
@@ -136,7 +175,7 @@ export default function Part2Page() {
               Start Part 2 Assessment
             </Link>
           )}
-          
+
           {part2Started && !part2Complete && (
             <Link href={withBasePath("/part2/assessment")} className="btn-primary block">
               Continue Part 2
@@ -148,12 +187,15 @@ export default function Part2Page() {
               <Link href={withBasePath("/part2/results")} className="btn-primary block">
                 View Part 2 Results
               </Link>
-              <Link
-                href={withBasePath("/part2/assessment")}
-                className="btn-secondary block"
+              <button
+                type="button"
+                onClick={handleRetake}
+                disabled={retaking}
+                className="btn-secondary w-full disabled:opacity-60"
               >
-                Retake Part 2
-              </Link>
+                {retaking ? "Resetting…" : "Retake Part 2"}
+              </button>
+              {retakeError && <p className="text-[13px] text-danger">{retakeError}</p>}
             </>
           )}
 

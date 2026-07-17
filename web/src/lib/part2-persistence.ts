@@ -202,3 +202,21 @@ export async function hasPart1Completed(
 
   return !!data;
 }
+
+/** Wipe Part 2 answers/results and start a fresh session. */
+export async function resetPart2Assessment(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<Part2Session> {
+  const { error: deleteError } = await supabase
+    .from("part2_sessions")
+    .delete()
+    .eq("user_id", userId);
+
+  if (deleteError) {
+    console.error("resetPart2Assessment delete failed:", deleteError.message);
+    throw new Error(deleteError.message);
+  }
+
+  return getOrCreatePart2Session(supabase, userId);
+}

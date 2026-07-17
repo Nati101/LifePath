@@ -1,15 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { AssessmentResult, PathScore } from "@/lib/types";
 import { config } from "@/lib/scoring";
 import { pathDetails } from "@/data/path-details";
-import { withBasePath } from "@/lib/supabase/client";
+import { resetAssessment } from "@/lib/assessment/persistence";
+import { createClient, withBasePath } from "@/lib/supabase/client";
 
 interface ResultsDashboardProps {
   result: AssessmentResult;
   studentName?: string;
+  allowRetake?: boolean;
 }
 
 interface PathDetailProps {
@@ -191,8 +193,44 @@ function AllPathsDetail({ path, isTopPath }: AllPathsDetailProps) {
   );
 }
 
-export default function ResultsDashboard({ result, studentName }: ResultsDashboardProps) {
+export default function ResultsDashboard({
+  result,
+  studentName,
+  allowRetake = false,
+}: ResultsDashboardProps) {
+  const router = useRouter();
   const { topPaths, pathScores, constructScores, tieNote } = result;
+  const [retaking, setRetaking] = useState(false);
+  const [retakeError, setRetakeError] = useState<string | null>(null);
+
+  const handleRetake = async () => {
+    const confirmed = window.confirm(
+      "This will clear all your Career Paths answers and results so you can start fresh. Continue?",
+    );
+    if (!confirmed) return;
+
+    setRetaking(true);
+    setRetakeError(null);
+
+    try {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        router.replace(withBasePath("/login"));
+        return;
+      }
+
+      await resetAssessment(supabase, user.id);
+      router.push(withBasePath("/assessment"));
+      router.refresh();
+    } catch (err) {
+      setRetakeError(err instanceof Error ? err.message : "Could not reset assessment");
+      setRetaking(false);
+    }
+  };
 
   return (
     <div className="animate-fade-in space-y-10">
@@ -291,17 +329,24 @@ export default function ResultsDashboard({ result, studentName }: ResultsDashboa
       </section>
 
       {/* Retake Assessment */}
-      <div className="text-center">
-        <Link
-          href={withBasePath("/assessment")}
-          className="btn-secondary inline-block"
-        >
-          Retake Assessment
-        </Link>
-        <p className="mt-3 text-[13px] text-muted">
-          Want to update your responses? You can retake any section.
-        </p>
-      </div>
+      {allowRetake && (
+        <div className="text-center">
+          <button
+            type="button"
+            onClick={handleRetake}
+            disabled={retaking}
+            className="btn-secondary inline-block disabled:opacity-60"
+          >
+            {retaking ? "Resetting…" : "Retake Assessment"}
+          </button>
+          <p className="mt-3 text-[13px] text-muted">
+            This clears your answers and lets you start Career Paths again.
+          </p>
+          {retakeError && (
+            <p className="mt-2 text-[13px] text-danger">{retakeError}</p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

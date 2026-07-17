@@ -239,6 +239,11 @@ export default function SectionFlow({ section }: SectionFlowProps) {
         <SectionComplete
           section={section}
           allSectionsComplete={allSectionsComplete}
+          onChangeAnswers={() => {
+            setCurrentStep(0);
+            setPhase("questions");
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
         />
       </>
     );

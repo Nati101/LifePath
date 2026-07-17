@@ -176,3 +176,60 @@ export async function loadStudentAssessment(
 
   return { session, responses, result };
 }
+
+/** Wipe Part 1 answers/results and start a fresh session. */
+export async function resetAssessment(
+  supabase: SupabaseClient,
+  userId: string,
+) {
+  const { error: deleteError } = await supabase
+    .from("assessment_sessions")
+    .delete()
+    .eq("user_id", userId);
+
+  if (deleteError) {
+    console.error("resetAssessment delete failed:", deleteError.message);
+    throw new Error(deleteError.message);
+  }
+
+  return getOrCreateSession(supabase, userId, "clinical_care");
+}
+
+/** Clear answers for one section so the student can retake it. */
+export async function resetSectionResponses(
+  supabase: SupabaseClient,
+  params: {
+    sessionId: string;
+    userId: string;
+    section: SectionKey;
+  },
+) {
+  const { error: responseError } = await supabase
+    .from("responses")
+    .delete()
+    .eq("session_id", params.sessionId)
+    .eq("section", params.section);
+
+  if (responseError) {
+    console.error("resetSectionResponses failed:", responseError.message);
+    throw new Error(responseError.message);
+  }
+
+  // Results cascade only on session delete; mark incomplete so scores recompute later.
+  const { error: sessionError } = await supabase
+    .from("assessment_sessions")
+    .update({
+      status: "in_progress",
+      completed_at: null,
+      current_section: params.section,
+    })
+    .eq("id", params.sessionId);
+
+  if (sessionError) {
+    console.error("resetSectionResponses session update failed:", sessionError.message);
+    throw new Error(sessionError.message);
+  }
+
+  // Best-effort: remove stale results if a delete policy exists.
+  await supabase.from("results").delete().eq("user_id", params.userId);
+}
