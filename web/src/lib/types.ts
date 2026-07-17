@@ -1,4 +1,13 @@
-export type SectionKey = "interests" | "strengths" | "drivers" | "conditions";
+export type SectionKey = 
+  | "clinical_care"
+  | "protection"
+  | "learning_support"
+  | "build_fix"
+  | "stem_systems"
+  | "business_leadership"
+  | "creative"
+  | "experience_service"
+  | "outdoor_systems";
 export type UserRole = "student" | "admin";
 
 export interface AssessmentItem {
@@ -44,13 +53,8 @@ export type Responses = Record<string, number>;
 
 export interface PathScore {
   path: string;
-  interests: number;
-  strengths: number;
-  drivers: number;
-  conditions: number;
-  overall: number;
+  score: number;
   fitLevel: string;
-  topContributor: string;
 }
 
 export interface AssessmentResult {

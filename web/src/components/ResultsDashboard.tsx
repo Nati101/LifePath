@@ -31,7 +31,7 @@ function PathDetail({ path, rank }: PathDetailProps) {
         </div>
         <div className="shrink-0 text-right">
           <div className="text-[1.5rem] font-semibold tabular-nums tracking-tight text-primary">
-            {path.overall}
+            {path.score}
           </div>
           <div className="text-[12px] text-muted">{path.fitLevel}</div>
         </div>
@@ -40,7 +40,7 @@ function PathDetail({ path, rank }: PathDetailProps) {
       <div className="mt-4 h-1 overflow-hidden rounded-full bg-border/80">
         <div
           className="h-full rounded-full bg-primary transition-all duration-700"
-          style={{ width: `${path.overall}%` }}
+          style={{ width: `${path.score}%` }}
         />
       </div>
 
@@ -136,7 +136,7 @@ function AllPathsDetail({ path, isTopPath }: AllPathsDetailProps) {
         </div>
         <div className="flex shrink-0 items-center gap-4">
           <div className="text-right">
-            <div className="text-[15px] font-semibold tabular-nums">{path.overall}</div>
+            <div className="text-[15px] font-semibold tabular-nums">{path.score}</div>
             <div className="text-[11px] text-muted">{path.fitLevel}</div>
           </div>
           <svg
