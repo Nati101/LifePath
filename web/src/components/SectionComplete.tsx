@@ -8,14 +8,22 @@ import type { SectionKey } from "@/lib/types";
 interface SectionCompleteProps {
   section: SectionKey;
   allSectionsComplete: boolean;
+  nextSectionHref?: string | null;
   onChangeAnswers?: () => void;
 }
 
 export default function SectionComplete({
   section,
   allSectionsComplete,
+  nextSectionHref,
   onChangeAnswers,
 }: SectionCompleteProps) {
+  const primaryHref = allSectionsComplete
+    ? withBasePath("/results")
+    : withBasePath(nextSectionHref ?? "/assessment");
+
+  const primaryLabel = allSectionsComplete ? "View results" : "Next section";
+
   return (
     <div className="page-shell centered">
       <div className="page-content animate-fade-in text-center">
@@ -38,16 +46,21 @@ export default function SectionComplete({
         <p className="mx-auto mb-10 max-w-sm text-[16px] leading-relaxed text-muted">
           {allSectionsComplete
             ? "All nine career path sections are done. Your results are ready to view."
-            : "Nice work. Head back to choose your next section when you're ready."}
+            : "Nice work. Continue to the next career path section."}
         </p>
 
         <div className="mx-auto flex w-full max-w-sm flex-col gap-3">
-          <Link
-            href={withBasePath(allSectionsComplete ? "/results" : "/assessment")}
-            className="btn-primary"
-          >
-            {allSectionsComplete ? "View results" : "Back to sections"}
+          <Link href={primaryHref} className="btn-primary">
+            {primaryLabel}
           </Link>
+          {!allSectionsComplete && (
+            <Link
+              href={withBasePath("/assessment")}
+              className="text-[14px] font-medium text-muted transition-colors hover:text-foreground"
+            >
+              Back to all sections
+            </Link>
+          )}
           {onChangeAnswers && (
             <button
               type="button"
