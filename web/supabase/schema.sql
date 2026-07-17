@@ -80,16 +80,23 @@ create policy "Admins can read all profiles"
   using (public.is_admin());
 
 -- Assessment sessions
-do $$ begin
-  create type section_key as enum ('interests', 'strengths', 'drivers', 'conditions');
-exception when duplicate_object then null;
-end $$;
-
 create table if not exists public.assessment_sessions (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.profiles(id) on delete cascade,
   status text not null default 'in_progress' check (status in ('in_progress', 'completed')),
-  current_section section_key not null default 'interests',
+  current_section text not null default 'clinical_care' check (
+    current_section in (
+      'clinical_care',
+      'protection',
+      'learning_support',
+      'build_fix',
+      'stem_systems',
+      'business_leadership',
+      'creative',
+      'experience_service',
+      'outdoor_systems'
+    )
+  ),
   current_index int not null default 0,
   started_at timestamptz not null default now(),
   completed_at timestamptz,
@@ -133,7 +140,19 @@ create table if not exists public.responses (
   session_id uuid not null references public.assessment_sessions(id) on delete cascade,
   user_id uuid not null references public.profiles(id) on delete cascade,
   item_id text not null,
-  section section_key not null,
+  section text not null check (
+    section in (
+      'clinical_care',
+      'protection',
+      'learning_support',
+      'build_fix',
+      'stem_systems',
+      'business_leadership',
+      'creative',
+      'experience_service',
+      'outdoor_systems'
+    )
+  ),
   rating int not null check (rating between 1 and 4),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
