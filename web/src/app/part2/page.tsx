@@ -55,7 +55,7 @@ export default function Part2Page() {
 
   const handleRetake = async () => {
     const confirmed = window.confirm(
-      "This will clear all your After High School Plan answers and results so you can start fresh. Continue?",
+      "This starts a new After High School Plan attempt. Your previous results will be saved so you can review them later. Continue?",
     );
     if (!confirmed) return;
 

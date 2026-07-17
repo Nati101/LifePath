@@ -1,12 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import SectionProgress from "@/components/admin/SectionProgress";
+import ResultsAttemptPicker, { formatAttemptDate } from "@/components/ResultsAttemptPicker";
 import ResultsDashboard from "@/components/ResultsDashboard";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { normalizeAvatar } from "@/lib/avatars";
+import {
+  listAllAttempts,
+  toAssessmentResult,
+  type StoredAssessmentResult,
+} from "@/lib/assessment/persistence";
 import { getSectionCompletion } from "@/lib/scoring";
 import { createClient, withBasePath } from "@/lib/supabase/client";
 import type { Responses } from "@/lib/types";
@@ -16,7 +22,12 @@ export default function AdminStudentPageClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const studentId = searchParams.get("id");
-  const [content, setContent] = useState<ReactNode>(null);
+  const [header, setHeader] = useState<ReactNode>(null);
+  const [responses, setResponses] = useState<Responses>({});
+  const [attempts, setAttempts] = useState<StoredAssessmentResult[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
     if (!ready) return;
@@ -39,26 +50,14 @@ export default function AdminStudentPageClient() {
 
       if (!profile) {
         if (!cancelled) {
-          setContent(
-            <div className="page-shell justify-center">
-              <div className="page-content text-center">
-                <p className="mb-6 text-[15px] text-muted">Student not found.</p>
-                <Link
-                  href={withBasePath("/admin")}
-                  className="text-[14px] font-medium text-primary transition-opacity hover:opacity-80"
-                >
-                  Back to admin
-                </Link>
-              </div>
-            </div>,
-          );
+          setNotFound(true);
+          setLoading(false);
         }
         return;
       }
 
-      const [{ data: result }, { data: responseRows }, { data: classRow }, { data: advisorRow }] =
+      const [{ data: responseRows }, { data: classRow }, { data: advisorRow }, allAttempts] =
         await Promise.all([
-          supabase.from("results").select("*").eq("user_id", studentId).single(),
           supabase.from("responses").select("item_id, rating").eq("user_id", studentId),
           profile.class_id
             ? supabase.from("classes").select("name").eq("id", profile.class_id).single()
@@ -70,22 +69,24 @@ export default function AdminStudentPageClient() {
                 .eq("id", profile.advisor_id)
                 .single()
             : Promise.resolve({ data: null }),
+          listAllAttempts(supabase, studentId!),
         ]);
 
-      const responses: Responses = {};
+      const loadedResponses: Responses = {};
       for (const row of responseRows ?? []) {
-        responses[row.item_id] = row.rating;
+        loadedResponses[row.item_id] = row.rating;
       }
 
-      const sectionCompletion = getSectionCompletion(responses);
-      const allComplete = Object.values(sectionCompletion).every((value) => value >= 1);
       const classLabel = classRow?.name ?? profile.class_name ?? null;
       const advisorLabel =
         advisorRow?.full_name?.trim() || advisorRow?.email || profile.advisor || null;
       const displayName = profile.full_name?.trim() || profile.email;
 
       if (!cancelled) {
-        setContent(
+        setResponses(loadedResponses);
+        setAttempts(allAttempts);
+        setSelectedId(allAttempts[0]?.id ?? null);
+        setHeader(
           <>
             <Link href={withBasePath("/admin")} className="admin-back-link">
               ← Back to admin
@@ -104,45 +105,9 @@ export default function AdminStudentPageClient() {
                 </div>
               </div>
             </div>
-
-            {!allComplete && (
-              <section className="admin-detail-section">
-                <h2 className="admin-detail-section__title">Assessment progress</h2>
-                <div className="surface-card p-5 sm:p-6">
-                  <SectionProgress responses={responses} />
-                </div>
-              </section>
-            )}
-
-            {result ? (
-              <ResultsDashboard
-                result={{
-                  pathScores: result.path_scores,
-                  topPaths: result.top_paths,
-                  constructScores: result.construct_scores ?? {},
-                  sectionCompletion,
-                  allComplete,
-                }}
-                studentName={profile.full_name ?? undefined}
-              />
-            ) : (
-              !allComplete && (
-                <p className="admin-detail-note">
-                  Results will appear here once all nine career path sections are complete.
-                </p>
-              )
-            )}
-
-            {allComplete && !result && (
-              <div className="surface-card p-5 sm:p-6">
-                <p className="text-[15px] text-muted">
-                  This student finished all sections but results have not been saved yet. Ask them
-                  to open the results page once more.
-                </p>
-              </div>
-            )}
           </>,
         );
+        setLoading(false);
       }
     }
 
@@ -153,7 +118,30 @@ export default function AdminStudentPageClient() {
     };
   }, [ready, router, studentId]);
 
-  if (!ready || !content) {
+  const selected = useMemo(
+    () => attempts.find((attempt) => attempt.id === selectedId) ?? attempts[0] ?? null,
+    [attempts, selectedId],
+  );
+
+  const sectionCompletion = getSectionCompletion(responses);
+  const allComplete = Object.values(sectionCompletion).every((value) => value >= 1);
+
+  const pickerOptions = useMemo(() => {
+    return attempts.map((attempt) => {
+      const date = formatAttemptDate(attempt.computed_at ?? attempt.completed_at);
+      const top = attempt.top_paths?.[0]?.path;
+      return {
+        id: attempt.id,
+        label:
+          attempt.source === "current"
+            ? `Latest result · ${date}`
+            : `Previous result · ${date}`,
+        sublabel: top,
+      };
+    });
+  }, [attempts]);
+
+  if (!ready || loading) {
     return (
       <div className="admin-shell">
         <div className="admin-page-content">
@@ -163,9 +151,70 @@ export default function AdminStudentPageClient() {
     );
   }
 
+  if (notFound) {
+    return (
+      <div className="admin-shell">
+        <div className="admin-page-content">
+          <div className="page-shell justify-center">
+            <div className="page-content text-center">
+              <p className="mb-6 text-[15px] text-muted">Student not found.</p>
+              <Link
+                href={withBasePath("/admin")}
+                className="text-[14px] font-medium text-primary transition-opacity hover:opacity-80"
+              >
+                Back to admin
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="admin-shell">
-      <div className="admin-page-content">{content}</div>
+      <div className="admin-page-content space-y-6">
+        {header}
+
+        {!allComplete && (
+          <section className="admin-detail-section">
+            <h2 className="admin-detail-section__title">Assessment progress</h2>
+            <div className="surface-card p-5 sm:p-6">
+              <SectionProgress responses={responses} />
+            </div>
+          </section>
+        )}
+
+        {attempts.length > 0 && (
+          <ResultsAttemptPicker
+            attempts={pickerOptions}
+            selectedId={selected?.id ?? ""}
+            onSelect={setSelectedId}
+          />
+        )}
+
+        {selected ? (
+          <ResultsDashboard
+            result={toAssessmentResult(selected)}
+            studentName={undefined}
+          />
+        ) : (
+          !allComplete && (
+            <p className="admin-detail-note">
+              Results will appear here once all nine career path sections are complete.
+            </p>
+          )
+        )}
+
+        {allComplete && attempts.length === 0 && (
+          <div className="surface-card p-5 sm:p-6">
+            <p className="text-[15px] text-muted">
+              This student finished all sections but results have not been saved yet. Ask them to
+              open the results page once more.
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

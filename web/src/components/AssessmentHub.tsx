@@ -80,7 +80,7 @@ export default function AssessmentHub() {
 
   const handleRetakeAll = async () => {
     const confirmed = window.confirm(
-      "This will clear all your Career Paths answers and results so you can start fresh. Continue?",
+      "This starts a new Career Paths attempt. Your previous results will be saved so you can review them later. Continue?",
     );
     if (!confirmed) return;
 

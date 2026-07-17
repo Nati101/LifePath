@@ -1,12 +1,25 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { computeResults } from "@/lib/scoring";
-import type { Responses, SectionKey } from "@/lib/types";
+import type { AssessmentResult, PathScore, Responses, SectionKey } from "@/lib/types";
+
+export interface StoredAssessmentResult {
+  id: string;
+  session_id?: string | null;
+  user_id: string;
+  path_scores: PathScore[];
+  top_paths: PathScore[];
+  construct_scores?: Record<string, number> | null;
+  section_scores?: unknown;
+  computed_at?: string;
+  completed_at?: string;
+  archived_at?: string;
+  source: "current" | "history";
+}
 
 export async function ensureProfile(
   supabase: SupabaseClient,
   user: { id: string; email?: string | null; user_metadata?: Record<string, unknown> },
 ) {
-  // Signup trigger usually creates the row; this is a no-op if it already exists.
   const { error } = await supabase.from("profiles").upsert(
     {
       id: user.id,
@@ -18,7 +31,6 @@ export async function ensureProfile(
   );
 
   if (error) {
-    // Concurrent signup can still race; treat existing profile as success.
     if (error.code === "23505") return;
     console.error("ensureProfile failed:", error.message);
     throw new Error(`Could not create profile: ${error.message}`);
@@ -53,7 +65,6 @@ export async function getOrCreateSession(
     .single();
 
   if (insertError) {
-    // Another request may have created the session first.
     if (insertError.code === "23505") {
       const { data: raced, error: refetchError } = await supabase
         .from("assessment_sessions")
@@ -161,27 +172,126 @@ export async function saveResults(
   return result;
 }
 
+export async function getCurrentResult(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<StoredAssessmentResult | null> {
+  const { data, error } = await supabase
+    .from("results")
+    .select("*")
+    .eq("user_id", userId)
+    .order("computed_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.error("getCurrentResult failed:", error.message);
+    throw new Error(error.message);
+  }
+
+  if (!data) return null;
+
+  return {
+    ...data,
+    source: "current",
+  };
+}
+
+export async function listResultHistory(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<StoredAssessmentResult[]> {
+  const { data, error } = await supabase
+    .from("assessment_result_history")
+    .select("*")
+    .eq("user_id", userId)
+    .order("completed_at", { ascending: false });
+
+  if (error) {
+    console.error("listResultHistory failed:", error.message);
+    return [];
+  }
+
+  return (data ?? []).map((row) => ({
+    ...row,
+    source: "history" as const,
+  }));
+}
+
+export async function listAllAttempts(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<StoredAssessmentResult[]> {
+  const [current, history] = await Promise.all([
+    getCurrentResult(supabase, userId),
+    listResultHistory(supabase, userId),
+  ]);
+
+  return [...(current ? [current] : []), ...history];
+}
+
+export function toAssessmentResult(stored: StoredAssessmentResult): AssessmentResult {
+  return {
+    pathScores: stored.path_scores,
+    topPaths: stored.top_paths,
+    constructScores: stored.construct_scores ?? {},
+    sectionCompletion: {
+      clinical_care: 1,
+      protection: 1,
+      learning_support: 1,
+      build_fix: 1,
+      stem_systems: 1,
+      business_leadership: 1,
+      creative: 1,
+      experience_service: 1,
+      outdoor_systems: 1,
+    },
+    allComplete: true,
+  };
+}
+
+async function archiveCurrentResult(
+  supabase: SupabaseClient,
+  userId: string,
+) {
+  const current = await getCurrentResult(supabase, userId);
+  if (!current) return;
+
+  const { error } = await supabase.from("assessment_result_history").insert({
+    user_id: userId,
+    path_scores: current.path_scores,
+    top_paths: current.top_paths,
+    construct_scores: current.construct_scores ?? {},
+    section_scores: current.section_scores ?? current.path_scores,
+    completed_at: current.computed_at ?? new Date().toISOString(),
+  });
+
+  if (error) {
+    console.error("archiveCurrentResult failed:", error.message);
+    throw new Error(
+      `Could not save previous results before retake. Please run the results history SQL migration. (${error.message})`,
+    );
+  }
+}
+
 export async function loadStudentAssessment(
   supabase: SupabaseClient,
   userId: string,
 ) {
   const session = await getOrCreateSession(supabase, userId);
   const responses = await loadResponses(supabase, session.id);
-
-  const { data: result } = await supabase
-    .from("results")
-    .select("*")
-    .eq("user_id", userId)
-    .maybeSingle();
+  const result = await getCurrentResult(supabase, userId);
 
   return { session, responses, result };
 }
 
-/** Wipe Part 1 answers/results and start a fresh session. */
+/** Archive current results, then wipe answers and start a fresh session. */
 export async function resetAssessment(
   supabase: SupabaseClient,
   userId: string,
 ) {
+  await archiveCurrentResult(supabase, userId);
+
   const { error: deleteError } = await supabase
     .from("assessment_sessions")
     .delete()
@@ -215,7 +325,6 @@ export async function resetSectionResponses(
     throw new Error(responseError.message);
   }
 
-  // Results cascade only on session delete; mark incomplete so scores recompute later.
   const { error: sessionError } = await supabase
     .from("assessment_sessions")
     .update({
@@ -230,6 +339,5 @@ export async function resetSectionResponses(
     throw new Error(sessionError.message);
   }
 
-  // Best-effort: remove stale results if a delete policy exists.
   await supabase.from("results").delete().eq("user_id", params.userId);
 }
