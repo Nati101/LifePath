@@ -12,7 +12,7 @@ export type UserRole = "student" | "admin";
 
 export interface AssessmentItem {
   id: string;
-  section: SectionKey;
+  section: string;
   text: string;
   primaryPath?: string | null;
   weights?: Record<string, number>;
@@ -36,7 +36,7 @@ export interface AssessmentConfig {
   pathNames: Record<string, string>;
   pathCodes: string[];
   sections: Record<SectionKey, SectionConfig>;
-  weights: Record<SectionKey, number>;
+  weights?: Record<string, number>;
   thresholds: {
     veryStrong: number;
     strong: number;
