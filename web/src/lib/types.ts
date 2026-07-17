@@ -71,7 +71,6 @@ export interface Profile {
   email: string;
   full_name: string | null;
   role: UserRole;
-  school_name: string | null;
   advisor: string | null;
   school_id: string | null;
   advisor_id: string | null;
