@@ -31,4 +31,6 @@ export interface AdminDashboardData {
     inProgress: number;
     notStarted: number;
   };
+  viewerIsSuperAdmin: boolean;
+  scopedToAdvisor: boolean;
 }

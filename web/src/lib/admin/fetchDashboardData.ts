@@ -38,6 +38,40 @@ function resolveStatus(
 export async function fetchDashboardData(
   supabase: SupabaseClient,
 ): Promise<AdminDashboardData> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return {
+      students: [],
+      classes: [],
+      advisors: [],
+      stats: { total: 0, completed: 0, inProgress: 0, notStarted: 0 },
+      viewerIsSuperAdmin: false,
+      scopedToAdvisor: false,
+    };
+  }
+
+  const { data: viewerProfile } = await supabase
+    .from("profiles")
+    .select("id, full_name, email, is_super_admin, role")
+    .eq("id", user.id)
+    .single();
+
+  const viewerIsSuperAdmin = Boolean(viewerProfile?.is_super_admin);
+  const scopedToAdvisor = viewerProfile?.role === "admin" && !viewerIsSuperAdmin;
+
+  let studentsQuery = supabase
+    .from("profiles")
+    .select("id, email, full_name, avatar_emoji, class_id, advisor_id, class_name, created_at")
+    .eq("role", "student")
+    .order("created_at", { ascending: false });
+
+  if (scopedToAdvisor) {
+    studentsQuery = studentsQuery.eq("advisor_id", user.id);
+  }
+
   const [
     { data: students },
     { data: sessions },
@@ -46,34 +80,51 @@ export async function fetchDashboardData(
     { data: advisors },
     { data: responseRows },
   ] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select("id, email, full_name, avatar_emoji, class_id, advisor_id, class_name, created_at")
-      .eq("role", "student")
-      .order("created_at", { ascending: false }),
+    studentsQuery,
     supabase.from("assessment_sessions").select("user_id, status, completed_at"),
     supabase.from("results").select("user_id, top_paths, computed_at").order("computed_at", { ascending: false }),
     supabase.from("classes").select("id, name").order("name"),
-    supabase
-      .from("profiles")
-      .select("id, full_name, email")
-      .eq("role", "admin")
-      .order("full_name"),
+    viewerIsSuperAdmin
+      ? supabase
+          .from("profiles")
+          .select("id, full_name, email")
+          .eq("role", "admin")
+          .order("full_name")
+      : Promise.resolve({
+          data: viewerProfile
+            ? [
+                {
+                  id: viewerProfile.id,
+                  full_name: viewerProfile.full_name,
+                  email: viewerProfile.email,
+                },
+              ]
+            : [],
+        }),
     supabase.from("responses").select("user_id, item_id, rating"),
   ]);
 
-  const sessionMap = new Map(sessions?.map((session) => [session.user_id, session]) ?? []);
+  const allowedStudentIds = new Set((students ?? []).map((student) => student.id));
+
+  const sessionMap = new Map(
+    (sessions ?? [])
+      .filter((session) => allowedStudentIds.has(session.user_id))
+      .map((session) => [session.user_id, session]),
+  );
   const resultMap = new Map<string, { user_id: string; top_paths: any; computed_at: string }>();
   for (const result of results ?? []) {
+    if (!allowedStudentIds.has(result.user_id)) continue;
     if (!resultMap.has(result.user_id)) {
       resultMap.set(result.user_id, result);
     }
   }
   const classMap = new Map(classes?.map((row) => [row.id, row.name]) ?? []);
   const advisorMap = new Map(
-    advisors?.map((row) => [row.id, row.full_name?.trim() || row.email]) ?? [],
+    (advisors ?? []).map((row) => [row.id, row.full_name?.trim() || row.email]),
   );
-  const responsesMap = buildResponsesMap(responseRows ?? []);
+  const responsesMap = buildResponsesMap(
+    (responseRows ?? []).filter((row) => allowedStudentIds.has(row.user_id)),
+  );
 
   const studentRows: AdminStudent[] =
     students?.map((student) => {
@@ -113,10 +164,12 @@ export async function fetchDashboardData(
     students: studentRows,
     classes: classes?.map((row) => ({ id: row.id, name: row.name })) ?? [],
     advisors:
-      advisors?.map((row) => ({
+      (advisors ?? []).map((row) => ({
         id: row.id,
         name: row.full_name?.trim() || row.email,
       })) ?? [],
     stats,
+    viewerIsSuperAdmin,
+    scopedToAdvisor,
   };
 }

@@ -41,14 +41,42 @@ export default function AdminStudentPageClient() {
 
     async function load() {
       const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("id, email, full_name, avatar_emoji, class_id, advisor_id, class_name, advisor")
-        .eq("id", studentId)
-        .single();
+      if (!user) {
+        router.replace(withBasePath("/login"));
+        return;
+      }
+
+      const [{ data: viewerProfile }, { data: profile }] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("id, is_super_admin, role")
+          .eq("id", user.id)
+          .single(),
+        supabase
+          .from("profiles")
+          .select("id, email, full_name, avatar_emoji, class_id, advisor_id, class_name, advisor")
+          .eq("id", studentId)
+          .single(),
+      ]);
 
       if (!profile) {
+        if (!cancelled) {
+          setNotFound(true);
+          setLoading(false);
+        }
+        return;
+      }
+
+      const isSuperAdmin = Boolean(viewerProfile?.is_super_admin);
+      const canView =
+        isSuperAdmin ||
+        (viewerProfile?.role === "admin" && profile.advisor_id === user.id);
+
+      if (!canView) {
         if (!cancelled) {
           setNotFound(true);
           setLoading(false);
