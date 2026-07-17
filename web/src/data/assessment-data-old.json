@@ -1,0 +1,1587 @@
+{
+  "pathNames": {
+    "CC": "Clinical Care Path",
+    "PR": "Protection Path",
+    "LS": "Learning & Support Path",
+    "BF": "Build & Fix Path",
+    "SS": "STEM Systems Path",
+    "BG": "Business Growth & Leadership Path",
+    "CR": "Creative Path",
+    "ES": "Experience & Service Path",
+    "OS": "Outdoor Systems Path"
+  },
+  "pathCodes": [
+    "CC",
+    "PR",
+    "LS",
+    "BF",
+    "SS",
+    "BG",
+    "CR",
+    "ES",
+    "OS"
+  ],
+  "sections": {
+    "interests": {
+      "label": "Interests",
+      "subtitle": "What you enjoy doing",
+      "items": [
+        {
+          "id": "INT01",
+          "section": "interests",
+          "text": "I'm curious about how the human body works and what helps people heal or recover.",
+          "primaryPath": "Clinical Care Path",
+          "weights": {
+            "CC": 1.0,
+            "SS": 0.25
+          }
+        },
+        {
+          "id": "INT02",
+          "section": "interests",
+          "text": "I like learning about health topics like nutrition, mental health, fitness, or injury prevention.",
+          "primaryPath": "Clinical Care Path",
+          "weights": {
+            "CC": 1.0,
+            "LS": 0.25
+          }
+        },
+        {
+          "id": "INT03",
+          "section": "interests",
+          "text": "I\u2019m interested in clinical or care settings (clinics, hospitals, therapy, wellness).",
+          "primaryPath": "Clinical Care Path",
+          "weights": {
+            "CC": 1.0,
+            "SS": 0.25
+          }
+        },
+        {
+          "id": "INT04",
+          "section": "interests",
+          "text": "I enjoy activities where I support or look after someone who is sick, injured, or going through a hard time.",
+          "primaryPath": "Clinical Care Path",
+          "weights": {
+            "CC": 1.0,
+            "BF": 0.25
+          }
+        },
+        {
+          "id": "INT05",
+          "section": "interests",
+          "text": "I'm curious about how laws, rights, and rules protect people in real situations.",
+          "primaryPath": "Protection Path",
+          "weights": {
+            "PR": 1.0,
+            "BG": 0.25
+          }
+        },
+        {
+          "id": "INT06",
+          "section": "interests",
+          "text": "I enjoy learning about safety, emergency response, or protecting the public.",
+          "primaryPath": "Protection Path",
+          "weights": {
+            "PR": 1.0,
+            "SS": 0.25
+          }
+        },
+        {
+          "id": "INT07",
+          "section": "interests",
+          "text": "I\u2019m interested in careers like policing, law, firefighting, or investigation.",
+          "primaryPath": "Protection Path",
+          "weights": {
+            "PR": 1.0
+          }
+        },
+        {
+          "id": "INT08",
+          "section": "interests",
+          "text": "I like piecing together what happened using clues, timelines, and evidence.",
+          "primaryPath": "Protection Path",
+          "weights": {
+            "PR": 1.0,
+            "BF": 0.25
+          }
+        },
+        {
+          "id": "INT09",
+          "section": "interests",
+          "text": "I enjoy helping someone practice or improve a skill and seeing them get better.",
+          "primaryPath": "Learning & Support Path",
+          "weights": {
+            "LS": 1.0,
+            "BF": 0.25
+          }
+        },
+        {
+          "id": "INT10",
+          "section": "interests",
+          "text": "I\u2019m curious about how kids, teens, or groups learn and grow.",
+          "primaryPath": "Learning & Support Path",
+          "weights": {
+            "LS": 1.0,
+            "ES": 0.25
+          }
+        },
+        {
+          "id": "INT11",
+          "section": "interests",
+          "text": "I enjoy settings like classrooms, youth programs, or community centers where I help others learn or grow.",
+          "primaryPath": "Learning & Support Path",
+          "weights": {
+            "LS": 1.0,
+            "BG": 0.25
+          }
+        },
+        {
+          "id": "INT12",
+          "section": "interests",
+          "text": "I enjoy figuring out people-problems\u2014like how to motivate someone, resolve conflict, or build confidence.",
+          "primaryPath": "Learning & Support Path",
+          "weights": {
+            "LS": 1.0,
+            "CR": 0.25
+          }
+        },
+        {
+          "id": "INT13",
+          "section": "interests",
+          "text": "I enjoy building, fixing, or making things with my hands.",
+          "primaryPath": "Build & Fix Path",
+          "weights": {
+            "BF": 1.0,
+            "SS": 0.25
+          }
+        },
+        {
+          "id": "INT14",
+          "section": "interests",
+          "text": "I\u2019m interested in how tools, machines, or structures are put together.",
+          "primaryPath": "Build & Fix Path",
+          "weights": {
+            "PR": 0.25,
+            "BF": 1.0
+          }
+        },
+        {
+          "id": "INT15",
+          "section": "interests",
+          "text": "I like settings with tools, equipment, machinery, or hands-on making spaces.",
+          "primaryPath": "Build & Fix Path",
+          "weights": {
+            "BF": 1.0,
+            "BG": 0.25
+          }
+        },
+        {
+          "id": "INT16",
+          "section": "interests",
+          "text": "I enjoy challenges that involve tools, materials, or equipment\u2014and seeing what I built or fixed when I'm done.",
+          "primaryPath": "Build & Fix Path",
+          "weights": {
+            "BF": 1.0,
+            "SS": 0.25
+          }
+        },
+        {
+          "id": "INT17",
+          "section": "interests",
+          "text": "I enjoy figuring out how devices, software, or systems work behind the scenes.",
+          "primaryPath": "STEM Systems Path",
+          "weights": {
+            "BF": 0.25,
+            "SS": 1.0
+          }
+        },
+        {
+          "id": "INT18",
+          "section": "interests",
+          "text": "I\u2019m interested in engineering, coding, robotics, or design.",
+          "primaryPath": "STEM Systems Path",
+          "weights": {
+            "SS": 1.0,
+            "BG": 0.25
+          }
+        },
+        {
+          "id": "INT19",
+          "section": "interests",
+          "text": "I like tech-focused settings (labs, makerspaces, computers, equipment).",
+          "primaryPath": "STEM Systems Path",
+          "weights": {
+            "CC": 0.25,
+            "SS": 1.0
+          }
+        },
+        {
+          "id": "INT20",
+          "section": "interests",
+          "text": "I enjoy logic puzzles, data patterns, and problem-solving challenges.",
+          "primaryPath": "STEM Systems Path",
+          "weights": {
+            "SS": 1.0,
+            "BG": 0.25
+          }
+        },
+        {
+          "id": "INT21",
+          "section": "interests",
+          "text": "I'm interested in how businesses and organizations grow, improve, and make decisions.",
+          "primaryPath": "Business Growth & Leadership Path",
+          "weights": {
+            "LS": 0.25,
+            "BG": 1.0
+          }
+        },
+        {
+          "id": "INT22",
+          "section": "interests",
+          "text": "I enjoy planning projects, setting goals, and seeing measurable results.",
+          "primaryPath": "Business Growth & Leadership Path",
+          "weights": {
+            "SS": 0.25,
+            "BG": 1.0
+          }
+        },
+        {
+          "id": "INT23",
+          "section": "interests",
+          "text": "I like leadership settings (teams, clubs, organizing, running things).",
+          "primaryPath": "Business Growth & Leadership Path",
+          "weights": {
+            "LS": 0.25,
+            "BG": 1.0
+          }
+        },
+        {
+          "id": "INT24",
+          "section": "interests",
+          "text": "I enjoy solving system problems\u2014like improving how something works, is organized, or uses resources.",
+          "primaryPath": "Business Growth & Leadership Path",
+          "weights": {
+            "BG": 1.0,
+            "ES": 0.25
+          }
+        },
+        {
+          "id": "INT25",
+          "section": "interests",
+          "text": "I enjoy creating stories, visuals, music, or content that shares an idea or feeling with others.",
+          "primaryPath": "Creative Path",
+          "weights": {
+            "CR": 1.0,
+            "ES": 0.25
+          }
+        },
+        {
+          "id": "INT26",
+          "section": "interests",
+          "text": "I\u2019m interested in media, communication, design, or performance.",
+          "primaryPath": "Creative Path",
+          "weights": {
+            "SS": 0.25,
+            "CR": 1.0
+          }
+        },
+        {
+          "id": "INT27",
+          "section": "interests",
+          "text": "I like creative settings (studio, stage, writing, filming, editing, design).",
+          "primaryPath": "Creative Path",
+          "weights": {
+            "LS": 0.25,
+            "CR": 1.0
+          }
+        },
+        {
+          "id": "INT28",
+          "section": "interests",
+          "text": "I enjoy creating something original\u2014a design, story, image, song, or performance\u2014and sharing it with others.",
+          "primaryPath": "Creative Path",
+          "weights": {
+            "SS": 0.25,
+            "CR": 1.0
+          }
+        },
+        {
+          "id": "INT29",
+          "section": "interests",
+          "text": "I enjoy fast-paced places where I help people, keep things moving, and solve small problems on the spot.",
+          "primaryPath": "Experience & Service Path",
+          "weights": {
+            "LS": 0.25,
+            "ES": 1.0
+          }
+        },
+        {
+          "id": "INT30",
+          "section": "interests",
+          "text": "I\u2019m interested in hospitality, events, travel, food, retail, or customer service.",
+          "primaryPath": "Experience & Service Path",
+          "weights": {
+            "CC": 0.25,
+            "ES": 1.0
+          }
+        },
+        {
+          "id": "INT31",
+          "section": "interests",
+          "text": "I like people-facing settings where teamwork, timing, and communication matter.",
+          "primaryPath": "Experience & Service Path",
+          "weights": {
+            "BG": 0.25,
+            "ES": 1.0
+          }
+        },
+        {
+          "id": "INT32",
+          "section": "interests",
+          "text": "I enjoy helping someone have a better experience by solving small problems.",
+          "primaryPath": "Experience & Service Path",
+          "weights": {
+            "CR": 0.25,
+            "ES": 1.0
+          }
+        },
+        {
+          "id": "INT33",
+          "section": "interests",
+          "text": "I enjoy being outdoors and working directly with nature, animals, or the land.",
+          "primaryPath": "Outdoor Systems Path",
+          "weights": {
+            "BF": 0.25,
+            "OS": 1.0
+          }
+        },
+        {
+          "id": "INT34",
+          "section": "interests",
+          "text": "I'm curious about how ecosystems, wildlife, weather, and environmental systems work.",
+          "primaryPath": "Outdoor Systems Path",
+          "weights": {
+            "SS": 0.25,
+            "OS": 1.0
+          }
+        },
+        {
+          "id": "INT35",
+          "section": "interests",
+          "text": "I like outdoor settings like parks, farms, rivers, trails, or conservation areas.",
+          "primaryPath": "Outdoor Systems Path",
+          "weights": {
+            "BF": 0.25,
+            "OS": 1.0
+          }
+        },
+        {
+          "id": "INT36",
+          "section": "interests",
+          "text": "I enjoy hands-on nature work like growing, caring for, restoring, or protecting natural areas.",
+          "primaryPath": "Outdoor Systems Path",
+          "weights": {
+            "CC": 0.25,
+            "OS": 1.0
+          }
+        }
+      ]
+    },
+    "strengths": {
+      "label": "Strengths",
+      "subtitle": "What you can do well",
+      "items": [
+        {
+          "id": "STR01",
+          "section": "strengths",
+          "text": "I can notice early warning signs that someone's health or safety is at risk and suggest a safe next step.",
+          "primaryPath": "Clinical Care Path",
+          "weights": {
+            "CC": 1.0
+          }
+        },
+        {
+          "id": "STR02",
+          "section": "strengths",
+          "text": "I can help someone feel calmer or more at ease when they're stressed, upset, or unwell.",
+          "primaryPath": "Clinical Care Path",
+          "weights": {
+            "CC": 1.0
+          }
+        },
+        {
+          "id": "STR03",
+          "section": "strengths",
+          "text": "I can follow careful procedures\u2014like checking, documenting, or cleaning\u2014so mistakes don't happen.",
+          "primaryPath": "Clinical Care Path",
+          "weights": {
+            "CC": 1.0
+          }
+        },
+        {
+          "id": "STR04",
+          "section": "strengths",
+          "text": "I can stay focused on details even when the situation feels serious or emotional.",
+          "primaryPath": "Clinical Care Path",
+          "weights": {
+            "CC": 1.0,
+            "SS": 0.25
+          }
+        },
+        {
+          "id": "STR05",
+          "section": "strengths",
+          "text": "I can stay calm and communicate clearly when there is conflict, urgency, or pressure.",
+          "primaryPath": "Protection Path",
+          "weights": {
+            "PR": 1.0
+          }
+        },
+        {
+          "id": "STR06",
+          "section": "strengths",
+          "text": "I can explain a rule or boundary in a way that feels fair and firm without being harsh.",
+          "primaryPath": "Protection Path",
+          "weights": {
+            "PR": 1.0
+          }
+        },
+        {
+          "id": "STR07",
+          "section": "strengths",
+          "text": "I can gather facts, check details, and describe events in the right order.",
+          "primaryPath": "Protection Path",
+          "weights": {
+            "PR": 1.0,
+            "CR": 0.25
+          }
+        },
+        {
+          "id": "STR08",
+          "section": "strengths",
+          "text": "I can make quick, safety-first decisions when something unexpected happens.",
+          "primaryPath": "Protection Path",
+          "weights": {
+            "PR": 1.0
+          }
+        },
+        {
+          "id": "STR09",
+          "section": "strengths",
+          "text": "I can break a skill down into clear, small steps that someone else can actually follow and learn.",
+          "primaryPath": "Learning & Support Path",
+          "weights": {
+            "LS": 1.0
+          }
+        },
+        {
+          "id": "STR10",
+          "section": "strengths",
+          "text": "I can encourage someone who\u2019s struggling without judging them.",
+          "primaryPath": "Learning & Support Path",
+          "weights": {
+            "LS": 1.0
+          }
+        },
+        {
+          "id": "STR11",
+          "section": "strengths",
+          "text": "I can plan a simple activity, lesson, or group session so people know what to do and why.",
+          "primaryPath": "Learning & Support Path",
+          "weights": {
+            "LS": 1.0
+          }
+        },
+        {
+          "id": "STR12",
+          "section": "strengths",
+          "text": "I can notice what a person needs (support, challenge, or a break) and adjust my approach.",
+          "primaryPath": "Learning & Support Path",
+          "weights": {
+            "LS": 1.0
+          }
+        },
+        {
+          "id": "STR13",
+          "section": "strengths",
+          "text": "I can build, assemble, or repair something by reading a plan, following steps, and checking my work.",
+          "primaryPath": "Build & Fix Path",
+          "weights": {
+            "BF": 1.0
+          }
+        },
+        {
+          "id": "STR14",
+          "section": "strengths",
+          "text": "I can work with a partner on a hands-on job and communicate clearly about next steps.",
+          "primaryPath": "Build & Fix Path",
+          "weights": {
+            "BF": 1.0
+          }
+        },
+        {
+          "id": "STR15",
+          "section": "strengths",
+          "text": "I can measure, line up, and fine-tune details so the final result fits and works.",
+          "primaryPath": "Build & Fix Path",
+          "weights": {
+            "BF": 1.0,
+            "SS": 0.15
+          }
+        },
+        {
+          "id": "STR16",
+          "section": "strengths",
+          "text": "I can troubleshoot a problem by testing different fixes safely until one works.",
+          "primaryPath": "Build & Fix Path",
+          "weights": {
+            "PR": 0.15,
+            "BF": 1.0
+          }
+        },
+        {
+          "id": "STR17",
+          "section": "strengths",
+          "text": "I can analyze a technical problem by breaking it into smaller parts and testing each one to find the answer.",
+          "primaryPath": "STEM Systems Path",
+          "weights": {
+            "SS": 1.0
+          }
+        },
+        {
+          "id": "STR18",
+          "section": "strengths",
+          "text": "I can explain a tech idea simply so others understand what\u2019s happening.",
+          "primaryPath": "STEM Systems Path",
+          "weights": {
+            "SS": 1.0,
+            "BG": 0.15
+          }
+        },
+        {
+          "id": "STR19",
+          "section": "strengths",
+          "text": "I can test a system, find the cause of an issue, and improve it using evidence.",
+          "primaryPath": "STEM Systems Path",
+          "weights": {
+            "SS": 1.0
+          }
+        },
+        {
+          "id": "STR20",
+          "section": "strengths",
+          "text": "I can learn a new tool by experimenting, reading directions, and trying again.",
+          "primaryPath": "STEM Systems Path",
+          "weights": {
+            "SS": 1.0,
+            "BG": 0.25
+          }
+        },
+        {
+          "id": "STR21",
+          "section": "strengths",
+          "text": "I can identify what a team or project needs, organize a plan to get there, and keep people on track until it's finished.",
+          "primaryPath": "Business Growth & Leadership Path",
+          "weights": {
+            "LS": 0.15,
+            "BG": 1.0
+          }
+        },
+        {
+          "id": "STR22",
+          "section": "strengths",
+          "text": "I can give a group clear direction and help people stay focused and on track.",
+          "primaryPath": "Business Growth & Leadership Path",
+          "weights": {
+            "SS": 0.25,
+            "BG": 1.0
+          }
+        },
+        {
+          "id": "STR23",
+          "section": "strengths",
+          "text": "I can compare options (time, cost, impact) and choose the best one.",
+          "primaryPath": "Business Growth & Leadership Path",
+          "weights": {
+            "BG": 1.0
+          }
+        },
+        {
+          "id": "STR24",
+          "section": "strengths",
+          "text": "I can spot inefficiencies in a business process or team workflow and suggest a practical fix that saves time or resources.",
+          "primaryPath": "Business Growth & Leadership Path",
+          "weights": {
+            "BG": 1.0
+          }
+        },
+        {
+          "id": "STR25",
+          "section": "strengths",
+          "text": "I can produce something that communicates an idea\u2014through writing, design, video, music, or art.",
+          "primaryPath": "Creative Path",
+          "weights": {
+            "CR": 1.0
+          }
+        },
+        {
+          "id": "STR26",
+          "section": "strengths",
+          "text": "I can match my message to the audience so it makes sense to them.",
+          "primaryPath": "Creative Path",
+          "weights": {
+            "CR": 1.0
+          }
+        },
+        {
+          "id": "STR27",
+          "section": "strengths",
+          "text": "I can improve my work by revising and polishing, not just finishing fast.",
+          "primaryPath": "Creative Path",
+          "weights": {
+            "CR": 1.0
+          }
+        },
+        {
+          "id": "STR28",
+          "section": "strengths",
+          "text": "I can share or present my work clearly in front of others, even if I feel some nerves.",
+          "primaryPath": "Creative Path",
+          "weights": {
+            "CR": 1.0,
+            "ES": 0.15
+          }
+        },
+        {
+          "id": "STR29",
+          "section": "strengths",
+          "text": "I can welcome people warmly and quickly help them feel comfortable and at ease.",
+          "primaryPath": "Experience & Service Path",
+          "weights": {
+            "ES": 1.0
+          }
+        },
+        {
+          "id": "STR30",
+          "section": "strengths",
+          "text": "I can handle a complaint by listening, staying calm, and finding a fair fix.",
+          "primaryPath": "Experience & Service Path",
+          "weights": {
+            "PR": 0.15,
+            "ES": 1.0
+          }
+        },
+        {
+          "id": "STR31",
+          "section": "strengths",
+          "text": "I can stay organized across multiple tasks in a busy or active setting.",
+          "primaryPath": "Experience & Service Path",
+          "weights": {
+            "CC": 0.25,
+            "ES": 1.0
+          }
+        },
+        {
+          "id": "STR32",
+          "section": "strengths",
+          "text": "I can notice what needs to happen next (restock, clean, reset, or update) without being told.",
+          "primaryPath": "Experience & Service Path",
+          "weights": {
+            "ES": 1.0
+          }
+        },
+        {
+          "id": "STR33",
+          "section": "strengths",
+          "text": "I can care for plants or animals by noticing needs and following routines.",
+          "primaryPath": "Outdoor Systems Path",
+          "weights": {
+            "BF": 0.15,
+            "OS": 1.0
+          }
+        },
+        {
+          "id": "STR34",
+          "section": "strengths",
+          "text": "I can work safely outdoors by paying attention to weather, tools, and risks.",
+          "primaryPath": "Outdoor Systems Path",
+          "weights": {
+            "OS": 1.0
+          }
+        },
+        {
+          "id": "STR35",
+          "section": "strengths",
+          "text": "I can watch nature carefully and record changes, patterns, or signs of impact over time.",
+          "primaryPath": "Outdoor Systems Path",
+          "weights": {
+            "SS": 0.25,
+            "OS": 1.0
+          }
+        },
+        {
+          "id": "STR36",
+          "section": "strengths",
+          "text": "I make choices that protect land, water, and living things\u2014reduce waste, prevent damage, follow rules.",
+          "primaryPath": "Outdoor Systems Path",
+          "weights": {
+            "OS": 1.0
+          }
+        }
+      ]
+    },
+    "drivers": {
+      "label": "Drivers",
+      "subtitle": "What motivates you",
+      "items": [
+        {
+          "id": "DRV01",
+          "section": "drivers",
+          "text": "I feel fulfilled when my work directly helps someone heal, recover, or stay healthier.",
+          "primaryPath": "Clinical Care Path",
+          "weights": {
+            "CC": 1.0
+          }
+        },
+        {
+          "id": "DRV02",
+          "section": "drivers",
+          "text": "I'm motivated when I help someone recover from illness, injury, or a health crisis.",
+          "primaryPath": "Clinical Care Path",
+          "weights": {
+            "CC": 1.0
+          }
+        },
+        {
+          "id": "DRV03",
+          "section": "drivers",
+          "text": "I'm motivated to keep learning so I can give better care and catch things other people might miss.",
+          "primaryPath": "Clinical Care Path",
+          "weights": {
+            "CC": 1.0
+          }
+        },
+        {
+          "id": "DRV04",
+          "section": "drivers",
+          "text": "I\u2019m motivated when I keep learning skills that make my care more effective.",
+          "primaryPath": "Clinical Care Path",
+          "weights": {
+            "CC": 1.0
+          }
+        },
+        {
+          "id": "DRV05",
+          "section": "drivers",
+          "text": "I feel a strong sense of purpose when I help prevent harm or protect people from danger.",
+          "primaryPath": "Protection Path",
+          "weights": {
+            "PR": 1.0
+          }
+        },
+        {
+          "id": "DRV06",
+          "section": "drivers",
+          "text": "It matters deeply to me to stand up for what's fair\u2014even when it's hard.",
+          "primaryPath": "Protection Path",
+          "weights": {
+            "PR": 1.0
+          }
+        },
+        {
+          "id": "DRV07",
+          "section": "drivers",
+          "text": "I want to be the kind of person who stays steady under pressure.",
+          "primaryPath": "Protection Path",
+          "weights": {
+            "PR": 1.0
+          }
+        },
+        {
+          "id": "DRV08",
+          "section": "drivers",
+          "text": "I\u2019m motivated when my work improves trust and safety in the community.",
+          "primaryPath": "Protection Path",
+          "weights": {
+            "PR": 1.0
+          }
+        },
+        {
+          "id": "DRV09",
+          "section": "drivers",
+          "text": "I feel fulfilled when someone grows more confident or capable because I helped them.",
+          "primaryPath": "Learning & Support Path",
+          "weights": {
+            "LS": 1.0
+          }
+        },
+        {
+          "id": "DRV10",
+          "section": "drivers",
+          "text": "It matters to me that people feel supported and respected while they're learning, not judged.",
+          "primaryPath": "Learning & Support Path",
+          "weights": {
+            "LS": 1.0
+          }
+        },
+        {
+          "id": "DRV11",
+          "section": "drivers",
+          "text": "I feel motivated when I help someone see a path forward\u2014whether that's a student finding their confidence or a person getting connected to help they need.",
+          "primaryPath": "Learning & Support Path",
+          "weights": {
+            "LS": 1.0
+          }
+        },
+        {
+          "id": "DRV12",
+          "section": "drivers",
+          "text": "I'm motivated when I can contribute to stronger, more connected groups or communities over time.",
+          "primaryPath": "Learning & Support Path",
+          "weights": {
+            "LS": 1.0
+          }
+        },
+        {
+          "id": "DRV13",
+          "section": "drivers",
+          "text": "I feel proud when I build or fix something people can rely on every day.",
+          "primaryPath": "Build & Fix Path",
+          "weights": {
+            "BF": 1.0
+          }
+        },
+        {
+          "id": "DRV14",
+          "section": "drivers",
+          "text": "It matters to me to do quality work that lasts and keeps people safe.",
+          "primaryPath": "Build & Fix Path",
+          "weights": {
+            "BF": 1.0
+          }
+        },
+        {
+          "id": "DRV15",
+          "section": "drivers",
+          "text": "I want to be known as dependable, practical, and good with my hands.",
+          "primaryPath": "Build & Fix Path",
+          "weights": {
+            "BF": 1.0
+          }
+        },
+        {
+          "id": "DRV16",
+          "section": "drivers",
+          "text": "I'm motivated when I master a new trade skill\u2014like welding a better joint, reading a blueprint faster, or operating new equipment.",
+          "primaryPath": "Build & Fix Path",
+          "weights": {
+            "BF": 1.0
+          }
+        },
+        {
+          "id": "DRV17",
+          "section": "drivers",
+          "text": "I feel proud when I finish work that is accurate, reliable, and clearly worth the effort.",
+          "primaryPath": "STEM Systems Path",
+          "weights": {
+            "SS": 1.0
+          }
+        },
+        {
+          "id": "DRV18",
+          "section": "drivers",
+          "text": "It matters to me to improve systems so they are safer, smarter, or more efficient.",
+          "primaryPath": "STEM Systems Path",
+          "weights": {
+            "SS": 1.0
+          }
+        },
+        {
+          "id": "DRV19",
+          "section": "drivers",
+          "text": "I want to be someone who keeps learning and stays current as technology and methods evolve.",
+          "primaryPath": "STEM Systems Path",
+          "weights": {
+            "SS": 1.0
+          }
+        },
+        {
+          "id": "DRV20",
+          "section": "drivers",
+          "text": "I\u2019m motivated when my ideas create long-term improvements, not just quick fixes.",
+          "primaryPath": "STEM Systems Path",
+          "weights": {
+            "SS": 1.0
+          }
+        },
+        {
+          "id": "DRV21",
+          "section": "drivers",
+          "text": "I feel purpose when a plan I helped create\u2014a business goal, project budget, or team strategy\u2014actually works and shows results.",
+          "primaryPath": "Business Growth & Leadership Path",
+          "weights": {
+            "BG": 1.0
+          }
+        },
+        {
+          "id": "DRV22",
+          "section": "drivers",
+          "text": "It matters to me to make wise choices with time, money, and resources.",
+          "primaryPath": "Business Growth & Leadership Path",
+          "weights": {
+            "BG": 1.0
+          }
+        },
+        {
+          "id": "DRV23",
+          "section": "drivers",
+          "text": "I want to lead in a way that is honest and fair\u2014getting results without cutting corners.",
+          "primaryPath": "Business Growth & Leadership Path",
+          "weights": {
+            "BG": 1.0
+          }
+        },
+        {
+          "id": "DRV24",
+          "section": "drivers",
+          "text": "I'm motivated when I help grow something bigger than myself\u2014a business, a program, a team\u2014that keeps running and thriving over time.",
+          "primaryPath": "Business Growth & Leadership Path",
+          "weights": {
+            "BG": 1.0
+          }
+        },
+        {
+          "id": "DRV25",
+          "section": "drivers",
+          "text": "I feel fulfilled when something I created helps people understand, feel, or see something in a new way.",
+          "primaryPath": "Creative Path",
+          "weights": {
+            "CR": 1.0
+          }
+        },
+        {
+          "id": "DRV26",
+          "section": "drivers",
+          "text": "It matters to me that my creative work\u2014writing, design, or visuals\u2014communicates an idea so clearly that people immediately feel or understand it.",
+          "primaryPath": "Creative Path",
+          "weights": {
+            "CR": 1.0
+          }
+        },
+        {
+          "id": "DRV27",
+          "section": "drivers",
+          "text": "I want to create work that feels true to who I am, not copied from others.",
+          "primaryPath": "Creative Path",
+          "weights": {
+            "CR": 1.0
+          }
+        },
+        {
+          "id": "DRV28",
+          "section": "drivers",
+          "text": "I'm motivated when I keep improving my craft and feel my work getting stronger over time.",
+          "primaryPath": "Creative Path",
+          "weights": {
+            "CR": 1.0
+          }
+        },
+        {
+          "id": "DRV29",
+          "section": "drivers",
+          "text": "I feel fulfilled when people feel welcomed, respected, and cared for.",
+          "primaryPath": "Experience & Service Path",
+          "weights": {
+            "ES": 1.0
+          }
+        },
+        {
+          "id": "DRV30",
+          "section": "drivers",
+          "text": "It matters to me to solve problems calmly so others have a better experience.",
+          "primaryPath": "Experience & Service Path",
+          "weights": {
+            "ES": 1.0
+          }
+        },
+        {
+          "id": "DRV31",
+          "section": "drivers",
+          "text": "I want to be the kind of person who stays kind and helpful under stress.",
+          "primaryPath": "Experience & Service Path",
+          "weights": {
+            "ES": 1.0
+          }
+        },
+        {
+          "id": "DRV32",
+          "section": "drivers",
+          "text": "I'm motivated when a place runs smoothly, people are satisfied, and I played a part in making that happen.",
+          "primaryPath": "Experience & Service Path",
+          "weights": {
+            "ES": 1.0
+          }
+        },
+        {
+          "id": "DRV33",
+          "section": "drivers",
+          "text": "It matters to me to protect nature and keep land and water healthy for the future.",
+          "primaryPath": "Outdoor Systems Path",
+          "weights": {
+            "OS": 1.0
+          }
+        },
+        {
+          "id": "DRV34",
+          "section": "drivers",
+          "text": "I feel connected and energized when I work outdoors and can sense the natural world around me.",
+          "primaryPath": "Outdoor Systems Path",
+          "weights": {
+            "OS": 1.0
+          }
+        },
+        {
+          "id": "DRV35",
+          "section": "drivers",
+          "text": "I want to be someone who actively works to protect ecosystems, reduce harm to animals, and leave the land in better shape than I found it.",
+          "primaryPath": "Outdoor Systems Path",
+          "weights": {
+            "OS": 1.0
+          }
+        },
+        {
+          "id": "DRV36",
+          "section": "drivers",
+          "text": "I'm motivated by work that supports long-term sustainability, even when results take time to show.",
+          "primaryPath": "Outdoor Systems Path",
+          "weights": {
+            "OS": 1.0
+          }
+        }
+      ]
+    },
+    "conditions": {
+      "label": "Work Style & Environment",
+      "subtitle": "What work feels like",
+      "items": [
+        {
+          "id": "CON01",
+          "section": "conditions",
+          "text": "I'm comfortable following detailed steps and procedures, even when they feel repetitive.",
+          "construct": "Structure & Clarity",
+          "reverse": false,
+          "constructCode": "Pace_Change",
+          "primary1": "Clinical Care Path",
+          "primary2": "Build & Fix Path",
+          "secondary": "Protection Path",
+          "secondaryWeight": 0.15,
+          "itemWeight": 0.7
+        },
+        {
+          "id": "CON02",
+          "section": "conditions",
+          "text": "I like work that has clear standards I can measure my performance against.",
+          "construct": "Structure & Clarity",
+          "reverse": false,
+          "constructCode": "Pace_Change",
+          "primary1": "Clinical Care Path",
+          "primary2": "STEM Systems Path",
+          "secondary": "Build & Fix Path",
+          "secondaryWeight": 0.33,
+          "itemWeight": 0.7
+        },
+        {
+          "id": "CON03",
+          "section": "conditions",
+          "text": "I\u2019m okay starting without clear steps and figuring it out as I go.",
+          "construct": "Structure & Clarity",
+          "reverse": true,
+          "constructCode": "Pace_Change",
+          "primary1": "Creative Path",
+          "primary2": "Business Growth & Leadership Path",
+          "secondary": "STEM Systems Path",
+          "secondaryWeight": 0.25,
+          "itemWeight": 0.7
+        },
+        {
+          "id": "CON04",
+          "section": "conditions",
+          "text": "I enjoy days where I have to respond quickly to what comes up.",
+          "construct": "Pace & Urgency",
+          "reverse": false,
+          "constructCode": "Pace_Change",
+          "primary1": "Experience & Service Path",
+          "primary2": "Business Growth & Leadership Path",
+          "secondary": null,
+          "secondaryWeight": 0,
+          "itemWeight": 1.0
+        },
+        {
+          "id": "CON05",
+          "section": "conditions",
+          "text": "I like being in situations where I have to act quickly, even if it means I might make a small mistake.",
+          "construct": "Pace & Urgency",
+          "reverse": false,
+          "constructCode": "Pressure_Responsibility",
+          "primary1": "Clinical Care Path",
+          "primary2": "Experience & Service Path",
+          "secondary": "Protection Path",
+          "secondaryWeight": 0.15,
+          "itemWeight": 1.0
+        },
+        {
+          "id": "CON06",
+          "section": "conditions",
+          "text": "I do my best work when I\u2019m not rushed and can take my time to think.",
+          "construct": "Pace & Urgency",
+          "reverse": true,
+          "constructCode": "Pressure_Responsibility",
+          "primary1": "STEM Systems Path",
+          "primary2": "Learning & Support Path",
+          "secondary": "Creative Path",
+          "secondaryWeight": 0.33,
+          "itemWeight": 1.0
+        },
+        {
+          "id": "CON07",
+          "section": "conditions",
+          "text": "I strongly prefer to avoid conflict or tense situations whenever possible.",
+          "construct": "Protection Contra",
+          "reverse": true,
+          "constructCode": "Pressure_Responsibility",
+          "primary1": "Protection Path",
+          "primary2": null,
+          "secondary": null,
+          "secondaryWeight": 0,
+          "itemWeight": 1.0
+        },
+        {
+          "id": "CON08",
+          "section": "conditions",
+          "text": "I'm okay repeating a process over and over to get really skilled at it.",
+          "construct": "Variety vs Routine",
+          "reverse": true,
+          "constructCode": "Pressure_Responsibility",
+          "primary1": "Build & Fix Path",
+          "primary2": "Clinical Care Path",
+          "secondary": "STEM Systems Path",
+          "secondaryWeight": 0.33,
+          "itemWeight": 1.0
+        },
+        {
+          "id": "CON09",
+          "section": "conditions",
+          "text": "I'm comfortable working within a clear chain of command where roles and authority are defined.",
+          "construct": "Protection Signature",
+          "reverse": false,
+          "constructCode": "Structure_Rules",
+          "primary1": "Protection Path",
+          "primary2": null,
+          "secondary": null,
+          "secondaryWeight": 0,
+          "itemWeight": 1.25
+        },
+        {
+          "id": "CON10",
+          "section": "conditions",
+          "text": "I like jobs where talking with people is a big part of the day.",
+          "construct": "Social Energy",
+          "reverse": false,
+          "constructCode": "Structure_Rules",
+          "primary1": "Learning & Support Path",
+          "primary2": "Experience & Service Path",
+          "secondary": "Business Growth & Leadership Path",
+          "secondaryWeight": 0.33,
+          "itemWeight": 1.0
+        },
+        {
+          "id": "CON11",
+          "section": "conditions",
+          "text": "I do my best work in a quieter setting where I don't have to interact constantly.",
+          "construct": "Social Energy",
+          "reverse": true,
+          "constructCode": "Structure_Rules",
+          "primary1": "STEM Systems Path",
+          "primary2": "Creative Path",
+          "secondary": null,
+          "secondaryWeight": 0,
+          "itemWeight": 1.0
+        },
+        {
+          "id": "CON12",
+          "section": "conditions",
+          "text": "I believe rules and standards should be applied consistently\u2014even when it's unpopular.",
+          "construct": "Protection Signature",
+          "reverse": false,
+          "constructCode": "Structure_Rules",
+          "primary1": "Protection Path",
+          "primary2": null,
+          "secondary": null,
+          "secondaryWeight": 0,
+          "itemWeight": 1.25
+        },
+        {
+          "id": "CON13",
+          "section": "conditions",
+          "text": "I prefer working closely with teammates throughout the day rather than doing most of my work independently.",
+          "construct": "Teamwork vs Solo Focus",
+          "reverse": false,
+          "constructCode": "Detail_Documentation",
+          "primary1": "Experience & Service Path",
+          "primary2": "Clinical Care Path",
+          "secondary": "Protection Path",
+          "secondaryWeight": 0.15,
+          "itemWeight": 1.0
+        },
+        {
+          "id": "CON14",
+          "section": "conditions",
+          "text": "I prefer doing my part independently and checking in later.",
+          "construct": "Teamwork vs Solo Focus",
+          "reverse": true,
+          "constructCode": "Detail_Documentation",
+          "primary1": "STEM Systems Path",
+          "primary2": "Outdoor Systems Path",
+          "secondary": "Creative Path",
+          "secondaryWeight": 0.25,
+          "itemWeight": 1.0
+        },
+        {
+          "id": "CON15",
+          "section": "conditions",
+          "text": "I like solving problems by talking them through with others and building on each other's ideas.",
+          "construct": "Teamwork vs Solo Focus",
+          "reverse": false,
+          "constructCode": "Detail_Documentation",
+          "primary1": "Business Growth & Leadership Path",
+          "primary2": "Learning & Support Path",
+          "secondary": "Experience & Service Path",
+          "secondaryWeight": 0.33,
+          "itemWeight": 1.0
+        },
+        {
+          "id": "CON16",
+          "section": "conditions",
+          "text": "I do my best work when I can choose my own approach to getting something done.",
+          "construct": "Independence & Autonomy",
+          "reverse": false,
+          "constructCode": "Detail_Documentation",
+          "primary1": "Creative Path",
+          "primary2": "Business Growth & Leadership Path",
+          "secondary": "Outdoor Systems Path",
+          "secondaryWeight": 0.33,
+          "itemWeight": 1.0
+        },
+        {
+          "id": "CON17",
+          "section": "conditions",
+          "text": "I do best when someone gives me clear steps to follow.",
+          "construct": "Independence & Autonomy",
+          "reverse": true,
+          "constructCode": "Social_Energy",
+          "primary1": "Clinical Care Path",
+          "primary2": "Build & Fix Path",
+          "secondary": "Protection Path",
+          "secondaryWeight": 0.15,
+          "itemWeight": 1.0
+        },
+        {
+          "id": "CON18",
+          "section": "conditions",
+          "text": "I like being responsible for the whole outcome, not just one piece.",
+          "construct": "Independence & Autonomy",
+          "reverse": false,
+          "constructCode": "Social_Energy",
+          "primary1": "Business Growth & Leadership Path",
+          "primary2": "Creative Path",
+          "secondary": "STEM Systems Path",
+          "secondaryWeight": 0.33,
+          "itemWeight": 1.0
+        },
+        {
+          "id": "CON19",
+          "section": "conditions",
+          "text": "I can stay composed and think clearly when the stakes feel high.",
+          "construct": "Comfort With Pressure",
+          "reverse": false,
+          "constructCode": "Social_Energy",
+          "primary1": "Clinical Care Path",
+          "primary2": "Experience & Service Path",
+          "secondary": "Protection Path",
+          "secondaryWeight": 0.15,
+          "itemWeight": 1.0
+        },
+        {
+          "id": "CON20",
+          "section": "conditions",
+          "text": "When things get urgent, it\u2019s hard for me to stay steady and think clearly.",
+          "construct": "Comfort With Pressure",
+          "reverse": true,
+          "constructCode": "Social_Energy",
+          "primary1": "Protection Path",
+          "primary2": "Experience & Service Path",
+          "secondary": "Clinical Care Path",
+          "secondaryWeight": 0.25,
+          "itemWeight": 1.0
+        },
+        {
+          "id": "CON21",
+          "section": "conditions",
+          "text": "I can keep making clear-headed decisions even when the emotional stakes are high\u2014like when someone is angry or in trouble.",
+          "construct": "Comfort With Pressure",
+          "reverse": false,
+          "constructCode": "Conflict_Firmness",
+          "primary1": "Business Growth & Leadership Path",
+          "primary2": "Clinical Care Path",
+          "secondary": "Protection Path",
+          "secondaryWeight": 0.15,
+          "itemWeight": 1.0
+        },
+        {
+          "id": "CON22",
+          "section": "conditions",
+          "text": "I can stay calm and respectful during a tense or confrontational situation with another person.",
+          "construct": "Protection Signature",
+          "reverse": false,
+          "constructCode": "Conflict_Firmness",
+          "primary1": "Protection Path",
+          "primary2": null,
+          "secondary": null,
+          "secondaryWeight": 0,
+          "itemWeight": 1.25
+        },
+        {
+          "id": "CON23",
+          "section": "conditions",
+          "text": "Frequent interruptions make it hard for me to do my best work.",
+          "construct": "Attention Environment",
+          "reverse": true,
+          "constructCode": "Conflict_Firmness",
+          "primary1": "STEM Systems Path",
+          "primary2": "Creative Path",
+          "secondary": "Build & Fix Path",
+          "secondaryWeight": 0.33,
+          "itemWeight": 1.0
+        },
+        {
+          "id": "CON24",
+          "section": "conditions",
+          "text": "I can keep my attention on my task even in a busy place.",
+          "construct": "Attention Environment",
+          "reverse": false,
+          "constructCode": "Conflict_Firmness",
+          "primary1": "Clinical Care Path",
+          "primary2": "Experience & Service Path",
+          "secondary": "Build & Fix Path",
+          "secondaryWeight": 0.33,
+          "itemWeight": 1.0
+        },
+        {
+          "id": "CON25",
+          "section": "conditions",
+          "text": "I prefer work where I\u2019m moving around, not sitting all day.",
+          "construct": "Work Setting",
+          "reverse": false,
+          "constructCode": "Sensory_BusyNoise",
+          "primary1": "Build & Fix Path",
+          "primary2": "Outdoor Systems Path",
+          "secondary": "Experience & Service Path",
+          "secondaryWeight": 0.33,
+          "itemWeight": 1.0
+        },
+        {
+          "id": "CON26",
+          "section": "conditions",
+          "text": "I prefer desk-based work where I\u2019m mostly in one place.",
+          "construct": "Work Setting",
+          "reverse": true,
+          "constructCode": "Sensory_BusyNoise",
+          "primary1": "STEM Systems Path",
+          "primary2": "Business Growth & Leadership Path",
+          "secondary": "Creative Path",
+          "secondaryWeight": 0.33,
+          "itemWeight": 1.0
+        },
+        {
+          "id": "CON27",
+          "section": "conditions",
+          "text": "I don\u2019t mind working in weather or changing outdoor conditions.",
+          "construct": "Work Setting",
+          "reverse": false,
+          "constructCode": "Sensory_BusyNoise",
+          "primary1": "Outdoor Systems Path",
+          "primary2": "Build & Fix Path",
+          "secondary": null,
+          "secondaryWeight": 0,
+          "itemWeight": 1.0
+        },
+        {
+          "id": "CON28",
+          "section": "conditions",
+          "text": "I prefer solving problems using facts, data, or careful planning rather than gut instinct.",
+          "construct": "Problem Style",
+          "reverse": false,
+          "constructCode": "Sensory_BusyNoise",
+          "primary1": "STEM Systems Path",
+          "primary2": "Clinical Care Path",
+          "secondary": "Protection Path",
+          "secondaryWeight": 0.15,
+          "itemWeight": 1.0
+        },
+        {
+          "id": "CON29",
+          "section": "conditions",
+          "text": "I prefer hands-on tasks like building, fixing, or operating equipment.",
+          "construct": "Problem Style",
+          "reverse": false,
+          "constructCode": "Physical_HandsOn",
+          "primary1": "Build & Fix Path",
+          "primary2": "Outdoor Systems Path",
+          "secondary": "Experience & Service Path",
+          "secondaryWeight": 0.33,
+          "itemWeight": 1.0
+        },
+        {
+          "id": "CON30",
+          "section": "conditions",
+          "text": "I prefer solving problems by creating something new\u2014like sketching a solution, writing a plan, or designing a better process.",
+          "construct": "Problem Style",
+          "reverse": false,
+          "constructCode": "Physical_HandsOn",
+          "primary1": "Creative Path",
+          "primary2": "Business Growth & Leadership Path",
+          "secondary": "STEM Systems Path",
+          "secondaryWeight": 0.33,
+          "itemWeight": 1.0
+        },
+        {
+          "id": "CON31",
+          "section": "conditions",
+          "text": "I like receiving feedback during a project so I can adjust and improve as I go.",
+          "construct": "Feedback & Support",
+          "reverse": false,
+          "constructCode": "Physical_HandsOn",
+          "primary1": "Creative Path",
+          "primary2": "Learning & Support Path",
+          "secondary": "STEM Systems Path",
+          "secondaryWeight": 0.33,
+          "itemWeight": 1.0
+        },
+        {
+          "id": "CON32",
+          "section": "conditions",
+          "text": "I remember details well and can write down what happened clearly and accurately.",
+          "construct": "Protection Signature",
+          "reverse": false,
+          "constructCode": "Physical_HandsOn",
+          "primary1": "Protection Path",
+          "primary2": null,
+          "secondary": null,
+          "secondaryWeight": 0,
+          "itemWeight": 1.25
+        },
+        {
+          "id": "CON33",
+          "section": "conditions",
+          "text": "Regular coaching or check-ins help me do my best.",
+          "construct": "Feedback & Support",
+          "reverse": false,
+          "constructCode": "Schedule_Flex",
+          "primary1": "Learning & Support Path",
+          "primary2": "Clinical Care Path",
+          "secondary": "Build & Fix Path",
+          "secondaryWeight": 0.33,
+          "itemWeight": 1.0
+        },
+        {
+          "id": "CON34",
+          "section": "conditions",
+          "text": "Even when it takes longer, I prefer doing something the right way over the fast way.",
+          "construct": "Quality vs Speed",
+          "reverse": false,
+          "constructCode": "Schedule_Flex",
+          "primary1": "Clinical Care Path",
+          "primary2": "STEM Systems Path",
+          "secondary": "Build & Fix Path",
+          "secondaryWeight": 0.33,
+          "itemWeight": 0.7
+        },
+        {
+          "id": "CON35",
+          "section": "conditions",
+          "text": "I find it hard to hold firm boundaries or enforce rules when someone pushes back.",
+          "construct": "Protection Contra",
+          "reverse": true,
+          "constructCode": "Schedule_Flex",
+          "primary1": "Protection Path",
+          "primary2": null,
+          "secondary": null,
+          "secondaryWeight": 0,
+          "itemWeight": 1.0
+        },
+        {
+          "id": "CON36",
+          "section": "conditions",
+          "text": "I double-check details before declaring something finished.",
+          "construct": "Quality vs Speed",
+          "reverse": false,
+          "constructCode": "Schedule_Flex",
+          "primary1": "Clinical Care Path",
+          "primary2": "Build & Fix Path",
+          "secondary": "Protection Path",
+          "secondaryWeight": 0.33,
+          "itemWeight": 0.7
+        }
+      ]
+    }
+  },
+  "weights": {
+    "interests": 0.35,
+    "strengths": 0.35,
+    "drivers": 0.2,
+    "conditions": 0.1
+  },
+  "thresholds": {
+    "veryStrong": 85,
+    "strong": 70,
+    "moderate": 55,
+    "emerging": 40,
+    "tieGap": 5
+  },
+  "fitLabels": {
+    "veryStrong": "Very Strong Fit",
+    "strong": "Strong Fit",
+    "moderate": "Moderate Fit",
+    "emerging": "Emerging Fit",
+    "low": "Low Fit"
+  },
+  "pathDescriptions": {
+    "Clinical Care Path": "Helping people heal through nursing, therapy, medicine, or mental health care.",
+    "Protection Path": "Keeping communities safe through policing, firefighting, emergency response, or investigations.",
+    "Learning & Support Path": "Helping others learn, grow, and overcome challenges through teaching, counseling, or coaching.",
+    "Build & Fix Path": "Building, repairing, and maintaining physical things using tools, equipment, and skilled techniques.",
+    "STEM Systems Path": "Solving real-world problems by designing, testing, and improving technical systems.",
+    "Business Growth & Leadership Path": "Organizing people, plans, and resources to reach goals and grow organizations.",
+    "Creative Path": "Creating designs, stories, media, music, or content that connects with people.",
+    "Experience & Service Path": "Delivering great experiences through hospitality, food service, events, or customer service.",
+    "Outdoor Systems Path": "Working outdoors with land, water, animals, and natural systems."
+  },
+  "scale": [
+    {
+      "value": 1,
+      "label": "Not Like Me"
+    },
+    {
+      "value": 2,
+      "label": "A Little Like Me"
+    },
+    {
+      "value": 3,
+      "label": "Mostly Like Me"
+    },
+    {
+      "value": 4,
+      "label": "Very Like Me"
+    }
+  ]
+}

@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import type { AssessmentResult, PathScore } from "@/lib/types";
 import { config } from "@/lib/scoring";
 import { pathDetails } from "@/data/path-details";
+import { withBasePath } from "@/lib/supabase/client";
 
 interface ResultsDashboardProps {
   result: AssessmentResult;
@@ -31,7 +33,7 @@ function PathDetail({ path, rank }: PathDetailProps) {
         </div>
         <div className="shrink-0 text-right">
           <div className="text-[1.5rem] font-semibold tabular-nums tracking-tight text-primary">
-            {path.overall}
+            {path.score}
           </div>
           <div className="text-[12px] text-muted">{path.fitLevel}</div>
         </div>
@@ -40,7 +42,7 @@ function PathDetail({ path, rank }: PathDetailProps) {
       <div className="mt-4 h-1 overflow-hidden rounded-full bg-border/80">
         <div
           className="h-full rounded-full bg-primary transition-all duration-700"
-          style={{ width: `${path.overall}%` }}
+          style={{ width: `${path.score}%` }}
         />
       </div>
 
@@ -136,7 +138,7 @@ function AllPathsDetail({ path, isTopPath }: AllPathsDetailProps) {
         </div>
         <div className="flex shrink-0 items-center gap-4">
           <div className="text-right">
-            <div className="text-[15px] font-semibold tabular-nums">{path.overall}</div>
+            <div className="text-[15px] font-semibold tabular-nums">{path.score}</div>
             <div className="text-[11px] text-muted">{path.fitLevel}</div>
           </div>
           <svg
@@ -287,6 +289,19 @@ export default function ResultsDashboard({ result, studentName }: ResultsDashboa
           ))}
         </ul>
       </section>
+
+      {/* Retake Assessment */}
+      <div className="text-center">
+        <Link
+          href={withBasePath("/assessment")}
+          className="btn-secondary inline-block"
+        >
+          Retake Assessment
+        </Link>
+        <p className="mt-3 text-[13px] text-muted">
+          Want to update your responses? You can retake any section.
+        </p>
+      </div>
     </div>
   );
 }
