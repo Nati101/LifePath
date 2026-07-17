@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import AvatarSelector from "@/components/AvatarSelector";
 import { createClient } from "@/lib/supabase/client";
@@ -27,7 +27,7 @@ export default function AccountForm({
   schoolId: initialSchoolId,
   advisorId: initialAdvisorId,
   avatarEmoji: initialAvatar,
-  schools: initialSchools,
+  schools,
   advisors,
 }: AccountFormProps) {
   const router = useRouter();
@@ -40,50 +40,27 @@ export default function AccountForm({
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [schools, setSchools] = useState<SelectOption[]>(initialSchools);
-  const [loadingSchools, setLoadingSchools] = useState(false);
 
   useEffect(() => {
     setFullName(initialName);
     setSchoolId(initialSchoolId ?? "");
     setAdvisorId(initialAdvisorId ?? "");
     setAvatarEmoji(normalizeAvatar(initialAvatar));
-    setSchools(initialSchools);
-  }, [initialName, initialSchoolId, initialAdvisorId, initialAvatar, initialSchools]);
+  }, [initialName, initialSchoolId, initialAdvisorId, initialAvatar]);
 
-  // When advisor changes, reload schools filtered by their school
+  const filteredAdvisors = useMemo(() => {
+    if (!schoolId) return [];
+    return advisors.filter((advisor) => advisor.schoolId === schoolId);
+  }, [advisors, schoolId]);
+
+  // Clear advisor if it no longer matches the selected school
   useEffect(() => {
-    const selectedAdvisor = advisors.find((a) => a.id === advisorId);
-    
-    async function loadSchools() {
-      setLoadingSchools(true);
-      const supabase = createClient();
-      
-      try {
-        let query = supabase.from("schools").select("id, name").order("name");
-        
-        // If advisor has a school, filter by it
-        if (selectedAdvisor?.schoolId) {
-          query = query.eq("id", selectedAdvisor.schoolId);
-        }
-        
-        const { data } = await query;
-        const newSchools = (data ?? []).map((row) => ({ id: row.id, name: row.name }));
-        setSchools(newSchools);
-        
-        // If current school is not in the filtered list, clear it
-        if (schoolId && selectedAdvisor?.schoolId && !newSchools.some((s) => s.id === schoolId)) {
-          setSchoolId("");
-        }
-      } catch (error) {
-        console.error("Failed to load schools:", error);
-      } finally {
-        setLoadingSchools(false);
-      }
+    if (!advisorId) return;
+    const stillValid = filteredAdvisors.some((advisor) => advisor.id === advisorId);
+    if (!stillValid) {
+      setAdvisorId("");
     }
-    
-    void loadSchools();
-  }, [advisorId, advisors, schoolId]);
+  }, [advisorId, filteredAdvisors]);
 
   const dirty =
     fullName.trim() !== initialName.trim() ||
@@ -104,7 +81,6 @@ export default function AccountForm({
       return;
     }
 
-    const selectedSchool = schools.find((item) => item.id === schoolId);
     const selectedAdvisor = advisors.find((item) => item.id === advisorId);
 
     const supabase = createClient();
@@ -114,7 +90,6 @@ export default function AccountForm({
         full_name: name,
         school_id: schoolId || null,
         advisor_id: advisorId || null,
-        school_name: selectedSchool?.name ?? null,
         advisor: selectedAdvisor?.name ?? null,
         avatar_emoji: avatarEmoji,
       })
@@ -190,45 +165,6 @@ export default function AccountForm({
           <p className="form-section-title">School Information</p>
 
           <div className="form-field">
-            <label htmlFor="advisorId" className="field-label">
-              Advisor
-            </label>
-            <div className="select-wrap">
-              <select
-                id="advisorId"
-                value={advisorId}
-                onChange={(e) => {
-                  setAdvisorId(e.target.value);
-                  setSaved(false);
-                }}
-                className="select-field"
-                disabled={advisors.length === 0}
-              >
-                <option value="">
-                  {advisors.length === 0
-                    ? "No advisors available"
-                    : "Select an advisor"}
-                </option>
-                {advisors.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            {advisors.length === 0 && (
-              <p className="field-hint">
-                Ask your teacher to create an admin account first.
-              </p>
-            )}
-            {advisors.length > 0 && (
-              <p className="field-hint">
-                Your advisor determines which school you can select.
-              </p>
-            )}
-          </div>
-
-          <div className="form-field">
             <label htmlFor="schoolId" className="field-label">
               School
             </label>
@@ -241,10 +177,10 @@ export default function AccountForm({
                   setSaved(false);
                 }}
                 className="select-field"
-                disabled={loadingSchools}
+                disabled={schools.length === 0}
               >
                 <option value="">
-                  {loadingSchools ? "Loading schools..." : "Select a school"}
+                  {schools.length === 0 ? "No schools available" : "Select a school"}
                 </option>
                 {schools.map((item) => (
                   <option key={item.id} value={item.id}>
@@ -253,13 +189,50 @@ export default function AccountForm({
                 ))}
               </select>
             </div>
-            {!loadingSchools && schools.length === 0 && advisorId && (
+            {schools.length === 0 && (
+              <p className="field-hint">Schools haven&apos;t been set up yet.</p>
+            )}
+            {schools.length > 0 && (
               <p className="field-hint">
-                No school available for this advisor. Ask your advisor to be assigned to a school.
+                Choose your school first. Then you can pick an advisor from that school.
               </p>
             )}
-            {!loadingSchools && schools.length === 0 && !advisorId && (
-              <p className="field-hint">Schools haven&apos;t been set up yet.</p>
+          </div>
+
+          <div className="form-field">
+            <label htmlFor="advisorId" className="field-label">
+              Advisor
+            </label>
+            <div className="select-wrap">
+              <select
+                id="advisorId"
+                value={advisorId}
+                onChange={(e) => {
+                  setAdvisorId(e.target.value);
+                  setSaved(false);
+                }}
+                className="select-field"
+                disabled={!schoolId || filteredAdvisors.length === 0}
+              >
+                <option value="">
+                  {!schoolId
+                    ? "Select a school first"
+                    : filteredAdvisors.length === 0
+                      ? "No advisors at this school"
+                      : "Select an advisor"}
+                </option>
+                {filteredAdvisors.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {schoolId && filteredAdvisors.length === 0 && (
+              <p className="field-hint">
+                No advisors are assigned to this school yet. Ask your teacher to set up an advisor
+                account.
+              </p>
             )}
           </div>
         </div>

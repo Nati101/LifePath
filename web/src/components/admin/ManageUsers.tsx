@@ -9,7 +9,6 @@ interface User {
   full_name: string | null;
   role: "student" | "admin";
   school_id: string | null;
-  school_name: string | null;
   is_super_admin: boolean;
   created_at: string;
 }
@@ -46,7 +45,7 @@ export default function ManageUsers() {
     const [usersRes, schoolsRes] = await Promise.all([
       supabase
         .from("profiles")
-        .select("id, email, full_name, role, school_id, school_name, is_super_admin, created_at")
+        .select("id, email, full_name, role, school_id, is_super_admin, created_at")
         .order("created_at", { ascending: false }),
       supabase.from("schools").select("id, name").order("name"),
     ]);
@@ -73,13 +72,11 @@ export default function ManageUsers() {
 
   async function updateUserSchool(userId: string, schoolId: string) {
     const supabase = createClient();
-    const school = schools.find((s) => s.id === schoolId);
     
     const { error } = await supabase
       .from("profiles")
       .update({ 
         school_id: schoolId || null,
-        school_name: school?.name || null
       })
       .eq("id", userId);
 
@@ -115,14 +112,12 @@ export default function ManageUsers() {
     }
 
     // Update profile to admin and assign school
-    const school = schools.find((s) => s.id === newAdvisorSchool);
     const { error: profileError } = await supabase
       .from("profiles")
       .update({
         role: "admin",
         full_name: newAdvisorName,
         school_id: newAdvisorSchool || null,
-        school_name: school?.name || null,
       })
       .eq("id", authData.user.id);
 
