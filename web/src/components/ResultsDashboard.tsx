@@ -205,7 +205,7 @@ export default function ResultsDashboard({
 
   const handleRetake = async () => {
     const confirmed = window.confirm(
-      "This will clear all your Career Paths answers and results so you can start fresh. Continue?",
+      "This starts a new Career Paths attempt. Your previous results will be saved so you can review them later. Continue?",
     );
     if (!confirmed) return;
 
@@ -340,7 +340,7 @@ export default function ResultsDashboard({
             {retaking ? "Resetting…" : "Retake Assessment"}
           </button>
           <p className="mt-3 text-[13px] text-muted">
-            This clears your answers and lets you start Career Paths again.
+            Starts a new attempt. Your previous results stay available on this page.
           </p>
           {retakeError && (
             <p className="mt-2 text-[13px] text-danger">{retakeError}</p>

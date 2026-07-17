@@ -52,7 +52,7 @@ export async function fetchDashboardData(
       .eq("role", "student")
       .order("created_at", { ascending: false }),
     supabase.from("assessment_sessions").select("user_id, status, completed_at"),
-    supabase.from("results").select("user_id, top_paths, computed_at"),
+    supabase.from("results").select("user_id, top_paths, computed_at").order("computed_at", { ascending: false }),
     supabase.from("classes").select("id, name").order("name"),
     supabase
       .from("profiles")
@@ -63,7 +63,12 @@ export async function fetchDashboardData(
   ]);
 
   const sessionMap = new Map(sessions?.map((session) => [session.user_id, session]) ?? []);
-  const resultMap = new Map(results?.map((result) => [result.user_id, result]) ?? []);
+  const resultMap = new Map<string, { user_id: string; top_paths: any; computed_at: string }>();
+  for (const result of results ?? []) {
+    if (!resultMap.has(result.user_id)) {
+      resultMap.set(result.user_id, result);
+    }
+  }
   const classMap = new Map(classes?.map((row) => [row.id, row.name]) ?? []);
   const advisorMap = new Map(
     advisors?.map((row) => [row.id, row.full_name?.trim() || row.email]) ?? [],

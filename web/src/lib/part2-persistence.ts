@@ -1,13 +1,19 @@
-import type { SupabaseClient, User } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   Part2Session,
-  Part2Response,
   Part2Responses,
   Part2Result,
   Part2SectionKey,
   Part2StoredResult,
 } from "./part2-types";
-import { computePart2Results, getPart2SectionCompletion } from "./part2-scoring";
+import { computePart2Results } from "./part2-scoring";
+import { getCurrentResult, listResultHistory } from "./assessment/persistence";
+
+export interface StoredPart2Attempt extends Part2StoredResult {
+  source: "current" | "history";
+  completed_at?: string;
+  archived_at?: string;
+}
 
 export async function getPart2Session(
   supabase: SupabaseClient,
@@ -169,11 +175,13 @@ export async function savePart2Results(
 export async function getPart2Results(
   supabase: SupabaseClient,
   userId: string,
-): Promise<Part2StoredResult | null> {
+): Promise<StoredPart2Attempt | null> {
   const { data, error } = await supabase
     .from("part2_results")
     .select("*")
     .eq("user_id", userId)
+    .order("computed_at", { ascending: false })
+    .limit(1)
     .maybeSingle();
 
   if (error) {
@@ -181,33 +189,110 @@ export async function getPart2Results(
     return null;
   }
 
-  return data;
+  if (!data) return null;
+
+  return {
+    ...data,
+    source: "current",
+  };
 }
 
-// Check if user has completed Part 1 (required before Part 2)
+export async function listPart2ResultHistory(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<StoredPart2Attempt[]> {
+  const { data, error } = await supabase
+    .from("part2_result_history")
+    .select("*")
+    .eq("user_id", userId)
+    .order("completed_at", { ascending: false });
+
+  if (error) {
+    console.error("listPart2ResultHistory failed:", error.message);
+    return [];
+  }
+
+  return (data ?? []).map((row) => ({
+    ...row,
+    session_id: "",
+    computed_at: row.completed_at,
+    source: "history" as const,
+  }));
+}
+
+export async function listAllPart2Attempts(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<StoredPart2Attempt[]> {
+  const [current, history] = await Promise.all([
+    getPart2Results(supabase, userId),
+    listPart2ResultHistory(supabase, userId),
+  ]);
+
+  return [...(current ? [current] : []), ...history];
+}
+
+export function toPart2Result(stored: StoredPart2Attempt): Part2Result {
+  return {
+    routeScores: stored.route_scores,
+    topRoutes: stored.top_routes,
+    factorScores: stored.factor_scores,
+    sectionCompletion: {
+      school_setup: 1,
+      training_style: 1,
+      life_factors: 1,
+      exploration: 1,
+    },
+    allComplete: true,
+    actionReadiness: stored.action_readiness,
+    actionReadinessLevel: stored.action_readiness_level,
+  };
+}
+
+async function archiveCurrentPart2Result(
+  supabase: SupabaseClient,
+  userId: string,
+) {
+  const current = await getPart2Results(supabase, userId);
+  if (!current) return;
+
+  const { error } = await supabase.from("part2_result_history").insert({
+    user_id: userId,
+    route_scores: current.route_scores,
+    top_routes: current.top_routes,
+    factor_scores: current.factor_scores,
+    action_readiness: current.action_readiness,
+    action_readiness_level: current.action_readiness_level,
+    completed_at: current.computed_at ?? new Date().toISOString(),
+  });
+
+  if (error) {
+    console.error("archiveCurrentPart2Result failed:", error.message);
+    throw new Error(
+      `Could not save previous Part 2 results before retake. Please run the results history SQL migration. (${error.message})`,
+    );
+  }
+}
+
+/** True if student has ever completed Part 1 (current or archived). */
 export async function hasPart1Completed(
   supabase: SupabaseClient,
   userId: string,
 ): Promise<boolean> {
-  const { data, error } = await supabase
-    .from("results")
-    .select("id")
-    .eq("user_id", userId)
-    .maybeSingle();
+  const current = await getCurrentResult(supabase, userId);
+  if (current) return true;
 
-  if (error) {
-    console.error("Failed to check Part 1 completion:", error);
-    return false;
-  }
-
-  return !!data;
+  const history = await listResultHistory(supabase, userId);
+  return history.length > 0;
 }
 
-/** Wipe Part 2 answers/results and start a fresh session. */
+/** Archive current Part 2 results, then wipe answers and start fresh. */
 export async function resetPart2Assessment(
   supabase: SupabaseClient,
   userId: string,
 ): Promise<Part2Session> {
+  await archiveCurrentPart2Result(supabase, userId);
+
   const { error: deleteError } = await supabase
     .from("part2_sessions")
     .delete()
