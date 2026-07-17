@@ -244,10 +244,7 @@ export default function SectionFlow({ section }: SectionFlowProps) {
     );
   }
 
-  const prompt =
-    section === "conditions"
-      ? "Choose what you would want on most work days."
-      : "Choose how accurately each statement reflects you.";
+  const prompt = "Choose how accurately each statement reflects you.";
 
   return (
     <AssessmentShell

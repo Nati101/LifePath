@@ -47,7 +47,7 @@ export async function getOrCreateSession(
     .from("assessment_sessions")
     .insert({
       user_id: userId,
-      current_section: section ?? "interests",
+      current_section: section ?? "clinical_care",
     })
     .select()
     .single();
@@ -148,12 +148,7 @@ export async function saveResults(
       path_scores: result.pathScores,
       top_paths: result.topPaths,
       construct_scores: result.constructScores,
-      section_scores: {
-        interests: result.pathScores,
-        strengths: result.pathScores,
-        drivers: result.pathScores,
-        conditions: result.constructScores,
-      },
+      section_scores: result.pathScores,
     },
     { onConflict: "session_id" },
   );
