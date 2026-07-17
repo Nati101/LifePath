@@ -92,7 +92,7 @@ export async function fetchDashboardData(
         status: resolveStatus(session?.status, progressPercent, Object.keys(responses).length > 0),
         progressPercent,
         topPath: topPath?.path ?? null,
-        topPathScore: topPath?.overall ?? null,
+        topPathScore: topPath?.score ?? topPath?.overall ?? null,
         createdAt: student.created_at,
       };
     }) ?? [];
