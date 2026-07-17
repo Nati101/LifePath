@@ -22,6 +22,7 @@ import {
   getConfig,
   getSectionCompletion,
   getSectionItems,
+  getSectionOrder,
 } from "@/lib/scoring";
 import { QUESTIONS_PER_STEP } from "@/lib/scale";
 import { sectionLabels } from "@/data/instructions";
@@ -229,6 +230,15 @@ export default function SectionFlow({ section }: SectionFlowProps) {
   }
 
   if (phase === "complete") {
+    const order = getSectionOrder();
+    const currentIndex = order.indexOf(section);
+    const completion = getSectionCompletion(responses);
+    const nextIncomplete = order.find(
+      (key, index) => index > currentIndex && (completion[key] ?? 0) < 1,
+    );
+    const fallbackIncomplete = order.find((key) => (completion[key] ?? 0) < 1);
+    const nextSection = nextIncomplete ?? fallbackIncomplete ?? null;
+
     return (
       <>
         {saveError && (
@@ -239,6 +249,7 @@ export default function SectionFlow({ section }: SectionFlowProps) {
         <SectionComplete
           section={section}
           allSectionsComplete={allSectionsComplete}
+          nextSectionHref={nextSection ? `/assessment/${nextSection}` : null}
           onChangeAnswers={() => {
             setCurrentStep(0);
             setPhase("questions");
