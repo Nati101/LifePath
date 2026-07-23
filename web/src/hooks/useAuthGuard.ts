@@ -1,16 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { getAuthenticatedUser, isAdminUser } from "@/lib/auth/guards";
-import { createClient, withBasePath } from "@/lib/supabase/client";
+import {
+  getAuthenticatedUser,
+  isAdminUser,
+  isSuperAdminUser,
+} from "@/lib/auth/guards";
+import { appPath, createClient } from "@/lib/supabase/client";
 
 interface AuthGuardOptions {
   admin?: boolean;
+  superAdmin?: boolean;
 }
 
 export function useAuthGuard(options: AuthGuardOptions = {}) {
-  const router = useRouter();
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -21,14 +24,20 @@ export function useAuthGuard(options: AuthGuardOptions = {}) {
       const user = await getAuthenticatedUser(supabase);
 
       if (!user) {
-        router.replace(withBasePath("/login"));
+        window.location.replace(appPath("/login"));
         return;
       }
 
-      if (options.admin) {
+      if (options.superAdmin) {
+        const allowed = await isSuperAdminUser(supabase, user.id);
+        if (!allowed) {
+          window.location.replace(appPath("/admin"));
+          return;
+        }
+      } else if (options.admin) {
         const allowed = await isAdminUser(supabase, user.id);
         if (!allowed) {
-          router.replace(withBasePath("/"));
+          window.location.replace(appPath("/"));
           return;
         }
       }
@@ -43,7 +52,7 @@ export function useAuthGuard(options: AuthGuardOptions = {}) {
     return () => {
       cancelled = true;
     };
-  }, [options.admin, router]);
+  }, [options.admin, options.superAdmin]);
 
   return ready;
 }

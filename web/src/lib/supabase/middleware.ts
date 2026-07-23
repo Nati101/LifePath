@@ -59,26 +59,37 @@ export async function updateSession(request: NextRequest) {
   ) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("role")
+      .select("role, is_super_admin")
       .eq("id", user.id)
-      .single();
+      .maybeSingle();
+
+    const isAdmin =
+      profile?.role === "admin" || Boolean(profile?.is_super_admin);
 
     const url = request.nextUrl.clone();
-    url.pathname =
-      profile?.role === "admin" ? `${basePath}/admin` : `${basePath}/`;
+    url.pathname = isAdmin ? `${basePath}/admin` : `${basePath}/`;
     return NextResponse.redirect(url);
   }
 
   if (user && pathname.startsWith("/admin")) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("role")
+      .select("role, is_super_admin")
       .eq("id", user.id)
-      .single();
+      .maybeSingle();
 
-    if (profile?.role !== "admin") {
+    const isAdmin =
+      profile?.role === "admin" || Boolean(profile?.is_super_admin);
+
+    if (!isAdmin) {
       const url = request.nextUrl.clone();
       url.pathname = `${basePath}/`;
+      return NextResponse.redirect(url);
+    }
+
+    if (pathname.startsWith("/admin/manage") && !profile?.is_super_admin) {
+      const url = request.nextUrl.clone();
+      url.pathname = `${basePath}/admin`;
       return NextResponse.redirect(url);
     }
   }

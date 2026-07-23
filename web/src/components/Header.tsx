@@ -2,12 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
 import ProfileMenu from "@/components/ProfileMenu";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { normalizeAvatar } from "@/lib/avatars";
 import { isAuthPage, normalizeAppPath } from "@/lib/navigation";
-import { createClient, withBasePath } from "@/lib/supabase/client";
+import { withBasePath } from "@/lib/supabase/client";
 
 export default function Header() {
   const pathname = usePathname();
@@ -16,29 +15,8 @@ export default function Header() {
   const appPath = normalizeAppPath(pathname);
   const showAuthenticatedNav = Boolean(user) && !onAuthPage;
   const displayName = user?.fullName?.trim() || "Account";
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
-
-  const isAdmin = user?.role === "admin";
-
-  useEffect(() => {
-    if (!user) return;
-    
-    async function checkSuperAdmin() {
-      if (!user) return;
-      
-      const supabase = createClient();
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("is_super_admin")
-        .eq("id", user.id)
-        .single();
-
-      if (profile?.is_super_admin) {
-        setIsSuperAdmin(true);
-      }
-    }
-    void checkSuperAdmin();
-  }, [user]);
+  const isAdmin = Boolean(user?.isAdmin);
+  const isSuperAdmin = Boolean(user?.isSuperAdmin);
 
   const isActive = (path: string) => {
     if (path === "/") return appPath === "/";
@@ -63,7 +41,6 @@ export default function Header() {
           ) : showAuthenticatedNav ? (
             <>
               {isAdmin ? (
-                // Admin Navigation
                 <>
                   <Link
                     href={withBasePath("/admin")}
@@ -81,7 +58,6 @@ export default function Header() {
                   )}
                 </>
               ) : (
-                // Student Navigation
                 <>
                   <Link
                     href={withBasePath("/")}

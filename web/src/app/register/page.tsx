@@ -37,7 +37,7 @@ export default function RegisterPage() {
         password,
         options: {
           emailRedirectTo: getAuthCallbackUrl("/welcome"),
-          data: { full_name: fullName, role: "student" },
+          data: { full_name: fullName },
         },
       });
 

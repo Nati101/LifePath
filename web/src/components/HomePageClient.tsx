@@ -1,14 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import type { Session } from "@supabase/supabase-js";
 import GuestLanding from "@/components/GuestLanding";
 import LoggedInHome from "@/components/LoggedInHome";
-import { createClient, withBasePath } from "@/lib/supabase/client";
+import { profileHasAdminAccess } from "@/lib/auth/guards";
+import { appPath, createClient } from "@/lib/supabase/client";
 
 export default function HomePageClient() {
-  const router = useRouter();
   const [state, setState] = useState<
     | { status: "loading" }
     | { status: "guest" }
@@ -34,9 +33,9 @@ export default function HomePageClient() {
       const [{ data: profile }, { data: assessmentSession }] = await Promise.all([
         supabase
           .from("profiles")
-          .select("role, full_name, avatar_emoji")
+          .select("role, is_super_admin, full_name, avatar_emoji")
           .eq("id", session.user.id)
-          .single(),
+          .maybeSingle(),
         supabase
           .from("assessment_sessions")
           .select("status")
@@ -44,9 +43,9 @@ export default function HomePageClient() {
           .maybeSingle(),
       ]);
 
-      // Redirect admins to admin dashboard
-      if (profile?.role === "admin" && !cancelled) {
-        router.replace(withBasePath("/admin"));
+      // Admins should never sit on the student career-paths home.
+      if (profileHasAdminAccess(profile) && !cancelled) {
+        window.location.replace(appPath("/admin"));
         return;
       }
 
@@ -55,7 +54,7 @@ export default function HomePageClient() {
           status: "authed",
           fullName: profile?.full_name ?? null,
           sessionStatus: assessmentSession?.status ?? null,
-          isAdmin: profile?.role === "admin",
+          isAdmin: false,
           avatarEmoji: profile?.avatar_emoji ?? null,
         });
       }
@@ -75,7 +74,7 @@ export default function HomePageClient() {
       cancelled = true;
       subscription.unsubscribe();
     };
-  }, [router]);
+  }, []);
 
   if (state.status === "loading") {
     return (
