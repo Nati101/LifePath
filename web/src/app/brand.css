@@ -1053,6 +1053,75 @@ body {
   padding: 14px 16px;
 }
 
+.admin-row--editing {
+  background: #f8faf9;
+}
+
+.admin-row-edit td {
+  padding: 0 16px 16px;
+  background: #f8faf9;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.admin-row-edit__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #ffffff;
+  border: 1.5px solid #e5e7eb;
+}
+
+.admin-row-edit__panel--card {
+  margin-top: 4px;
+}
+
+.admin-row-edit__fields {
+  display: grid;
+  gap: 12px;
+}
+
+@media (min-width: 720px) {
+  .admin-row-edit__fields {
+    grid-template-columns: minmax(140px, 180px) minmax(180px, 1fr) auto;
+    align-items: end;
+  }
+}
+
+.admin-row-edit__field {
+  display: block;
+  min-width: 0;
+}
+
+.admin-row-edit__select {
+  height: 44px !important;
+  font-size: 14px !important;
+  min-width: 0;
+}
+
+.admin-row-edit__check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding-bottom: 2px;
+  font-size: 14px;
+  color: #4b5563;
+  white-space: nowrap;
+}
+
+.admin-row-edit__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.admin-row-edit__actions .btn-primary-sm,
+.admin-row-edit__actions .btn-secondary-sm {
+  width: auto;
+}
+
 .admin-manage-card .admin-name-cell {
   min-width: 0;
   width: 100%;

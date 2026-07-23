@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 interface User {
@@ -514,106 +514,117 @@ export default function ManageUsers() {
               const label = user.full_name?.trim() || user.email;
               const isSelf = currentUserId === user.id;
               return (
-                <tr key={user.id} className="admin-row">
-                  <td className="admin-col-name">
-                    <NameCell name={user.full_name || "—"} isSuperAdmin={user.is_super_admin} />
-                  </td>
-                  <td className="admin-row__email" style={{ marginTop: 0 }}>
-                    {user.email}
-                  </td>
-                  <td>
-                    {editing ? (
-                      <div className="space-y-2">
-                        <div className="select-wrap">
-                          <select
-                            value={editSuperAdmin ? "admin" : editRole}
-                            onChange={(e) => {
-                              const value = e.target.value as "student" | "admin";
-                              setEditRole(value);
-                              if (value === "student") setEditSuperAdmin(false);
-                            }}
-                            disabled={busy || (isSelf && user.is_super_admin)}
-                            className="select-field text-[13px]"
-                            aria-label={`Role for ${label}`}
-                          >
-                            <option value="student">Student</option>
-                            <option value="admin">Advisor</option>
-                          </select>
-                        </div>
-                        <label className="flex items-center gap-2 text-[13px] text-muted">
-                          <input
-                            type="checkbox"
-                            checked={editSuperAdmin}
-                            disabled={busy || (isSelf && user.is_super_admin)}
-                            onChange={(e) => {
-                              setEditSuperAdmin(e.target.checked);
-                              if (e.target.checked) setEditRole("admin");
-                            }}
-                          />
-                          Super admin
-                        </label>
-                      </div>
-                    ) : (
+                <Fragment key={user.id}>
+                  <tr className={`admin-row${editing ? " admin-row--editing" : ""}`}>
+                    <td className="admin-col-name">
+                      <NameCell name={user.full_name || "—"} isSuperAdmin={user.is_super_admin} />
+                    </td>
+                    <td className="admin-row__email" style={{ marginTop: 0 }}>
+                      {user.email}
+                    </td>
+                    <td>
                       <span className="text-[14px]">{roleLabel(user.role)}</span>
-                    )}
-                  </td>
-                  <td className="admin-col-school">
-                    {editing ? (
-                      <div className="select-wrap">
-                        <select
-                          value={editSchoolId}
-                          onChange={(e) => setEditSchoolId(e.target.value)}
-                          disabled={busy}
-                          className="select-field text-[13px]"
-                          aria-label={`School for ${label}`}
-                        >
-                          <option value="">No school</option>
-                          {schools.map((school) => (
-                            <option key={school.id} value={school.id}>
-                              {school.name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    ) : (
+                    </td>
+                    <td className="admin-col-school">
                       <span className="text-[14px] text-muted">{schoolName(user.school_id)}</span>
-                    )}
-                  </td>
-                  <td className="admin-row__meta text-[12px] text-muted">
-                    {new Date(user.created_at).toLocaleDateString()}
-                  </td>
-                  <td className="admin-row__action">
-                    {editing ? (
-                      <div className="flex justify-end gap-3">
+                    </td>
+                    <td className="admin-row__meta text-[12px] text-muted">
+                      {new Date(user.created_at).toLocaleDateString()}
+                    </td>
+                    <td className="admin-row__action">
+                      {editing ? (
+                        <span className="text-[13px] text-muted">Editing…</span>
+                      ) : (
                         <button
                           type="button"
                           className="admin-link"
-                          disabled={busy}
-                          onClick={() => void saveEdit(user)}
+                          onClick={() => startEdit(user)}
+                          aria-label={`Edit ${label}`}
                         >
-                          {busy ? "Saving…" : "Save"}
+                          Edit
                         </button>
-                        <button
-                          type="button"
-                          className="admin-link"
-                          disabled={busy}
-                          onClick={cancelEdit}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        className="admin-link"
-                        onClick={() => startEdit(user)}
-                        aria-label={`Edit ${label}`}
-                      >
-                        Edit
-                      </button>
-                    )}
-                  </td>
-                </tr>
+                      )}
+                    </td>
+                  </tr>
+                  {editing && (
+                    <tr className="admin-row-edit">
+                      <td colSpan={6}>
+                        <div className="admin-row-edit__panel">
+                          <div className="admin-row-edit__fields">
+                            <label className="admin-row-edit__field">
+                              <span className="field-label">Role</span>
+                              <div className="select-wrap">
+                                <select
+                                  value={editSuperAdmin ? "admin" : editRole}
+                                  onChange={(e) => {
+                                    const value = e.target.value as "student" | "admin";
+                                    setEditRole(value);
+                                    if (value === "student") setEditSuperAdmin(false);
+                                  }}
+                                  disabled={busy || (isSelf && user.is_super_admin)}
+                                  className="select-field admin-row-edit__select"
+                                  aria-label={`Role for ${label}`}
+                                >
+                                  <option value="student">Student</option>
+                                  <option value="admin">Advisor</option>
+                                </select>
+                              </div>
+                            </label>
+                            <label className="admin-row-edit__field">
+                              <span className="field-label">School</span>
+                              <div className="select-wrap">
+                                <select
+                                  value={editSchoolId}
+                                  onChange={(e) => setEditSchoolId(e.target.value)}
+                                  disabled={busy}
+                                  className="select-field admin-row-edit__select"
+                                  aria-label={`School for ${label}`}
+                                >
+                                  <option value="">No school</option>
+                                  {schools.map((school) => (
+                                    <option key={school.id} value={school.id}>
+                                      {school.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            </label>
+                            <label className="admin-row-edit__check">
+                              <input
+                                type="checkbox"
+                                checked={editSuperAdmin}
+                                disabled={busy || (isSelf && user.is_super_admin)}
+                                onChange={(e) => {
+                                  setEditSuperAdmin(e.target.checked);
+                                  if (e.target.checked) setEditRole("admin");
+                                }}
+                              />
+                              <span>Super admin</span>
+                            </label>
+                          </div>
+                          <div className="admin-row-edit__actions">
+                            <button
+                              type="button"
+                              className="btn-primary-sm"
+                              disabled={busy}
+                              onClick={() => void saveEdit(user)}
+                            >
+                              {busy ? "Saving…" : "Save"}
+                            </button>
+                            <button
+                              type="button"
+                              className="btn-secondary-sm"
+                              disabled={busy}
+                              onClick={cancelEdit}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
               );
             })}
             {filteredUsers.length === 0 && (
@@ -658,9 +669,9 @@ export default function ManageUsers() {
               </div>
 
               {editing && (
-                <div className="space-y-3">
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <label className="form-field">
+                <div className="admin-row-edit__panel admin-row-edit__panel--card">
+                  <div className="admin-row-edit__fields">
+                    <label className="admin-row-edit__field">
                       <span className="field-label">Role</span>
                       <div className="select-wrap">
                         <select
@@ -671,7 +682,7 @@ export default function ManageUsers() {
                             if (value === "student") setEditSuperAdmin(false);
                           }}
                           disabled={busy || (isSelf && user.is_super_admin)}
-                          className="select-field text-[13px]"
+                          className="select-field admin-row-edit__select"
                           aria-label={`Role for ${label}`}
                         >
                           <option value="student">Student</option>
@@ -679,14 +690,14 @@ export default function ManageUsers() {
                         </select>
                       </div>
                     </label>
-                    <label className="form-field">
+                    <label className="admin-row-edit__field">
                       <span className="field-label">School</span>
                       <div className="select-wrap">
                         <select
                           value={editSchoolId}
                           onChange={(e) => setEditSchoolId(e.target.value)}
                           disabled={busy}
-                          className="select-field text-[13px]"
+                          className="select-field admin-row-edit__select"
                           aria-label={`School for ${label}`}
                         >
                           <option value="">No school</option>
@@ -698,23 +709,23 @@ export default function ManageUsers() {
                         </select>
                       </div>
                     </label>
+                    <label className="admin-row-edit__check">
+                      <input
+                        type="checkbox"
+                        checked={editSuperAdmin}
+                        disabled={busy || (isSelf && user.is_super_admin)}
+                        onChange={(e) => {
+                          setEditSuperAdmin(e.target.checked);
+                          if (e.target.checked) setEditRole("admin");
+                        }}
+                      />
+                      <span>Super admin</span>
+                    </label>
                   </div>
-                  <label className="flex items-center gap-2 text-[14px] text-muted">
-                    <input
-                      type="checkbox"
-                      checked={editSuperAdmin}
-                      disabled={busy || (isSelf && user.is_super_admin)}
-                      onChange={(e) => {
-                        setEditSuperAdmin(e.target.checked);
-                        if (e.target.checked) setEditRole("admin");
-                      }}
-                    />
-                    Super admin
-                  </label>
-                  <div className="flex gap-3">
+                  <div className="admin-row-edit__actions">
                     <button
                       type="button"
-                      className="admin-link"
+                      className="btn-primary-sm"
                       disabled={busy}
                       onClick={() => void saveEdit(user)}
                     >
@@ -722,7 +733,7 @@ export default function ManageUsers() {
                     </button>
                     <button
                       type="button"
-                      className="admin-link"
+                      className="btn-secondary-sm"
                       disabled={busy}
                       onClick={cancelEdit}
                     >
