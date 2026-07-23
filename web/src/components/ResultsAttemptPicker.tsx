@@ -1,5 +1,7 @@
 "use client";
 
+import { useId } from "react";
+
 interface AttemptOption {
   id: string;
   label: string;
@@ -10,22 +12,34 @@ interface ResultsAttemptPickerProps {
   attempts: AttemptOption[];
   selectedId: string;
   onSelect: (id: string) => void;
+  /** Defaults to student-facing “your” copy; use admin on advisor views. */
+  audience?: "self" | "admin";
+  label?: string;
 }
 
 export default function ResultsAttemptPicker({
   attempts,
   selectedId,
   onSelect,
+  audience = "self",
+  label = "Previous results",
 }: ResultsAttemptPickerProps) {
+  const pickerId = useId();
+
   if (attempts.length <= 1) return null;
+
+  const helper =
+    audience === "admin"
+      ? "Choose an earlier attempt to compare with the latest results."
+      : "Choose an earlier attempt to compare with your latest results.";
 
   return (
     <div className="rounded-[16px] border border-border bg-card p-4">
-      <label htmlFor="attempt-picker" className="mb-2 block text-[13px] font-semibold text-muted">
-        Previous results
+      <label htmlFor={pickerId} className="mb-2 block text-[13px] font-semibold text-muted">
+        {label}
       </label>
       <select
-        id="attempt-picker"
+        id={pickerId}
         value={selectedId}
         onChange={(e) => onSelect(e.target.value)}
         className="input-field"
@@ -37,9 +51,7 @@ export default function ResultsAttemptPicker({
           </option>
         ))}
       </select>
-      <p className="mt-2 text-[12px] text-muted">
-        Choose an earlier attempt to compare with your latest results.
-      </p>
+      <p className="mt-2 text-[12px] text-muted">{helper}</p>
     </div>
   );
 }

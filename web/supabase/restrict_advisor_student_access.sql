@@ -1,6 +1,6 @@
 -- Restrict advisors to only their assigned students
 -- Super admins still see everyone
--- Run this in Supabase SQL Editor
+-- REQUIRED for production — run this in Supabase SQL Editor after lock_profile_privileges.sql
 
 create or replace function public.is_super_admin()
 returns boolean

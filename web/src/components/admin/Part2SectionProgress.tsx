@@ -30,7 +30,14 @@ export default function Part2SectionProgress({ responses }: Part2SectionProgress
                 {complete ? "Complete" : `${percent}%`}
               </span>
             </div>
-            <div className="admin-progress__track">
+            <div
+              className="admin-progress__track"
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={percent}
+              aria-label={`${config.sections[section].label} ${complete ? "complete" : `${percent}%`}`}
+            >
               <div
                 className={`admin-progress__fill${complete ? " admin-progress__fill--complete" : ""}`}
                 style={{ width: `${percent}%` }}

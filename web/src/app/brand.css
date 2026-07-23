@@ -677,7 +677,7 @@ body {
 
 .admin-page-content {
   width: 100%;
-  max-width: 960px !important;
+  max-width: 1120px !important;
 }
 
 .admin-col-sm,
@@ -788,6 +788,33 @@ body {
   .admin-stat-grid--3 {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+
+  .admin-stat-grid--5 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 960px) {
+  .admin-stat-grid--5 {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+.admin-summary-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+@media (min-width: 720px) {
+  .admin-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.admin-summary-grid .admin-summary-card {
+  margin-bottom: 0;
 }
 
 .admin-stat-card {
@@ -1393,6 +1420,13 @@ input.admin-row-edit__select {
   align-items: flex-start;
   gap: 12px;
   margin-bottom: 12px;
+}
+
+.admin-student-card__status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 4px;
 }
 
 .admin-student-card__meta {

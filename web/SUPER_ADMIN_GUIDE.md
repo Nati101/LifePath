@@ -25,13 +25,15 @@ Run in this order for a complete install:
 2. `web/supabase/add_schools.sql` (schools table + `school_id` on profiles)
 3. `web/supabase/add_super_admin.sql` (`is_super_admin` column, helpers, RLS)
 4. **`web/supabase/lock_profile_privileges.sql`** (required — locks roles / super-admin flag, restricts school CRUD to super admins)
-5. Recommended: `web/supabase/restrict_advisor_student_access.sql` (advisors only see assigned students)
+5. **`web/supabase/restrict_advisor_student_access.sql`** (required — advisors only read assigned students’ assessment / Part 2 data)
 
 Then verify:
 
 ```text
 web/supabase/verify_super_admin.sql
 ```
+
+That script checks privilege locks **and** advisor-scoped RLS helpers/policies.
 
 **Do not re-run `fix_rls.sql` after the super-admin migrations** unless you immediately re-run `add_super_admin.sql` and `lock_profile_privileges.sql`. `fix_rls.sql` can reset `is_admin()` to ignore `is_super_admin`.
 
@@ -62,7 +64,7 @@ After the first super admin exists, others can be granted from **Manage → Peop
 | Nav | Manage links only render for `is_super_admin` |
 | RLS + privilege trigger | Real enforcement for role / `is_super_admin` / school mutations |
 
-This app is often deployed as a **static export** (GitHub Pages). Next.js middleware is **not** the gate there. Correct Supabase SQL (especially `lock_profile_privileges.sql`) is required for production security.
+This app is often deployed as a **static export** (GitHub Pages). Next.js middleware is **not** the gate there. Correct Supabase SQL (`lock_profile_privileges.sql` + `restrict_advisor_student_access.sql`) is required for production security.
 
 ## Using the interface
 

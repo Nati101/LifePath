@@ -42,7 +42,9 @@ export default function AdminStudentPageClient() {
   const [selectedPart2Id, setSelectedPart2Id] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [loadError, setLoadError] = useState("");
   const [studentName, setStudentName] = useState<string | undefined>();
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     if (!ready) return;
@@ -55,6 +57,10 @@ export default function AdminStudentPageClient() {
     let cancelled = false;
 
     async function load() {
+      setLoading(true);
+      setLoadError("");
+      setNotFound(false);
+
       const supabase = createClient();
       const {
         data: { user },
@@ -65,20 +71,30 @@ export default function AdminStudentPageClient() {
         return;
       }
 
-      const [{ data: viewerProfile }, { data: profile }] = await Promise.all([
-        supabase
-          .from("profiles")
-          .select("id, is_super_admin, role")
-          .eq("id", user.id)
-          .single(),
-        supabase
-          .from("profiles")
-          .select("id, email, full_name, avatar_emoji, school_id, advisor_id, advisor")
-          .eq("id", studentId)
-          .single(),
-      ]);
+      const [{ data: viewerProfile, error: viewerError }, { data: profile, error: profileError }] =
+        await Promise.all([
+          supabase
+            .from("profiles")
+            .select("id, is_super_admin, role")
+            .eq("id", user.id)
+            .single(),
+          supabase
+            .from("profiles")
+            .select("id, email, full_name, avatar_emoji, school_id, advisor_id")
+            .eq("id", studentId)
+            .single(),
+        ]);
 
-      if (!profile) {
+      if (viewerError) {
+        if (!cancelled) {
+          setLoadError(viewerError.message);
+          setLoading(false);
+        }
+        return;
+      }
+
+      // Missing profile (or RLS deny) looks like not found — don't leak existence.
+      if (!profile || profileError) {
         if (!cancelled) {
           setNotFound(true);
           setLoading(false);
@@ -100,9 +116,9 @@ export default function AdminStudentPageClient() {
       }
 
       const [
-        { data: responseRows },
-        { data: schoolRow },
-        { data: advisorRow },
+        responsesResult,
+        schoolResult,
+        advisorResult,
         allAttempts,
         allPart2Attempts,
         part2Session,
@@ -110,26 +126,42 @@ export default function AdminStudentPageClient() {
         supabase.from("responses").select("item_id, rating").eq("user_id", studentId),
         profile.school_id
           ? supabase.from("schools").select("name").eq("id", profile.school_id).single()
-          : Promise.resolve({ data: null }),
+          : Promise.resolve({ data: null, error: null }),
         profile.advisor_id
           ? supabase
               .from("profiles")
               .select("full_name, email")
               .eq("id", profile.advisor_id)
               .single()
-          : Promise.resolve({ data: null }),
+          : Promise.resolve({ data: null, error: null }),
         listAllAttempts(supabase, studentId!),
         listAllPart2Attempts(supabase, studentId!),
         getPart2Session(supabase, studentId!),
       ]);
 
+      if (responsesResult.error) {
+        if (!cancelled) {
+          setLoadError(responsesResult.error.message);
+          setLoading(false);
+        }
+        return;
+      }
+
       let loadedPart2: Part2Responses = {};
       if (part2Session) {
-        loadedPart2 = await loadPart2Responses(supabase, part2Session.id);
+        try {
+          loadedPart2 = await loadPart2Responses(supabase, part2Session.id);
+        } catch (error) {
+          if (!cancelled) {
+            setLoadError(error instanceof Error ? error.message : "Failed to load Part 2 responses.");
+            setLoading(false);
+          }
+          return;
+        }
       }
 
       const loadedResponses: Responses = {};
-      for (const row of responseRows ?? []) {
+      for (const row of responsesResult.data ?? []) {
         loadedResponses[row.item_id] = row.rating;
       }
 
@@ -148,9 +180,9 @@ export default function AdminStudentPageClient() {
         ? allPart2Attempts
         : allPart2Attempts.filter((attempt) => attempt.source === "history");
 
-      const schoolLabel = schoolRow?.name ?? null;
+      const schoolLabel = schoolResult.data?.name ?? null;
       const advisorLabel =
-        advisorRow?.full_name?.trim() || advisorRow?.email || profile.advisor || null;
+        advisorResult.data?.full_name?.trim() || advisorResult.data?.email || null;
       const displayName = profile.full_name?.trim() || profile.email;
 
       if (!cancelled) {
@@ -164,7 +196,7 @@ export default function AdminStudentPageClient() {
         setHeader(
           <>
             <Link href={withBasePath("/admin")} className="admin-back-link">
-              ← Back to admin
+              ← Dashboard
             </Link>
 
             <div className="admin-student-header surface-card">
@@ -191,7 +223,7 @@ export default function AdminStudentPageClient() {
     return () => {
       cancelled = true;
     };
-  }, [ready, router, studentId]);
+  }, [ready, reloadToken, router, studentId]);
 
   const selected = useMemo(
     () => attempts.find((attempt) => attempt.id === selectedId) ?? attempts[0] ?? null,
@@ -255,6 +287,30 @@ export default function AdminStudentPageClient() {
     );
   }
 
+  if (loadError) {
+    return (
+      <div className="admin-shell">
+        <div className="admin-page-content">
+          <div className="surface-card p-5 sm:p-6">
+            <p className="text-[14px] text-danger">{loadError}</p>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => setReloadToken((token) => token + 1)}
+              >
+                Retry
+              </button>
+              <Link href={withBasePath("/admin")} className="btn-secondary">
+                ← Dashboard
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (notFound) {
     return (
       <div className="admin-shell">
@@ -266,7 +322,7 @@ export default function AdminStudentPageClient() {
                 href={withBasePath("/admin")}
                 className="text-[14px] font-medium text-primary transition-opacity hover:opacity-80"
               >
-                Back to admin
+                ← Dashboard
               </Link>
             </div>
           </div>
@@ -306,6 +362,8 @@ export default function AdminStudentPageClient() {
               attempts={pickerOptions}
               selectedId={selected?.id ?? ""}
               onSelect={setSelectedId}
+              audience="admin"
+              label="Previous Part 1 results"
             />
           )}
 
@@ -361,6 +419,8 @@ export default function AdminStudentPageClient() {
               attempts={part2PickerOptions}
               selectedId={selectedPart2?.id ?? ""}
               onSelect={setSelectedPart2Id}
+              audience="admin"
+              label="Previous Part 2 results"
             />
           )}
 
