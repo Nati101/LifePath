@@ -1,5 +1,23 @@
 -- Lock profile privilege columns so clients cannot self-promote.
--- Run in Supabase SQL Editor (after add_super_admin.sql).
+-- Run in Supabase SQL Editor after add_super_admin.sql.
+-- Required for production: without this, privilege hardening and school policies may be incomplete.
+
+-- Treat super admins as admins for shared admin policies
+create or replace function public.is_admin()
+returns boolean
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select exists (
+    select 1 from public.profiles
+    where id = auth.uid()
+      and (role = 'admin' or is_super_admin = true)
+  );
+$$;
+
+grant execute on function public.is_admin() to authenticated;
 
 -- Signup always creates a student (ignore metadata role)
 create or replace function public.handle_new_user()

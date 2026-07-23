@@ -12,6 +12,7 @@ interface School {
 export default function ManageSchools() {
   const [schools, setSchools] = useState<School[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newSchoolName, setNewSchoolName] = useState("");
   const [creating, setCreating] = useState(false);
@@ -23,13 +24,20 @@ export default function ManageSchools() {
   const [pendingDelete, setPendingDelete] = useState<School | null>(null);
 
   const loadSchools = useCallback(async () => {
+    setLoadError("");
     const supabase = createClient();
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("schools")
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (data) setSchools(data);
+    if (error) {
+      setLoadError(error.message);
+      setLoading(false);
+      return;
+    }
+
+    setSchools(data ?? []);
     setLoading(false);
   }, []);
 
@@ -64,6 +72,7 @@ export default function ManageSchools() {
 
   async function updateSchool(id: string, name: string) {
     setFormError("");
+    setFormSuccess("");
     setRowBusyId(id);
     const supabase = createClient();
     const { error } = await supabase.from("schools").update({ name }).eq("id", id);
@@ -77,12 +86,14 @@ export default function ManageSchools() {
     setEditingId(null);
     setEditingName("");
     setRowBusyId(null);
+    setFormSuccess("School name updated.");
     await loadSchools();
   }
 
   async function confirmDeleteSchool() {
     if (!pendingDelete) return;
     setFormError("");
+    setFormSuccess("");
     setRowBusyId(pendingDelete.id);
 
     const supabase = createClient();
@@ -95,6 +106,7 @@ export default function ManageSchools() {
       return;
     }
 
+    setFormSuccess(`Deleted "${pendingDelete.name}".`);
     setPendingDelete(null);
     setRowBusyId(null);
     await loadSchools();
@@ -102,6 +114,24 @@ export default function ManageSchools() {
 
   if (loading) {
     return <p className="text-[15px] text-muted">Loading schools…</p>;
+  }
+
+  if (loadError) {
+    return (
+      <div className="space-y-3">
+        <p className="text-[14px] text-danger">{loadError}</p>
+        <button
+          type="button"
+          className="btn-secondary"
+          onClick={() => {
+            setLoading(true);
+            void loadSchools();
+          }}
+        >
+          Retry
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -157,10 +187,14 @@ export default function ManageSchools() {
       )}
 
       {formError && <p className="text-[14px] text-danger">{formError}</p>}
-      {formSuccess && <p className="text-[14px] font-medium text-primary">{formSuccess}</p>}
+      {formSuccess && (
+        <p className="rounded-[12px] bg-primary-light px-4 py-3 text-[14px] font-medium text-foreground">
+          {formSuccess}
+        </p>
+      )}
 
       {pendingDelete && (
-        <div className="surface-card space-y-3 p-5">
+        <div className="surface-card space-y-3 border border-danger/30 p-5">
           <p className="text-[15px] text-foreground">
             Delete <span className="font-semibold">{pendingDelete.name}</span>? Advisors and
             students at this school will be unassigned.
@@ -168,7 +202,7 @@ export default function ManageSchools() {
           <div className="flex flex-wrap gap-3">
             <button
               type="button"
-              className="btn-primary"
+              className="btn-danger"
               disabled={rowBusyId === pendingDelete.id}
               onClick={() => void confirmDeleteSchool()}
             >
@@ -256,7 +290,7 @@ export default function ManageSchools() {
                         </button>
                         <button
                           type="button"
-                          className="admin-link"
+                          className="admin-link text-danger"
                           disabled={busy}
                           onClick={() => setPendingDelete(school)}
                           aria-label={`Delete ${school.name}`}
@@ -278,6 +312,86 @@ export default function ManageSchools() {
             )}
           </tbody>
         </table>
+      </div>
+
+      <div className="admin-card-list">
+        {schools.map((school) => {
+          const busy = rowBusyId === school.id;
+          const editing = editingId === school.id;
+          return (
+            <div key={school.id} className="admin-manage-card surface-card">
+              {editing ? (
+                <div className="space-y-3">
+                  <input
+                    type="text"
+                    value={editingName}
+                    onChange={(e) => setEditingName(e.target.value)}
+                    className="input-field"
+                    aria-label={`Edit name for ${school.name}`}
+                  />
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      className="admin-link"
+                      disabled={busy || !editingName.trim()}
+                      onClick={() => void updateSchool(school.id, editingName.trim())}
+                    >
+                      {busy ? "Saving…" : "Save"}
+                    </button>
+                    <button
+                      type="button"
+                      className="admin-link"
+                      disabled={busy}
+                      onClick={() => {
+                        setEditingId(null);
+                        setEditingName("");
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="mb-3 flex items-start justify-between gap-3">
+                    <div>
+                      <p className="admin-row__name">{school.name}</p>
+                      <p className="text-[12px] text-muted-light">
+                        Created {new Date(school.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      className="admin-link"
+                      disabled={busy}
+                      onClick={() => {
+                        setEditingId(school.id);
+                        setEditingName(school.name);
+                      }}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      className="admin-link text-danger"
+                      disabled={busy}
+                      onClick={() => setPendingDelete(school)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          );
+        })}
+        {schools.length === 0 && (
+          <div className="admin-empty-card surface-card">
+            No schools yet. Add one to assign advisors and students.
+          </div>
+        )}
       </div>
     </div>
   );

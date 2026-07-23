@@ -21,6 +21,23 @@ $$;
 
 GRANT EXECUTE ON FUNCTION public.is_super_admin() TO authenticated;
 
+-- Super admins count as admins for shared dashboard/read policies
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+STABLE
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = auth.uid()
+      AND (role = 'admin' OR is_super_admin = true)
+  );
+$$;
+
+GRANT EXECUTE ON FUNCTION public.is_admin() TO authenticated;
+
 -- Add RLS policies for super admin management
 DROP POLICY IF EXISTS "Super admins can manage all profiles" ON public.profiles;
 CREATE POLICY "Super admins can manage all profiles"

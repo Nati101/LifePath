@@ -249,7 +249,7 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
 
--- Privilege lock: clients cannot self-promote (full version: lock_profile_privileges.sql)
+-- Privilege lock: clients cannot self-promote (keep in sync with lock_profile_privileges.sql)
 create or replace function public.protect_profile_privileges()
 returns trigger
 language plpgsql
@@ -259,9 +259,16 @@ as $$
 begin
   if tg_op = 'INSERT' then
     new.role := 'student';
+    begin
+      new.is_super_admin := false;
+    exception
+      when undefined_column then
+        null;
+    end;
     return new;
   end if;
 
+  -- UPDATE: role changes only by super admins
   if new.role is distinct from old.role then
     if auth.uid() is null then
       null; -- SQL editor / service role
@@ -276,6 +283,18 @@ begin
       end;
     end if;
   end if;
+
+  -- is_super_admin only via SQL editor (auth.uid() is null)
+  begin
+    if new.is_super_admin is distinct from old.is_super_admin then
+      if auth.uid() is not null then
+        raise exception 'is_super_admin can only be changed in the SQL editor';
+      end if;
+    end if;
+  exception
+    when undefined_column then
+      null;
+  end;
 
   return new;
 end;

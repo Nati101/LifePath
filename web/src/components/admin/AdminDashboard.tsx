@@ -193,14 +193,26 @@ export default function AdminDashboard({ data }: AdminDashboardProps) {
   return (
     <div className="admin-page">
       <div className="admin-page__header">
-        <h1 className="admin-page__title">
-          {data.scopedToAdvisor ? "My students" : "Admin dashboard"}
-        </h1>
-        <p className="admin-page__subtitle">
-          {data.scopedToAdvisor
-            ? "Monitor Part 1 and Part 2 progress for students assigned to you."
-            : "Monitor student progress, filter by school or advisor, and review results."}
-        </p>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h1 className="admin-page__title">
+              {data.scopedToAdvisor ? "My students" : "Admin dashboard"}
+            </h1>
+            <p className="admin-page__subtitle">
+              {data.scopedToAdvisor
+                ? "Monitor Part 1 and Part 2 progress for students assigned to you."
+                : "Monitor student progress, filter by school or advisor, and review results."}
+            </p>
+          </div>
+          {data.viewerIsSuperAdmin && (
+            <Link
+              href={withBasePath("/admin/manage")}
+              className="text-[14px] font-medium text-primary hover:underline"
+            >
+              Super Admin Management →
+            </Link>
+          )}
+        </div>
       </div>
 
       <div className="admin-stat-grid">

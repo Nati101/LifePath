@@ -143,6 +143,30 @@ body {
 .btn-secondary:active:not(:disabled) { transform: scale(0.98); }
 .btn-secondary:disabled { opacity: 0.45; cursor: not-allowed; }
 
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 52px;
+  padding: 0 1.5rem;
+  border-radius: 9999px;
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.btn-danger:hover:not(:disabled) { background: #b91c1c !important; }
+.btn-danger:active:not(:disabled) { transform: scale(0.98); }
+.btn-danger:disabled { opacity: 0.45; cursor: not-allowed; }
+
 .btn-secondary-sm {
   display: inline-flex;
   align-items: center;
@@ -713,6 +737,17 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.admin-empty-card {
+  padding: 24px 20px;
+  text-align: center;
+  font-size: 14px;
+  color: #4b5563;
+}
+
+.admin-manage-card {
+  padding: 16px 18px;
 }
 
 .admin-page__header {

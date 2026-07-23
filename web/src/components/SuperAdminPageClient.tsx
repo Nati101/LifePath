@@ -28,7 +28,7 @@ export default function SuperAdminPageClient() {
       <div className="admin-page-content">
         <div className="admin-page">
           <div className="admin-page__header">
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <h1 className="admin-page__title">Super Admin Management</h1>
                 <p className="admin-page__subtitle">
@@ -44,11 +44,14 @@ export default function SuperAdminPageClient() {
             </div>
           </div>
 
-          <div className="mb-6 flex gap-2 border-b border-border" role="tablist">
+          <div className="mb-6 flex gap-2 border-b border-border" role="tablist" aria-label="Management sections">
             <button
               type="button"
               role="tab"
+              id="tab-users"
               aria-selected={activeTab === "users"}
+              aria-controls="panel-users"
+              tabIndex={activeTab === "users" ? 0 : -1}
               onClick={() => setActiveTab("users")}
               className={`px-4 py-3 text-[14px] font-medium transition-colors ${
                 activeTab === "users"
@@ -61,7 +64,10 @@ export default function SuperAdminPageClient() {
             <button
               type="button"
               role="tab"
+              id="tab-schools"
               aria-selected={activeTab === "schools"}
+              aria-controls="panel-schools"
+              tabIndex={activeTab === "schools" ? 0 : -1}
               onClick={() => setActiveTab("schools")}
               className={`px-4 py-3 text-[14px] font-medium transition-colors ${
                 activeTab === "schools"
@@ -73,8 +79,22 @@ export default function SuperAdminPageClient() {
             </button>
           </div>
 
-          {activeTab === "users" && <ManageUsers />}
-          {activeTab === "schools" && <ManageSchools />}
+          <div
+            id="panel-users"
+            role="tabpanel"
+            aria-labelledby="tab-users"
+            hidden={activeTab !== "users"}
+          >
+            {activeTab === "users" && <ManageUsers />}
+          </div>
+          <div
+            id="panel-schools"
+            role="tabpanel"
+            aria-labelledby="tab-schools"
+            hidden={activeTab !== "schools"}
+          >
+            {activeTab === "schools" && <ManageSchools />}
+          </div>
         </div>
       </div>
     </div>
