@@ -351,7 +351,7 @@ export default function AdvisorAccountForm({
               href={withBasePath("/admin/manage")}
               className="block rounded-lg border border-border px-4 py-3 text-[15px] font-medium text-foreground transition-colors hover:bg-background"
             >
-              ⚙️ Manage Users & Schools →
+              Manage →
             </Link>
           )}
         </div>

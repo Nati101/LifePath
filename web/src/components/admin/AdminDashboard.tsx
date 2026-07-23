@@ -209,7 +209,7 @@ export default function AdminDashboard({ data }: AdminDashboardProps) {
               href={withBasePath("/admin/manage")}
               className="text-[14px] font-medium text-primary hover:underline"
             >
-              Super Admin Management →
+              Manage →
             </Link>
           )}
         </div>

@@ -1,10 +1,10 @@
 # Super Admin Setup Guide
 
-This guide explains how to set up and use Super Admin Management in LifePath.
+This guide explains how to set up and use the **Manage** page in LifePath (`/admin/manage`).
 
 ## Overview
 
-Super Admin Management (`/admin/manage`) lets designated admins:
+The Manage page lets designated super admins:
 
 - Promote existing users to advisor (they must register first)
 - Demote advisors back to students
@@ -39,26 +39,27 @@ WHERE email = 'your-admin-email@school.edu';
 ### 3. Verify access
 
 1. Sign in as that user
-2. Open `/admin` — you should see **Super Admin Management →**
+2. Open `/admin` — you should see **Manage →**
 3. Header nav should show **Manage**
 4. Open `/admin/manage`
 
 ## Using the interface
 
-### Users & Advisors
+### People tab
 
-**Promote to advisor**
+**Promote advisor**
 
 1. Ask the person to register on LifePath (student signup is fine)
-2. Click **+ Promote to advisor**
+2. Click **Promote advisor** in the toolbar
 3. Enter their email, optional display name, and school
 4. Click **Make advisor**
 
-**Change roles in the table**
+**Edit a person**
 
-- Use the Role dropdown: Student ↔ Advisor
-- Demoting an advisor asks for confirmation and clears students who had that person as advisor
-- Super admin rows cannot change role or school here
+1. Click **Edit** on their row
+2. Change role and/or school, then **Save**
+3. Demoting an advisor asks for confirmation and clears students who had that person as advisor
+4. Super admin rows cannot be edited here
 
 **Filters**
 
@@ -67,17 +68,18 @@ WHERE email = 'your-admin-email@school.edu';
 - Filter by school (including “No school”)
 - Large lists load 50 at a time — use **Show more**
 
-### Schools
+### Schools tab
 
-1. **+ Add school** to create
-2. **Edit** to rename
-3. **Delete** confirms first — profiles at that school are unassigned (`school_id` set null)
+1. **Add school** in the toolbar to create
+2. Search schools by name
+3. **Edit** to rename
+4. **Delete** confirms first — profiles at that school are unassigned (`school_id` set null)
 
 ## Recommended onboarding workflow
 
 1. **Schools** → add the school  
 2. Have the advisor **register** at `/register`  
-3. **Users & Advisors** → promote their email and assign the school  
+3. **People** → Promote advisor with their email and school  
 4. Tell them to sign in at `/login` (they use the password they chose at registration)  
 5. Students register, then pick that advisor on Account / Welcome
 

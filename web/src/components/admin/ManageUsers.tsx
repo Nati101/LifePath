@@ -20,6 +20,10 @@ interface School {
 
 const PAGE_SIZE = 50;
 
+function roleLabel(role: "student" | "admin") {
+  return role === "admin" ? "Advisor" : "Student";
+}
+
 export default function ManageUsers() {
   const [users, setUsers] = useState<User[]>([]);
   const [schools, setSchools] = useState<School[]>([]);
@@ -40,6 +44,10 @@ export default function ManageUsers() {
   const [promoting, setPromoting] = useState(false);
   const [promoteError, setPromoteError] = useState("");
 
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editRole, setEditRole] = useState<"student" | "admin">("student");
+  const [editSchoolId, setEditSchoolId] = useState("");
+
   const loadData = useCallback(async () => {
     setLoadError("");
     const supabase = createClient();
@@ -54,9 +62,7 @@ export default function ManageUsers() {
 
     if (usersRes.error || schoolsRes.error) {
       setLoadError(
-        usersRes.error?.message ||
-          schoolsRes.error?.message ||
-          "Failed to load users.",
+        usersRes.error?.message || schoolsRes.error?.message || "Failed to load users.",
       );
       setLoading(false);
       return;
@@ -72,7 +78,10 @@ export default function ManageUsers() {
     void loadData();
   }, [loadData]);
 
-  async function clearAdvisorAssignments(supabase: ReturnType<typeof createClient>, advisorId: string) {
+  async function clearAdvisorAssignments(
+    supabase: ReturnType<typeof createClient>,
+    advisorId: string,
+  ) {
     const { error } = await supabase
       .from("profiles")
       .update({ advisor_id: null })
@@ -83,11 +92,31 @@ export default function ManageUsers() {
     }
   }
 
-  async function updateUserRole(userId: string, newRole: "student" | "admin") {
-    const user = users.find((u) => u.id === userId);
-    if (!user || user.is_super_admin) return;
+  function startEdit(user: User) {
+    if (user.is_super_admin) return;
+    setEditingId(user.id);
+    setEditRole(user.role);
+    setEditSchoolId(user.school_id || "");
+    setRowError("");
+  }
 
-    if (user.role === "admin" && newRole === "student") {
+  function cancelEdit() {
+    setEditingId(null);
+    setRowBusyId(null);
+  }
+
+  async function saveEdit(user: User) {
+    if (user.is_super_admin) return;
+
+    const roleChanged = editRole !== user.role;
+    const schoolChanged = (editSchoolId || null) !== user.school_id;
+
+    if (!roleChanged && !schoolChanged) {
+      cancelEdit();
+      return;
+    }
+
+    if (user.role === "admin" && editRole === "student") {
       const label = user.full_name?.trim() || user.email;
       const confirmed = window.confirm(
         `Demote ${label} to student? Students assigned to this advisor will be unassigned.`,
@@ -97,13 +126,14 @@ export default function ManageUsers() {
 
     setRowError("");
     setBannerSuccess("");
-    setRowBusyId(userId);
+    setRowBusyId(user.id);
     const supabase = createClient();
 
-    const { error } = await supabase
-      .from("profiles")
-      .update({ role: newRole })
-      .eq("id", userId);
+    const updates: { role?: "student" | "admin"; school_id?: string | null } = {};
+    if (roleChanged) updates.role = editRole;
+    if (schoolChanged) updates.school_id = editSchoolId || null;
+
+    const { error } = await supabase.from("profiles").update(updates).eq("id", user.id);
 
     if (error) {
       setRowError(error.message);
@@ -111,42 +141,21 @@ export default function ManageUsers() {
       return;
     }
 
-    if (newRole === "student") {
+    if (roleChanged && editRole === "student") {
       try {
-        await clearAdvisorAssignments(supabase, userId);
+        await clearAdvisorAssignments(supabase, user.id);
       } catch (err) {
         setRowError(err instanceof Error ? err.message : "Failed to clear advisor links");
         setRowBusyId(null);
+        setEditingId(null);
         await loadData();
         return;
       }
     }
 
-    await loadData();
+    setEditingId(null);
     setRowBusyId(null);
-  }
-
-  async function updateUserSchool(userId: string, schoolId: string) {
-    const user = users.find((u) => u.id === userId);
-    if (!user || user.is_super_admin) return;
-
-    setRowError("");
-    setBannerSuccess("");
-    setRowBusyId(userId);
-    const supabase = createClient();
-    const { error } = await supabase
-      .from("profiles")
-      .update({ school_id: schoolId || null })
-      .eq("id", userId);
-
-    if (error) {
-      setRowError(error.message);
-      setRowBusyId(null);
-      return;
-    }
-
     await loadData();
-    setRowBusyId(null);
   }
 
   async function promoteAdvisor(e: React.FormEvent) {
@@ -190,7 +199,7 @@ export default function ManageUsers() {
     }
 
     if (existing.role === "admin") {
-      setPromoteError("That account is already an advisor. Update their school in the table below.");
+      setPromoteError("That account is already an advisor. Edit their school in the list below.");
       setPromoting(false);
       return;
     }
@@ -262,7 +271,7 @@ export default function ManageUsers() {
   }
 
   if (loading) {
-    return <p className="text-[15px] text-muted">Loading users…</p>;
+    return <p className="text-[15px] text-muted">Loading people…</p>;
   }
 
   if (loadError) {
@@ -284,10 +293,10 @@ export default function ManageUsers() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="admin-stat-grid">
         <div className="admin-stat-card">
-          <p className="admin-stat-card__label">Total Users</p>
+          <p className="admin-stat-card__label">Total</p>
           <p className="admin-stat-card__value">{users.length}</p>
         </div>
         <div className="admin-stat-card">
@@ -305,110 +314,13 @@ export default function ManageUsers() {
       </div>
 
       {bannerSuccess && (
-        <p className="rounded-[12px] bg-primary-light px-4 py-3 text-[14px] font-medium text-foreground">
-          {bannerSuccess}
-        </p>
+        <p className="admin-manage-banner">{bannerSuccess}</p>
       )}
-
-      {!showPromoteForm && (
-        <button
-          type="button"
-          onClick={() => {
-            setShowPromoteForm(true);
-            setPromoteError("");
-            setBannerSuccess("");
-          }}
-          className="btn-primary"
-        >
-          + Promote to advisor
-        </button>
-      )}
-
-      {showPromoteForm && (
-        <form onSubmit={(e) => void promoteAdvisor(e)} className="surface-card space-y-4 p-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-[17px] font-semibold">Promote existing user</h3>
-            <button
-              type="button"
-              onClick={() => {
-                setShowPromoteForm(false);
-                setPromoteError("");
-              }}
-              className="text-[14px] text-muted hover:text-foreground"
-            >
-              Cancel
-            </button>
-          </div>
-
-          <p className="text-[14px] leading-relaxed text-muted">
-            The person must already have a LifePath account (register as a student first). This
-            grants advisor access; it does not create a new login.
-          </p>
-
-          <div className="form-field">
-            <label htmlFor="promoteEmail" className="field-label">
-              Email
-            </label>
-            <input
-              id="promoteEmail"
-              type="email"
-              required
-              value={promoteEmail}
-              onChange={(e) => setPromoteEmail(e.target.value)}
-              placeholder="advisor@school.edu"
-              className="input-field"
-              autoComplete="off"
-            />
-          </div>
-
-          <div className="form-field">
-            <label htmlFor="promoteName" className="field-label">
-              Display name (optional)
-            </label>
-            <input
-              id="promoteName"
-              type="text"
-              value={promoteName}
-              onChange={(e) => setPromoteName(e.target.value)}
-              placeholder="Leave blank to keep current name"
-              className="input-field"
-            />
-          </div>
-
-          <div className="form-field">
-            <label htmlFor="promoteSchool" className="field-label">
-              Assign to school
-            </label>
-            <div className="select-wrap">
-              <select
-                id="promoteSchool"
-                value={promoteSchool}
-                onChange={(e) => setPromoteSchool(e.target.value)}
-                className="select-field"
-              >
-                <option value="">No school (assign later)</option>
-                {schools.map((school) => (
-                  <option key={school.id} value={school.id}>
-                    {school.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {promoteError && <p className="text-[14px] text-danger">{promoteError}</p>}
-
-          <button type="submit" disabled={promoting || !promoteEmail.trim()} className="btn-primary">
-            {promoting ? "Saving…" : "Make advisor"}
-          </button>
-        </form>
-      )}
-
       {rowError && <p className="text-[14px] text-danger">{rowError}</p>}
 
       <div className="admin-toolbar surface-card">
         <label className="admin-search">
-          <span className="sr-only">Search users</span>
+          <span className="sr-only">Search people</span>
           <input
             type="search"
             value={searchQuery}
@@ -425,9 +337,9 @@ export default function ManageUsers() {
             className="select-field admin-toolbar__select"
             aria-label="Filter by role"
           >
-            <option value="all">All Users</option>
-            <option value="admin">Advisors Only</option>
-            <option value="student">Students Only</option>
+            <option value="all">All roles</option>
+            <option value="admin">Advisors</option>
+            <option value="student">Students</option>
           </select>
           <select
             value={schoolFilter}
@@ -443,11 +355,86 @@ export default function ManageUsers() {
               </option>
             ))}
           </select>
+          <button
+            type="button"
+            className="btn-primary-sm admin-toolbar__action"
+            onClick={() => {
+              setShowPromoteForm((open) => !open);
+              setPromoteError("");
+              if (!showPromoteForm) setBannerSuccess("");
+            }}
+          >
+            {showPromoteForm ? "Close" : "Promote advisor"}
+          </button>
         </div>
       </div>
 
+      {showPromoteForm && (
+        <form onSubmit={(e) => void promoteAdvisor(e)} className="admin-manage-panel surface-card">
+          <p className="admin-manage-panel__title">Promote existing user</p>
+          <p className="admin-manage-panel__hint">
+            They must already have a LifePath account. This grants advisor access; it does not
+            create a login.
+          </p>
+          <div className="admin-manage-panel__fields">
+            <div className="form-field">
+              <label htmlFor="promoteEmail" className="field-label">
+                Email
+              </label>
+              <input
+                id="promoteEmail"
+                type="email"
+                required
+                value={promoteEmail}
+                onChange={(e) => setPromoteEmail(e.target.value)}
+                placeholder="advisor@school.edu"
+                className="input-field"
+                autoComplete="off"
+              />
+            </div>
+            <div className="form-field">
+              <label htmlFor="promoteName" className="field-label">
+                Display name (optional)
+              </label>
+              <input
+                id="promoteName"
+                type="text"
+                value={promoteName}
+                onChange={(e) => setPromoteName(e.target.value)}
+                placeholder="Keep current name"
+                className="input-field"
+              />
+            </div>
+            <div className="form-field">
+              <label htmlFor="promoteSchool" className="field-label">
+                School
+              </label>
+              <div className="select-wrap">
+                <select
+                  id="promoteSchool"
+                  value={promoteSchool}
+                  onChange={(e) => setPromoteSchool(e.target.value)}
+                  className="select-field"
+                >
+                  <option value="">No school</option>
+                  {schools.map((school) => (
+                    <option key={school.id} value={school.id}>
+                      {school.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+          {promoteError && <p className="text-[14px] text-danger">{promoteError}</p>}
+          <button type="submit" disabled={promoting || !promoteEmail.trim()} className="btn-primary-sm">
+            {promoting ? "Saving…" : "Make advisor"}
+          </button>
+        </form>
+      )}
+
       <div className="admin-results-meta">
-        Showing {visibleUsers.length} of {filteredUsers.length} users
+        Showing {visibleUsers.length} of {filteredUsers.length}
         {filteredUsers.length !== users.length ? ` (filtered from ${users.length})` : ""}
       </div>
 
@@ -460,63 +447,104 @@ export default function ManageUsers() {
               <th>Role</th>
               <th>School</th>
               <th>Joined</th>
+              <th aria-label="Actions" />
             </tr>
           </thead>
           <tbody>
             {visibleUsers.map((user) => {
               const busy = rowBusyId === user.id;
+              const editing = editingId === user.id;
               const label = user.full_name?.trim() || user.email;
               return (
                 <tr key={user.id} className="admin-row">
                   <td className="admin-row__name">
                     {user.full_name || "—"}
                     {user.is_super_admin && (
-                      <span className="ml-2 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
-                        SUPER ADMIN
-                      </span>
+                      <span className="admin-super-badge">Super admin</span>
                     )}
                   </td>
                   <td className="admin-row__email">{user.email}</td>
                   <td>
-                    <select
-                      value={user.role}
-                      onChange={(e) =>
-                        void updateUserRole(user.id, e.target.value as "student" | "admin")
-                      }
-                      disabled={user.is_super_admin || busy}
-                      className="select-field text-[13px]"
-                      aria-label={`Role for ${label}`}
-                    >
-                      <option value="student">Student</option>
-                      <option value="admin">Advisor</option>
-                    </select>
+                    {editing ? (
+                      <div className="select-wrap">
+                        <select
+                          value={editRole}
+                          onChange={(e) => setEditRole(e.target.value as "student" | "admin")}
+                          disabled={busy}
+                          className="select-field text-[13px]"
+                          aria-label={`Role for ${label}`}
+                        >
+                          <option value="student">Student</option>
+                          <option value="admin">Advisor</option>
+                        </select>
+                      </div>
+                    ) : (
+                      <span className="text-[14px]">{roleLabel(user.role)}</span>
+                    )}
                   </td>
                   <td>
-                    <select
-                      value={user.school_id || ""}
-                      onChange={(e) => void updateUserSchool(user.id, e.target.value)}
-                      disabled={user.is_super_admin || busy}
-                      className="select-field text-[13px]"
-                      aria-label={`School for ${label}`}
-                    >
-                      <option value="">No school</option>
-                      {schools.map((school) => (
-                        <option key={school.id} value={school.id}>
-                          {school.name}
-                        </option>
-                      ))}
-                    </select>
+                    {editing ? (
+                      <div className="select-wrap">
+                        <select
+                          value={editSchoolId}
+                          onChange={(e) => setEditSchoolId(e.target.value)}
+                          disabled={busy}
+                          className="select-field text-[13px]"
+                          aria-label={`School for ${label}`}
+                        >
+                          <option value="">No school</option>
+                          {schools.map((school) => (
+                            <option key={school.id} value={school.id}>
+                              {school.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    ) : (
+                      <span className="text-[14px] text-muted">{schoolName(user.school_id)}</span>
+                    )}
                   </td>
                   <td className="admin-row__meta text-[12px] text-muted">
                     {new Date(user.created_at).toLocaleDateString()}
+                  </td>
+                  <td className="admin-row__action">
+                    {user.is_super_admin ? null : editing ? (
+                      <div className="flex justify-end gap-3">
+                        <button
+                          type="button"
+                          className="admin-link"
+                          disabled={busy}
+                          onClick={() => void saveEdit(user)}
+                        >
+                          {busy ? "Saving…" : "Save"}
+                        </button>
+                        <button
+                          type="button"
+                          className="admin-link"
+                          disabled={busy}
+                          onClick={cancelEdit}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        className="admin-link"
+                        onClick={() => startEdit(user)}
+                        aria-label={`Edit ${label}`}
+                      >
+                        Edit
+                      </button>
+                    )}
                   </td>
                 </tr>
               );
             })}
             {filteredUsers.length === 0 && (
               <tr>
-                <td colSpan={5} className="admin-empty">
-                  No users match your filters.
+                <td colSpan={6} className="admin-empty">
+                  No people match your filters.
                 </td>
               </tr>
             )}
@@ -527,66 +555,100 @@ export default function ManageUsers() {
       <div className="admin-card-list">
         {visibleUsers.map((user) => {
           const busy = rowBusyId === user.id;
+          const editing = editingId === user.id;
           const label = user.full_name?.trim() || user.email;
           return (
             <div key={user.id} className="admin-manage-card surface-card">
-              <div className="mb-3">
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="admin-row__name">{user.full_name || "—"}</p>
-                  {user.is_super_admin && (
-                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
-                      SUPER ADMIN
-                    </span>
+              <div className="mb-3 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="admin-row__name">{user.full_name || "—"}</p>
+                    {user.is_super_admin && (
+                      <span className="admin-super-badge">Super admin</span>
+                    )}
+                  </div>
+                  <p className="text-[13px] text-muted">{user.email}</p>
+                  {!editing && (
+                    <p className="mt-1 text-[12px] text-muted-light">
+                      {roleLabel(user.role)} · {schoolName(user.school_id)} · Joined{" "}
+                      {new Date(user.created_at).toLocaleDateString()}
+                    </p>
                   )}
                 </div>
-                <p className="text-[13px] text-muted">{user.email}</p>
-                <p className="mt-1 text-[12px] text-muted-light">
-                  Joined {new Date(user.created_at).toLocaleDateString()} · {schoolName(user.school_id)}
-                </p>
+                {!user.is_super_admin && !editing && (
+                  <button
+                    type="button"
+                    className="admin-link shrink-0"
+                    onClick={() => startEdit(user)}
+                  >
+                    Edit
+                  </button>
+                )}
               </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <label className="form-field">
-                  <span className="field-label">Role</span>
-                  <div className="select-wrap">
-                    <select
-                      value={user.role}
-                      onChange={(e) =>
-                        void updateUserRole(user.id, e.target.value as "student" | "admin")
-                      }
-                      disabled={user.is_super_admin || busy}
-                      className="select-field text-[13px]"
-                      aria-label={`Role for ${label}`}
-                    >
-                      <option value="student">Student</option>
-                      <option value="admin">Advisor</option>
-                    </select>
+
+              {editing && (
+                <div className="space-y-3">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <label className="form-field">
+                      <span className="field-label">Role</span>
+                      <div className="select-wrap">
+                        <select
+                          value={editRole}
+                          onChange={(e) => setEditRole(e.target.value as "student" | "admin")}
+                          disabled={busy}
+                          className="select-field text-[13px]"
+                          aria-label={`Role for ${label}`}
+                        >
+                          <option value="student">Student</option>
+                          <option value="admin">Advisor</option>
+                        </select>
+                      </div>
+                    </label>
+                    <label className="form-field">
+                      <span className="field-label">School</span>
+                      <div className="select-wrap">
+                        <select
+                          value={editSchoolId}
+                          onChange={(e) => setEditSchoolId(e.target.value)}
+                          disabled={busy}
+                          className="select-field text-[13px]"
+                          aria-label={`School for ${label}`}
+                        >
+                          <option value="">No school</option>
+                          {schools.map((school) => (
+                            <option key={school.id} value={school.id}>
+                              {school.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </label>
                   </div>
-                </label>
-                <label className="form-field">
-                  <span className="field-label">School</span>
-                  <div className="select-wrap">
-                    <select
-                      value={user.school_id || ""}
-                      onChange={(e) => void updateUserSchool(user.id, e.target.value)}
-                      disabled={user.is_super_admin || busy}
-                      className="select-field text-[13px]"
-                      aria-label={`School for ${label}`}
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      className="admin-link"
+                      disabled={busy}
+                      onClick={() => void saveEdit(user)}
                     >
-                      <option value="">No school</option>
-                      {schools.map((school) => (
-                        <option key={school.id} value={school.id}>
-                          {school.name}
-                        </option>
-                      ))}
-                    </select>
+                      {busy ? "Saving…" : "Save"}
+                    </button>
+                    <button
+                      type="button"
+                      className="admin-link"
+                      disabled={busy}
+                      onClick={cancelEdit}
+                    >
+                      Cancel
+                    </button>
                   </div>
-                </label>
-              </div>
+                </div>
+              )}
             </div>
           );
         })}
         {filteredUsers.length === 0 && (
-          <div className="admin-empty-card surface-card">No users match your filters.</div>
+          <div className="admin-empty-card surface-card">No people match your filters.</div>
         )}
       </div>
 
