@@ -32,7 +32,7 @@ export default function LoggedInHome({
         </h1>
         <p className="mb-8 text-[16px] leading-relaxed text-muted">
           {completed
-            ? "Your assessment is complete. Continue with Part 2."
+            ? "Your career assessment is complete. Continue with My Path."
             : "Pick up where you left off."}
         </p>
 
@@ -57,7 +57,7 @@ export default function LoggedInHome({
                 Get personalized post-secondary route recommendations and next steps.
               </p>
               <Link href={withBasePath("/part2")} className="btn-secondary block">
-                Go to Part 2
+                Go to My Path
               </Link>
             </div>
           )}

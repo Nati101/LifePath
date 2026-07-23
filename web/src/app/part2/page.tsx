@@ -55,7 +55,7 @@ export default function Part2Page() {
 
   const handleRetake = async () => {
     const confirmed = window.confirm(
-      "This starts a new After High School Plan attempt. Your previous results will be saved so you can review them later. Continue?",
+      "This starts a new My Path attempt. Your previous results will be saved so you can review them later. Continue?",
     );
     if (!confirmed) return;
 
@@ -95,10 +95,10 @@ export default function Part2Page() {
       <div className="page-shell py-10 sm:py-12">
         <div className="page-content mx-auto max-w-2xl text-center">
           <h1 className="mb-4 text-[2rem] font-semibold tracking-tight">
-            My After High School Plan
+            My Path After High School
           </h1>
           <p className="mb-8 text-[16px] leading-relaxed text-muted">
-            Before starting Part 2, you need to complete Part 1 (LifePath Career Assessment).
+            Before starting My Path, you need to complete Part 1 (LifePath Career Assessment).
           </p>
           <Link href={withBasePath("/assessment")} className="btn-primary">
             Go to Part 1
@@ -113,7 +113,7 @@ export default function Part2Page() {
       <div className="page-content mx-auto max-w-2xl">
         <div className="text-center">
           <h1 className="mb-4 text-[2rem] font-semibold tracking-tight">
-            My After High School Plan
+            My Path After High School
           </h1>
           <p className="mb-8 text-[16px] leading-relaxed text-muted">
             Plan your next steps after high school. Get personalized route recommendations based on
@@ -172,20 +172,20 @@ export default function Part2Page() {
         <div className="mt-8 space-y-3 text-center">
           {!part2Started && (
             <Link href={withBasePath("/part2/assessment")} className="btn-primary block">
-              Start Part 2 Assessment
+              Start My Path
             </Link>
           )}
 
           {part2Started && !part2Complete && (
             <Link href={withBasePath("/part2/assessment")} className="btn-primary block">
-              Continue Part 2
+              Continue My Path
             </Link>
           )}
 
           {part2Complete && (
             <>
               <Link href={withBasePath("/part2/results")} className="btn-primary block">
-                View Part 2 Results
+                View My Path Results
               </Link>
               <button
                 type="button"
@@ -193,7 +193,7 @@ export default function Part2Page() {
                 disabled={retaking}
                 className="btn-secondary w-full disabled:opacity-60"
               >
-                {retaking ? "Resetting…" : "Retake Part 2"}
+                {retaking ? "Resetting…" : "Retake My Path"}
               </button>
               {retakeError && <p className="text-[13px] text-danger">{retakeError}</p>}
             </>

@@ -166,7 +166,7 @@ export default function Part2AssessmentPageClient() {
             Complete Part 1 First
           </h1>
           <p className="mb-6 text-[15px] leading-relaxed text-muted">
-            Part 2 (My Path After High School) requires you to complete Part 1 (LifePath Career Assessment) first.
+            My Path After High School requires you to complete Part 1 (LifePath Career Assessment) first.
           </p>
           <Link href={withBasePath("/assessment")} className="btn-primary">
             Go to Part 1

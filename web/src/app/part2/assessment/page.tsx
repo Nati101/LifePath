@@ -1,7 +1,5 @@
-import { redirect } from "next/navigation";
-import { withBasePath } from "@/lib/supabase/client";
+import Part2AssessmentResumeClient from "@/components/Part2AssessmentResumeClient";
 
 export default function Part2AssessmentPage() {
-  // Redirect to first section
-  redirect(withBasePath("/part2/assessment/school_setup"));
+  return <Part2AssessmentResumeClient />;
 }

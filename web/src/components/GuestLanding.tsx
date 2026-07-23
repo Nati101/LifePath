@@ -23,7 +23,7 @@ export default function GuestLanding() {
           </p>
           <ul className="space-y-3.5 text-[15px] leading-snug text-muted">
             <li>Answer honestly — there are no right or wrong answers.</li>
-            <li>Four sections, about 20–30 minutes total.</li>
+            <li>Nine sections, about 20–30 minutes total.</li>
             <li>Your progress saves automatically.</li>
           </ul>
         </div>

@@ -140,10 +140,10 @@ export default function Part2ResultsPageClient() {
             No results yet
           </h1>
           <p className="mb-8 text-[15px] leading-relaxed text-muted">
-            Complete all Part 2 sections to see your post-high-school route recommendations.
+            Complete all My Path sections to see your post-high-school route recommendations.
           </p>
           <Link href={withBasePath("/part2/assessment")} className="btn-primary">
-            Go to Part 2 assessment
+            Go to My Path
           </Link>
         </div>
       </div>
@@ -155,13 +155,13 @@ export default function Part2ResultsPageClient() {
       <div className="mb-8 space-y-4">
         {inProgressRetake && (
           <div className="rounded-[16px] bg-primary-light px-4 py-3.5 text-[14px] leading-relaxed text-foreground/80">
-            You started a new After High School Plan attempt. Your previous results are saved below
-            while you finish the new one.{" "}
+            You started a new My Path attempt. Your previous results are saved below while you
+            finish the new one.{" "}
             <Link
               href={withBasePath("/part2/assessment")}
               className="font-medium text-primary underline"
             >
-              Continue assessment
+              Continue My Path
             </Link>
           </div>
         )}

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import AssessmentShell from "@/components/AssessmentShell";
+import ProgressBar from "@/components/ProgressBar";
 import ScaleLegend from "@/components/ScaleLegend";
 import StatementCard from "@/components/StatementCard";
 import { getPart2Config, getPart2SectionOrder } from "@/lib/part2-scoring";
@@ -38,10 +39,12 @@ export default function Part2SectionFlow({
   const currentSectionIndex = sectionOrder.indexOf(section);
   const isLastSection = currentSectionIndex === sectionOrder.length - 1;
   const currentAnswered = responses[currentItem?.id] != null;
+  const hasNextQuestion = currentIndex < items.length - 1;
+  const prompt = "Choose how accurately each statement reflects you.";
 
   const handleAnswer = async (rating: number) => {
     if (!currentItem || saving) return;
-    
+
     setSaving(true);
     await onAnswer(currentItem.id, rating);
     setSaving(false);
@@ -89,14 +92,16 @@ export default function Part2SectionFlow({
       footer={
         <div className="mx-auto flex w-full max-w-sm flex-col items-center gap-3">
           {!isComplete ? (
-            <button
-              type="button"
-              onClick={handleNext}
-              disabled={!currentAnswered || saving || currentIndex >= items.length - 1}
-              className="btn-primary"
-            >
-              {saving ? "Saving…" : currentIndex === items.length - 1 ? "Finish section" : "Continue"}
-            </button>
+            hasNextQuestion ? (
+              <button
+                type="button"
+                onClick={handleNext}
+                disabled={!currentAnswered || saving}
+                className="btn-primary"
+              >
+                {saving ? "Saving…" : "Continue"}
+              </button>
+            ) : null
           ) : (
             <button
               type="button"
@@ -120,7 +125,7 @@ export default function Part2SectionFlow({
               href={withBasePath("/part2")}
               className="font-medium text-muted transition-colors hover:text-foreground"
             >
-              Part 2 overview
+              Overview
             </Link>
             <span className="tabular-nums text-muted-light">
               {answered}/{items.length}
@@ -130,27 +135,21 @@ export default function Part2SectionFlow({
       }
     >
       <div className="animate-fade-in">
-        <p className="mb-4 text-[12px] font-semibold tracking-wide text-primary uppercase">
+        <p className="mb-1 text-[12px] font-semibold tracking-wide text-primary uppercase">
           {sectionInfo.label}
         </p>
+        <p className="mb-4 text-[12px] text-muted">
+          Section {currentSectionIndex + 1} of {sectionOrder.length}
+        </p>
 
-        <div className="mb-6">
-          <div className="mb-2 flex items-center justify-between text-[13px]">
-            <span className="font-medium text-foreground">
-              Question {currentIndex + 1} of {items.length}
-            </span>
-            <span className="text-muted">{percent}%</span>
-          </div>
-          <div className="h-1.5 overflow-hidden rounded-full bg-border/80">
-            <div
-              className="h-full rounded-full bg-primary transition-all duration-500 ease-out"
-              style={{ width: `${Math.max(percent, 1)}%` }}
-            />
-          </div>
-        </div>
+        <ProgressBar
+          percent={percent}
+          step={currentIndex + 1}
+          totalSteps={items.length}
+        />
 
         <h1 className="my-7 px-1 text-center text-[22px] font-semibold leading-snug tracking-tight text-foreground sm:my-8 sm:text-[24px]">
-          {sectionInfo.subtitle}
+          {prompt}
         </h1>
 
         <ScaleLegend />
