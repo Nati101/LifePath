@@ -25,7 +25,6 @@ export async function ensureProfile(
       id: user.id,
       email: user.email ?? "",
       full_name: (user.user_metadata?.full_name as string) ?? "",
-      role: "student",
     },
     { onConflict: "id", ignoreDuplicates: true },
   );
@@ -291,6 +290,9 @@ export async function resetAssessment(
   userId: string,
 ) {
   await archiveCurrentResult(supabase, userId);
+
+  // Clear live results even if session cascade does not (query is by user_id).
+  await supabase.from("results").delete().eq("user_id", userId);
 
   const { error: deleteError } = await supabase
     .from("assessment_sessions")

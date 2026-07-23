@@ -1,50 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { createClient, withBasePath } from "@/lib/supabase/client";
-import { getAuthenticatedUser } from "@/lib/auth/guards";
 import ManageUsers from "@/components/admin/ManageUsers";
 import ManageSchools from "@/components/admin/ManageSchools";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
+import { withBasePath } from "@/lib/supabase/client";
+import { useState } from "react";
 
 type Tab = "users" | "schools";
 
 export default function SuperAdminPageClient() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const ready = useAuthGuard({ superAdmin: true });
   const [activeTab, setActiveTab] = useState<Tab>("users");
 
-  useEffect(() => {
-    async function checkAccess() {
-      const supabase = createClient();
-      const user = await getAuthenticatedUser(supabase);
-
-      if (!user) {
-        router.replace(withBasePath("/login"));
-        return;
-      }
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("is_super_admin")
-        .eq("id", user.id)
-        .single();
-
-      if (!profile?.is_super_admin) {
-        router.replace(withBasePath("/admin"));
-        return;
-      }
-
-      setIsSuperAdmin(true);
-      setLoading(false);
-    }
-
-    void checkAccess();
-  }, [router]);
-
-  if (loading) {
+  if (!ready) {
     return (
       <div className="admin-shell">
         <div className="admin-page-content">
@@ -54,16 +23,12 @@ export default function SuperAdminPageClient() {
     );
   }
 
-  if (!isSuperAdmin) {
-    return null;
-  }
-
   return (
     <div className="admin-shell">
       <div className="admin-page-content">
         <div className="admin-page">
           <div className="admin-page__header">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-4">
               <div>
                 <h1 className="admin-page__title">Super Admin Management</h1>
                 <p className="admin-page__subtitle">
@@ -79,9 +44,11 @@ export default function SuperAdminPageClient() {
             </div>
           </div>
 
-          {/* Tab Navigation */}
-          <div className="mb-6 flex gap-2 border-b border-border">
+          <div className="mb-6 flex gap-2 border-b border-border" role="tablist">
             <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === "users"}
               onClick={() => setActiveTab("users")}
               className={`px-4 py-3 text-[14px] font-medium transition-colors ${
                 activeTab === "users"
@@ -92,6 +59,9 @@ export default function SuperAdminPageClient() {
               Users & Advisors
             </button>
             <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === "schools"}
               onClick={() => setActiveTab("schools")}
               className={`px-4 py-3 text-[14px] font-medium transition-colors ${
                 activeTab === "schools"
@@ -103,7 +73,6 @@ export default function SuperAdminPageClient() {
             </button>
           </div>
 
-          {/* Tab Content */}
           {activeTab === "users" && <ManageUsers />}
           {activeTab === "schools" && <ManageSchools />}
         </div>

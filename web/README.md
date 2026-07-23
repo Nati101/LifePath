@@ -17,7 +17,8 @@ A career exploration assessment web app built with **Next.js** and **Supabase**,
 2. Run `supabase/schema.sql` in the SQL Editor
 3. If saves fail or progress stays at 0%, also run `supabase/fix_rls.sql`
 4. For retakes / result history on an existing project, run `supabase/add_results_history.sql`
-5. Create your first admin user via the Auth dashboard, then run:
+5. To lock role / super-admin escalation, run `supabase/lock_profile_privileges.sql`
+6. Create your first admin user via the Auth dashboard, then run:
 
 ```sql
 UPDATE profiles SET role = 'admin' WHERE email = 'your@email.com';

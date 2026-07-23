@@ -30,9 +30,9 @@ function StatusBadge({ status }: { status: StudentStatus }) {
   return <span className={className}>{STATUS_LABELS[status]}</span>;
 }
 
-function ProgressBar({ value }: { value: number }) {
+function ProgressBar({ value, label }: { value: number; label?: string }) {
   return (
-    <div className="admin-progress" aria-label={`${value}% complete`}>
+    <div className="admin-progress" aria-label={label ?? `${value}% complete`}>
       <div className="admin-progress__track">
         <div className="admin-progress__fill" style={{ width: `${value}%` }} />
       </div>
@@ -57,13 +57,22 @@ function StudentRow({ student }: { student: AdminStudent }) {
           </div>
         </div>
       </td>
-      <td className="admin-row__meta admin-col-sm">{student.className ?? "—"}</td>
+      <td className="admin-row__meta admin-col-sm">{student.schoolName ?? "—"}</td>
       <td className="admin-row__meta admin-col-lg">{student.advisorName ?? "—"}</td>
       <td className="admin-row__progress admin-col-md">
-        <ProgressBar value={student.progressPercent} />
+        <ProgressBar value={student.progressPercent} label={`Part 1 ${student.progressPercent}%`} />
       </td>
       <td className="admin-row__status">
         <StatusBadge status={student.status} />
+      </td>
+      <td className="admin-row__progress admin-col-md">
+        <ProgressBar
+          value={student.part2ProgressPercent}
+          label={`Part 2 ${student.part2ProgressPercent}%`}
+        />
+        <div className="mt-1">
+          <StatusBadge status={student.part2Status} />
+        </div>
       </td>
       <td className="admin-row__path admin-col-md">
         {student.topPath ? (
@@ -76,9 +85,16 @@ function StudentRow({ student }: { student: AdminStudent }) {
         ) : (
           "—"
         )}
+        {student.topRoute && (
+          <div className="mt-1 text-[12px] text-muted">P2: {student.topRoute}</div>
+        )}
       </td>
       <td className="admin-row__action">
-        <Link href={withBasePath(`/admin/student?id=${student.id}`)} className="admin-link">
+        <Link
+          href={withBasePath(`/admin/student?id=${student.id}`)}
+          className="admin-link"
+          aria-label={`View ${displayName}`}
+        >
           View
         </Link>
       </td>
@@ -93,6 +109,7 @@ function StudentCard({ student }: { student: AdminStudent }) {
     <Link
       href={withBasePath(`/admin/student?id=${student.id}`)}
       className="admin-student-card"
+      aria-label={`View ${displayName}`}
     >
       <div className="admin-student-card__header">
         <span className="admin-row__avatar" aria-hidden>
@@ -105,14 +122,27 @@ function StudentCard({ student }: { student: AdminStudent }) {
         <StatusBadge status={student.status} />
       </div>
       <div className="admin-student-card__meta">
-        <span>{student.className ?? "No class"}</span>
+        <span>{student.schoolName ?? "No school"}</span>
         <span>{student.advisorName ?? "No advisor"}</span>
       </div>
+      <p className="mb-1 text-[12px] font-medium text-muted">Part 1</p>
       <ProgressBar value={student.progressPercent} />
-      {student.topPath && (
+      <p className="mb-1 mt-3 text-[12px] font-medium text-muted">Part 2</p>
+      <ProgressBar value={student.part2ProgressPercent} />
+      {(student.topPath || student.topRoute) && (
         <p className="admin-student-card__path">
-          Top path: {student.topPath}
-          {student.topPathScore != null ? ` (${student.topPathScore})` : ""}
+          {student.topPath && (
+            <>
+              Top path: {student.topPath}
+              {student.topPathScore != null ? ` (${student.topPathScore})` : ""}
+            </>
+          )}
+          {student.topRoute && (
+            <>
+              {student.topPath ? " · " : ""}
+              Route: {student.topRoute}
+            </>
+          )}
         </p>
       )}
     </Link>
@@ -121,31 +151,44 @@ function StudentCard({ student }: { student: AdminStudent }) {
 
 export default function AdminDashboard({ data }: AdminDashboardProps) {
   const [query, setQuery] = useState("");
-  const [classFilter, setClassFilter] = useState("all");
+  const [schoolFilter, setSchoolFilter] = useState("all");
   const [advisorFilter, setAdvisorFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState<StudentStatus | "all">("all");
+
+  const hasFilters =
+    query.trim() !== "" ||
+    schoolFilter !== "all" ||
+    advisorFilter !== "all" ||
+    statusFilter !== "all";
 
   const filteredStudents = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
 
     return data.students.filter((student) => {
-      if (classFilter !== "all" && student.classId !== classFilter) return false;
+      if (schoolFilter !== "all" && student.schoolId !== schoolFilter) return false;
       if (advisorFilter !== "all" && student.advisorId !== advisorFilter) return false;
       if (statusFilter !== "all" && student.status !== statusFilter) return false;
 
       if (!normalizedQuery) return true;
 
-      const haystack = [student.fullName, student.email, student.className, student.advisorName]
+      const haystack = [student.fullName, student.email, student.schoolName, student.advisorName]
         .filter(Boolean)
         .join(" ")
         .toLowerCase();
 
       return haystack.includes(normalizedQuery);
     });
-  }, [advisorFilter, classFilter, data.students, query, statusFilter]);
+  }, [advisorFilter, data.students, query, schoolFilter, statusFilter]);
 
   const completionRate =
     data.stats.total > 0 ? Math.round((data.stats.completed / data.stats.total) * 100) : 0;
+
+  const emptyMessage =
+    data.scopedToAdvisor && data.students.length === 0
+      ? "You have no assigned students yet."
+      : hasFilters
+        ? "No students match your filters."
+        : "No students found.";
 
   return (
     <div className="admin-page">
@@ -155,21 +198,23 @@ export default function AdminDashboard({ data }: AdminDashboardProps) {
         </h1>
         <p className="admin-page__subtitle">
           {data.scopedToAdvisor
-            ? "Monitor progress and results for students assigned to you."
-            : "Monitor student progress, filter by class or advisor, and review results."}
+            ? "Monitor Part 1 and Part 2 progress for students assigned to you."
+            : "Monitor student progress, filter by school or advisor, and review results."}
         </p>
       </div>
 
       <div className="admin-stat-grid">
         {[
           { label: "Total students", value: data.stats.total },
-          { label: "Completed", value: data.stats.completed, accent: true },
-          { label: "In progress", value: data.stats.inProgress },
-          { label: "Not started", value: data.stats.notStarted },
+          { label: "Part 1 completed", value: data.stats.completed, accent: true },
+          { label: "Part 1 in progress", value: data.stats.inProgress },
+          { label: "Part 2 completed", value: data.stats.part2Completed },
         ].map((stat) => (
           <div key={stat.label} className="admin-stat-card">
             <p className="admin-stat-card__label">{stat.label}</p>
-            <p className={`admin-stat-card__value${stat.accent ? " admin-stat-card__value--accent" : ""}`}>
+            <p
+              className={`admin-stat-card__value${stat.accent ? " admin-stat-card__value--accent" : ""}`}
+            >
               {stat.value}
             </p>
           </div>
@@ -178,7 +223,7 @@ export default function AdminDashboard({ data }: AdminDashboardProps) {
 
       <div className="admin-summary-card">
         <div>
-          <p className="admin-summary-card__label">Completion rate</p>
+          <p className="admin-summary-card__label">Part 1 completion rate</p>
           <p className="admin-summary-card__value">{completionRate}%</p>
         </div>
         <div className="admin-summary-card__bar">
@@ -202,13 +247,13 @@ export default function AdminDashboard({ data }: AdminDashboardProps) {
 
         <div className="admin-toolbar__filters">
           <select
-            value={classFilter}
-            onChange={(event) => setClassFilter(event.target.value)}
+            value={schoolFilter}
+            onChange={(event) => setSchoolFilter(event.target.value)}
             className="select-field admin-toolbar__select"
-            aria-label="Filter by class"
+            aria-label="Filter by school"
           >
-            <option value="all">All classes</option>
-            {data.classes.map((option) => (
+            <option value="all">All schools</option>
+            {data.schools.map((option) => (
               <option key={option.id} value={option.id}>
                 {option.name}
               </option>
@@ -235,9 +280,9 @@ export default function AdminDashboard({ data }: AdminDashboardProps) {
             value={statusFilter}
             onChange={(event) => setStatusFilter(event.target.value as StudentStatus | "all")}
             className="select-field admin-toolbar__select"
-            aria-label="Filter by status"
+            aria-label="Filter by Part 1 status"
           >
-            <option value="all">All statuses</option>
+            <option value="all">All Part 1 statuses</option>
             <option value="completed">Completed</option>
             <option value="in_progress">In progress</option>
             <option value="not_started">Not started</option>
@@ -254,11 +299,12 @@ export default function AdminDashboard({ data }: AdminDashboardProps) {
           <thead>
             <tr>
               <th>Student</th>
-              <th className="admin-col-sm">Class</th>
+              <th className="admin-col-sm">School</th>
               <th className="admin-col-lg">Advisor</th>
-              <th className="admin-col-md">Progress</th>
-              <th>Status</th>
-              <th className="admin-col-md">Top path</th>
+              <th className="admin-col-md">Part 1</th>
+              <th>P1 status</th>
+              <th className="admin-col-md">Part 2</th>
+              <th className="admin-col-md">Results</th>
               <th aria-label="Actions" />
             </tr>
           </thead>
@@ -268,8 +314,8 @@ export default function AdminDashboard({ data }: AdminDashboardProps) {
             ))}
             {filteredStudents.length === 0 && (
               <tr>
-                <td colSpan={7} className="admin-empty">
-                  No students match your filters.
+                <td colSpan={8} className="admin-empty">
+                  {emptyMessage}
                 </td>
               </tr>
             )}
@@ -282,7 +328,7 @@ export default function AdminDashboard({ data }: AdminDashboardProps) {
           <StudentCard key={student.id} student={student} />
         ))}
         {filteredStudents.length === 0 && (
-          <div className="admin-empty-card surface-card">No students match your filters.</div>
+          <div className="admin-empty-card surface-card">{emptyMessage}</div>
         )}
       </div>
     </div>

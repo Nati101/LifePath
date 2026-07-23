@@ -5,14 +5,17 @@ export interface AdminStudent {
   email: string;
   fullName: string | null;
   avatarEmoji: string;
-  classId: string | null;
-  className: string | null;
+  schoolId: string | null;
+  schoolName: string | null;
   advisorId: string | null;
   advisorName: string | null;
   status: StudentStatus;
   progressPercent: number;
   topPath: string | null;
   topPathScore: number | null;
+  part2Status: StudentStatus;
+  part2ProgressPercent: number;
+  topRoute: string | null;
   createdAt: string;
 }
 
@@ -23,13 +26,14 @@ export interface AdminFilterOption {
 
 export interface AdminDashboardData {
   students: AdminStudent[];
-  classes: AdminFilterOption[];
+  schools: AdminFilterOption[];
   advisors: AdminFilterOption[];
   stats: {
     total: number;
     completed: number;
     inProgress: number;
     notStarted: number;
+    part2Completed: number;
   };
   viewerIsSuperAdmin: boolean;
   scopedToAdvisor: boolean;

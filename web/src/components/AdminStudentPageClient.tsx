@@ -4,8 +4,10 @@ import Link from "next/link";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import SectionProgress from "@/components/admin/SectionProgress";
+import Part2SectionProgress from "@/components/admin/Part2SectionProgress";
 import ResultsAttemptPicker, { formatAttemptDate } from "@/components/ResultsAttemptPicker";
 import ResultsDashboard from "@/components/ResultsDashboard";
+import Part2ResultsDashboard from "@/components/Part2ResultsDashboard";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { normalizeAvatar } from "@/lib/avatars";
 import {
@@ -13,9 +15,18 @@ import {
   toAssessmentResult,
   type StoredAssessmentResult,
 } from "@/lib/assessment/persistence";
+import {
+  getPart2Session,
+  listAllPart2Attempts,
+  loadPart2Responses,
+  toPart2Result,
+  type StoredPart2Attempt,
+} from "@/lib/part2-persistence";
 import { getSectionCompletion } from "@/lib/scoring";
+import { getAllPart2Items } from "@/lib/part2-scoring";
 import { createClient, withBasePath } from "@/lib/supabase/client";
 import type { Responses } from "@/lib/types";
+import type { Part2Responses } from "@/lib/part2-types";
 
 export default function AdminStudentPageClient() {
   const ready = useAuthGuard({ admin: true });
@@ -24,10 +35,14 @@ export default function AdminStudentPageClient() {
   const studentId = searchParams.get("id");
   const [header, setHeader] = useState<ReactNode>(null);
   const [responses, setResponses] = useState<Responses>({});
+  const [part2Responses, setPart2Responses] = useState<Part2Responses>({});
   const [attempts, setAttempts] = useState<StoredAssessmentResult[]>([]);
+  const [part2Attempts, setPart2Attempts] = useState<StoredPart2Attempt[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedPart2Id, setSelectedPart2Id] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [studentName, setStudentName] = useState<string | undefined>();
 
   useEffect(() => {
     if (!ready) return;
@@ -58,7 +73,7 @@ export default function AdminStudentPageClient() {
           .single(),
         supabase
           .from("profiles")
-          .select("id, email, full_name, avatar_emoji, class_id, advisor_id, class_name, advisor")
+          .select("id, email, full_name, avatar_emoji, school_id, advisor_id, advisor")
           .eq("id", studentId)
           .single(),
       ]);
@@ -84,36 +99,68 @@ export default function AdminStudentPageClient() {
         return;
       }
 
-      const [{ data: responseRows }, { data: classRow }, { data: advisorRow }, allAttempts] =
-        await Promise.all([
-          supabase.from("responses").select("item_id, rating").eq("user_id", studentId),
-          profile.class_id
-            ? supabase.from("classes").select("name").eq("id", profile.class_id).single()
-            : Promise.resolve({ data: null }),
-          profile.advisor_id
-            ? supabase
-                .from("profiles")
-                .select("full_name, email")
-                .eq("id", profile.advisor_id)
-                .single()
-            : Promise.resolve({ data: null }),
-          listAllAttempts(supabase, studentId!),
-        ]);
+      const [
+        { data: responseRows },
+        { data: schoolRow },
+        { data: advisorRow },
+        allAttempts,
+        allPart2Attempts,
+        part2Session,
+      ] = await Promise.all([
+        supabase.from("responses").select("item_id, rating").eq("user_id", studentId),
+        profile.school_id
+          ? supabase.from("schools").select("name").eq("id", profile.school_id).single()
+          : Promise.resolve({ data: null }),
+        profile.advisor_id
+          ? supabase
+              .from("profiles")
+              .select("full_name, email")
+              .eq("id", profile.advisor_id)
+              .single()
+          : Promise.resolve({ data: null }),
+        listAllAttempts(supabase, studentId!),
+        listAllPart2Attempts(supabase, studentId!),
+        getPart2Session(supabase, studentId!),
+      ]);
+
+      let loadedPart2: Part2Responses = {};
+      if (part2Session) {
+        loadedPart2 = await loadPart2Responses(supabase, part2Session.id);
+      }
 
       const loadedResponses: Responses = {};
       for (const row of responseRows ?? []) {
         loadedResponses[row.item_id] = row.rating;
       }
 
-      const classLabel = classRow?.name ?? profile.class_name ?? null;
+      const part1Complete = Object.values(getSectionCompletion(loadedResponses)).every(
+        (value) => value >= 1,
+      );
+      const part2ItemCount = getAllPart2Items().length;
+      const part2CompleteNow =
+        part2ItemCount > 0 && Object.keys(loadedPart2).length >= part2ItemCount;
+
+      // While an attempt is in progress, only show archived history — never a live snapshot.
+      const visiblePart1 = part1Complete
+        ? allAttempts
+        : allAttempts.filter((attempt) => attempt.source === "history");
+      const visiblePart2 = part2CompleteNow
+        ? allPart2Attempts
+        : allPart2Attempts.filter((attempt) => attempt.source === "history");
+
+      const schoolLabel = schoolRow?.name ?? null;
       const advisorLabel =
         advisorRow?.full_name?.trim() || advisorRow?.email || profile.advisor || null;
       const displayName = profile.full_name?.trim() || profile.email;
 
       if (!cancelled) {
         setResponses(loadedResponses);
-        setAttempts(allAttempts);
-        setSelectedId(allAttempts[0]?.id ?? null);
+        setPart2Responses(loadedPart2);
+        setAttempts(visiblePart1);
+        setPart2Attempts(visiblePart2);
+        setSelectedId(visiblePart1[0]?.id ?? null);
+        setSelectedPart2Id(visiblePart2[0]?.id ?? null);
+        setStudentName(displayName);
         setHeader(
           <>
             <Link href={withBasePath("/admin")} className="admin-back-link">
@@ -128,7 +175,7 @@ export default function AdminStudentPageClient() {
                 <h1 className="admin-student-header__name">{displayName}</h1>
                 <p className="admin-student-header__meta">{profile.email}</p>
                 <div className="admin-student-header__tags">
-                  {classLabel && <span className="admin-tag">{classLabel}</span>}
+                  {schoolLabel && <span className="admin-tag">{schoolLabel}</span>}
                   {advisorLabel && <span className="admin-tag">Advisor: {advisorLabel}</span>}
                 </div>
               </div>
@@ -151,23 +198,52 @@ export default function AdminStudentPageClient() {
     [attempts, selectedId],
   );
 
+  const selectedPart2 = useMemo(
+    () =>
+      part2Attempts.find((attempt) => attempt.id === selectedPart2Id) ??
+      part2Attempts[0] ??
+      null,
+    [part2Attempts, selectedPart2Id],
+  );
+
   const sectionCompletion = getSectionCompletion(responses);
   const allComplete = Object.values(sectionCompletion).every((value) => value >= 1);
+  const part2Total = getAllPart2Items().length;
+  const part2Answered = Object.keys(part2Responses).length;
+  const part2Complete = part2Total > 0 && part2Answered >= part2Total;
 
   const pickerOptions = useMemo(() => {
     return attempts.map((attempt) => {
       const date = formatAttemptDate(attempt.computed_at ?? attempt.completed_at);
       const top = attempt.top_paths?.[0]?.path;
+      const isHistory = attempt.source === "history";
       return {
         id: attempt.id,
-        label:
-          attempt.source === "current"
+        label: allComplete
+          ? attempt.source === "current"
             ? `Latest result · ${date}`
-            : `Previous result · ${date}`,
+            : `Previous result · ${date}`
+          : `Previous completed · ${date}`,
+        sublabel: top ?? (isHistory ? "Archived" : undefined),
+      };
+    });
+  }, [attempts, allComplete]);
+
+  const part2PickerOptions = useMemo(() => {
+    return part2Attempts.map((attempt) => {
+      const date = formatAttemptDate(attempt.computed_at ?? attempt.completed_at);
+      const top = attempt.top_routes?.[0]?.route;
+      return {
+        id: attempt.id,
+        label: part2Complete
+          ? attempt.source === "current"
+            ? `Latest Part 2 · ${date}`
+            : `Previous Part 2 · ${date}`
+          : `Previous Part 2 · ${date}`,
         sublabel: top,
       };
     });
-  }, [attempts]);
+  }, [part2Attempts, part2Complete]);
 
   if (!ready || loading) {
     return (
@@ -204,44 +280,103 @@ export default function AdminStudentPageClient() {
       <div className="admin-page-content space-y-6">
         {header}
 
-        {!allComplete && (
-          <section className="admin-detail-section">
-            <h2 className="admin-detail-section__title">Assessment progress</h2>
-            <div className="surface-card p-5 sm:p-6">
+        <section className="admin-detail-section">
+          <h2 className="admin-detail-section__title">Part 1</h2>
+
+          {!allComplete && (
+            <div className="surface-card mb-4 p-5 sm:p-6">
+              <p className="mb-4 text-[14px] text-muted">
+                Current attempt is still in progress
+                {Object.keys(responses).length > 0
+                  ? ` (${Object.keys(responses).length} answers so far).`
+                  : "."}
+              </p>
               <SectionProgress responses={responses} />
             </div>
-          </section>
-        )}
+          )}
 
-        {attempts.length > 0 && (
-          <ResultsAttemptPicker
-            attempts={pickerOptions}
-            selectedId={selected?.id ?? ""}
-            onSelect={setSelectedId}
-          />
-        )}
-
-        {selected ? (
-          <ResultsDashboard
-            result={toAssessmentResult(selected)}
-            studentName={undefined}
-          />
-        ) : (
-          !allComplete && (
-            <p className="admin-detail-note">
-              Results will appear here once all nine career path sections are complete.
+          {!allComplete && attempts.length > 0 && (
+            <p className="admin-detail-note mb-4">
+              Snapshot below is from a previous completed attempt, not the current one.
             </p>
-          )
-        )}
+          )}
 
-        {allComplete && attempts.length === 0 && (
-          <div className="surface-card p-5 sm:p-6">
-            <p className="text-[15px] text-muted">
-              This student finished all sections but results have not been saved yet. Ask them to
-              open the results page once more.
+          {attempts.length > 0 && (
+            <ResultsAttemptPicker
+              attempts={pickerOptions}
+              selectedId={selected?.id ?? ""}
+              onSelect={setSelectedId}
+            />
+          )}
+
+          {selected ? (
+            <ResultsDashboard
+              result={toAssessmentResult(selected)}
+              studentName={studentName}
+              allowRetake={false}
+            />
+          ) : (
+            !allComplete && (
+              <p className="admin-detail-note">
+                Part 1 results will appear here once all career path sections are complete.
+              </p>
+            )
+          )}
+
+          {allComplete && attempts.length === 0 && (
+            <div className="surface-card p-5 sm:p-6">
+              <p className="text-[15px] text-muted">
+                This student finished Part 1 but results have not been saved yet. Ask them to open
+                the results page once more.
+              </p>
+            </div>
+          )}
+        </section>
+
+        <section className="admin-detail-section">
+          <h2 className="admin-detail-section__title">Part 2</h2>
+          {!part2Complete && (
+            <div className="surface-card mb-4 p-5 sm:p-6">
+              {part2Answered === 0 ? (
+                <p className="text-[14px] text-muted">This student has not started Part 2 yet.</p>
+              ) : (
+                <>
+                  <p className="mb-4 text-[14px] text-muted">
+                    Current Part 2 attempt is still in progress ({part2Answered} answers so far).
+                  </p>
+                  <Part2SectionProgress responses={part2Responses} />
+                </>
+              )}
+            </div>
+          )}
+
+          {!part2Complete && part2Attempts.length > 0 && (
+            <p className="admin-detail-note mb-4">
+              Route results below are from a previous completed Part 2 attempt.
             </p>
-          </div>
-        )}
+          )}
+
+          {part2Attempts.length > 0 && (
+            <ResultsAttemptPicker
+              attempts={part2PickerOptions}
+              selectedId={selectedPart2?.id ?? ""}
+              onSelect={setSelectedPart2Id}
+            />
+          )}
+
+          {selectedPart2 ? (
+            <Part2ResultsDashboard
+              result={toPart2Result(selectedPart2)}
+              studentName={studentName}
+            />
+          ) : (
+            part2Complete && (
+              <p className="admin-detail-note">
+                Part 2 is complete but results have not been saved yet.
+              </p>
+            )
+          )}
+        </section>
       </div>
     </div>
   );

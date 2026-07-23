@@ -225,7 +225,7 @@ create policy "Admins read all results"
   on public.results for select
   using (public.is_admin());
 
--- Auto-create profile on signup
+-- Auto-create profile on signup (always student; never trust metadata role)
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
@@ -237,7 +237,7 @@ begin
     new.id,
     new.email,
     coalesce(new.raw_user_meta_data->>'full_name', ''),
-    coalesce((new.raw_user_meta_data->>'role')::user_role, 'student')
+    'student'
   )
   on conflict (id) do nothing;
   return new;
@@ -248,6 +248,43 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
+
+-- Privilege lock: clients cannot self-promote (full version: lock_profile_privileges.sql)
+create or replace function public.protect_profile_privileges()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if tg_op = 'INSERT' then
+    new.role := 'student';
+    return new;
+  end if;
+
+  if new.role is distinct from old.role then
+    if auth.uid() is null then
+      null; -- SQL editor / service role
+    else
+      begin
+        if not public.is_super_admin() then
+          raise exception 'Only super admins can change user roles';
+        end if;
+      exception
+        when undefined_function then
+          raise exception 'Only the SQL editor can change user roles';
+      end;
+    end if;
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists protect_profile_privileges on public.profiles;
+create trigger protect_profile_privileges
+  before insert or update on public.profiles
+  for each row execute procedure public.protect_profile_privileges();
 
 -- Updated_at helper
 create or replace function public.set_updated_at()
