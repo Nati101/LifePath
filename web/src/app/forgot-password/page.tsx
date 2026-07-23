@@ -8,7 +8,7 @@ import { getAuthCallbackUrl } from "@/lib/supabase/env";
 import { createClient, withBasePath } from "@/lib/supabase/client";
 
 export default function ForgotPasswordPage() {
-  useRedirectIfAuthenticated("/assessment");
+  useRedirectIfAuthenticated();
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);

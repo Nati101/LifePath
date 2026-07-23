@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect } from "react";
+import { getPostAuthHomePath } from "@/lib/auth/guards";
 import { appPath, createClient } from "@/lib/supabase/client";
 
-function safeNextPath(raw: string | null): string {
+function safeNextPath(raw: string | null): string | null {
   if (!raw || !raw.startsWith("/") || raw.startsWith("//")) {
-    return "/assessment";
+    return null;
   }
   return raw;
 }
@@ -29,7 +30,8 @@ export default function AuthCallbackPage() {
       }
 
       if (!cancelled) {
-        window.location.replace(appPath(next));
+        const destination = next ?? (await getPostAuthHomePath(supabase));
+        window.location.replace(appPath(destination));
       }
     }
 

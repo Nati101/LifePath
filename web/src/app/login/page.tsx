@@ -4,10 +4,11 @@ import Link from "next/link";
 import { useState } from "react";
 import AuthBrandMark from "@/components/AuthBrandMark";
 import { useRedirectIfAuthenticated } from "@/hooks/useRedirectIfAuthenticated";
+import { getPostAuthHomePath } from "@/lib/auth/guards";
 import { appPath, createClient, withBasePath } from "@/lib/supabase/client";
 
 export default function LoginPage() {
-  useRedirectIfAuthenticated("/assessment");
+  useRedirectIfAuthenticated();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -30,8 +31,10 @@ export default function LoginPage() {
         return;
       }
 
-      // Hard navigation: soft router.push/refresh can hang on static GitHub Pages.
-      window.location.assign(appPath("/assessment"));
+      // Students → landing (`/`); admins → dashboard (`/admin`).
+      // Hard navigation avoids soft-router hangs on static GitHub Pages.
+      const home = await getPostAuthHomePath(supabase);
+      window.location.assign(appPath(home));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign in failed. Please try again.");
     } finally {

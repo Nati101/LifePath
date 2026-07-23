@@ -1,26 +1,35 @@
 "use client";
 
 import { useEffect } from "react";
+import { getPostAuthHomePath } from "@/lib/auth/guards";
 import { appPath, createClient } from "@/lib/supabase/client";
 
-export function useRedirectIfAuthenticated(redirectTo = "/") {
+/** If already signed in, send students to `/` and admins to `/admin`. */
+export function useRedirectIfAuthenticated() {
   useEffect(() => {
     const supabase = createClient();
+    let cancelled = false;
 
-    const go = () => {
-      window.location.replace(appPath(redirectTo));
-    };
+    async function goHome() {
+      const path = await getPostAuthHomePath(supabase);
+      if (!cancelled && path !== "/login") {
+        window.location.replace(appPath(path));
+      }
+    }
 
     void supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) go();
+      if (session) void goHome();
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) go();
+      if (session) void goHome();
     });
 
-    return () => subscription.unsubscribe();
-  }, [redirectTo]);
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
+  }, []);
 }

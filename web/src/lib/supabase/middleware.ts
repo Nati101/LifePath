@@ -57,8 +57,15 @@ export async function updateSession(request: NextRequest) {
       pathname === "/register" ||
       pathname === "/forgot-password")
   ) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
     const url = request.nextUrl.clone();
-    url.pathname = `${basePath}/assessment`;
+    url.pathname =
+      profile?.role === "admin" ? `${basePath}/admin` : `${basePath}/`;
     return NextResponse.redirect(url);
   }
 

@@ -8,6 +8,7 @@ import {
   passwordHint,
   validatePassword,
 } from "@/lib/auth/password";
+import { getPostAuthHomePath } from "@/lib/auth/guards";
 import { appPath, createClient, withBasePath } from "@/lib/supabase/client";
 
 export default function UpdatePasswordPage() {
@@ -68,7 +69,7 @@ export default function UpdatePasswordPage() {
         return;
       }
 
-      window.location.assign(appPath("/assessment"));
+      window.location.assign(appPath(await getPostAuthHomePath(supabase)));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not update password.");
     } finally {
