@@ -2,8 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { createClient, withBasePath } from "@/lib/supabase/client";
+import { appPath, createClient, withBasePath } from "@/lib/supabase/client";
 import {
   ensureProfile,
   getOrCreateSession,
@@ -16,7 +15,6 @@ import { getSectionCompletion } from "@/lib/scoring";
 import type { Responses } from "@/lib/types";
 
 export default function AssessmentHub() {
-  const router = useRouter();
   const [responses, setResponses] = useState<Responses>({});
   const [loading, setLoading] = useState(true);
   const [allComplete, setAllComplete] = useState(false);
@@ -31,7 +29,8 @@ export default function AssessmentHub() {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      router.replace(withBasePath("/login"));
+      window.location.replace(appPath("/login"));
+      setLoading(false);
       return;
     }
 
@@ -66,7 +65,7 @@ export default function AssessmentHub() {
     } finally {
       setLoading(false);
     }
-  }, [router]);
+  }, []);
 
   useEffect(() => {
     loadProgress();
@@ -93,15 +92,14 @@ export default function AssessmentHub() {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) {
-        router.replace(withBasePath("/login"));
+        window.location.replace(appPath("/login"));
         return;
       }
 
       await resetAssessment(supabase, user.id);
       setResponses({});
       setAllComplete(false);
-      router.push(withBasePath("/assessment/clinical_care"));
-      router.refresh();
+      window.location.assign(appPath("/assessment/clinical_care"));
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : "Could not reset assessment");
       setRetaking(false);

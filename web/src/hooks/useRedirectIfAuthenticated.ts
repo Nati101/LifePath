@@ -1,29 +1,26 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { createClient, withBasePath } from "@/lib/supabase/client";
+import { appPath, createClient } from "@/lib/supabase/client";
 
 export function useRedirectIfAuthenticated(redirectTo = "/") {
-  const router = useRouter();
-
   useEffect(() => {
     const supabase = createClient();
 
+    const go = () => {
+      window.location.replace(appPath(redirectTo));
+    };
+
     void supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        router.replace(withBasePath(redirectTo));
-      }
+      if (session) go();
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) {
-        router.replace(withBasePath(redirectTo));
-      }
+      if (session) go();
     });
 
     return () => subscription.unsubscribe();
-  }, [redirectTo, router]);
+  }, [redirectTo]);
 }

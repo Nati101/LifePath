@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { createClient, withBasePath } from "@/lib/supabase/client";
+import { appPath, createClient } from "@/lib/supabase/client";
 
 function safeNextPath(raw: string | null): string {
   if (!raw || !raw.startsWith("/") || raw.startsWith("//")) {
@@ -12,8 +11,6 @@ function safeNextPath(raw: string | null): string {
 }
 
 export default function AuthCallbackPage() {
-  const router = useRouter();
-
   useEffect(() => {
     let cancelled = false;
 
@@ -26,13 +23,13 @@ export default function AuthCallbackPage() {
       if (code) {
         const { error } = await supabase.auth.exchangeCodeForSession(code);
         if (error && !cancelled) {
-          router.replace(withBasePath("/login"));
+          window.location.replace(appPath("/login"));
           return;
         }
       }
 
       if (!cancelled) {
-        router.replace(withBasePath(next));
+        window.location.replace(appPath(next));
       }
     }
 
@@ -41,7 +38,7 @@ export default function AuthCallbackPage() {
     return () => {
       cancelled = true;
     };
-  }, [router]);
+  }, []);
 
   return (
     <div className="page-shell centered">

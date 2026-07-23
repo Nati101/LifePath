@@ -2,16 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import AuthBrandMark from "@/components/AuthBrandMark";
 import { useRedirectIfAuthenticated } from "@/hooks/useRedirectIfAuthenticated";
 import { MIN_PASSWORD_LENGTH, passwordHint, validatePassword } from "@/lib/auth/password";
 import { ensureProfile } from "@/lib/assessment/persistence";
 import { getAuthCallbackUrl } from "@/lib/supabase/env";
-import { createClient, withBasePath } from "@/lib/supabase/client";
+import { appPath, createClient, withBasePath } from "@/lib/supabase/client";
 
 export default function RegisterPage() {
-  const router = useRouter();
   useRedirectIfAuthenticated("/assessment");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -32,34 +30,37 @@ export default function RegisterPage() {
 
     setLoading(true);
 
-    const supabase = createClient();
-    const { data, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: getAuthCallbackUrl("/welcome"),
-        data: { full_name: fullName, role: "student" },
-      },
-    });
+    try {
+      const supabase = createClient();
+      const { data, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: getAuthCallbackUrl("/welcome"),
+          data: { full_name: fullName, role: "student" },
+        },
+      });
 
-    if (authError) {
-      setError(authError.message);
+      if (authError) {
+        setError(authError.message);
+        return;
+      }
+
+      if (!data.session) {
+        setNeedsConfirm(true);
+        return;
+      }
+
+      if (data.user) {
+        await ensureProfile(supabase, data.user);
+      }
+
+      window.location.assign(appPath("/welcome"));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not create account. Please try again.");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    if (!data.session) {
-      setNeedsConfirm(true);
-      setLoading(false);
-      return;
-    }
-
-    if (data.user) {
-      await ensureProfile(supabase, data.user);
-    }
-
-    router.push(withBasePath("/welcome"));
-    router.refresh();
   };
 
   if (needsConfirm) {

@@ -1,15 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import AuthBrandMark from "@/components/AuthBrandMark";
 import { getAccountOptions } from "@/lib/account/getAccountOptions";
 import type { AccountOptions } from "@/lib/account/options";
 import { getAuthenticatedUser } from "@/lib/auth/guards";
-import { createClient, withBasePath } from "@/lib/supabase/client";
+import { appPath, createClient } from "@/lib/supabase/client";
 
 export default function WelcomePage() {
-  const router = useRouter();
   const [ready, setReady] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [options, setOptions] = useState<AccountOptions>({
@@ -29,7 +27,7 @@ export default function WelcomePage() {
       const user = await getAuthenticatedUser(supabase);
 
       if (!user) {
-        router.replace(withBasePath("/login"));
+        window.location.replace(appPath("/login"));
         return;
       }
 
@@ -45,7 +43,7 @@ export default function WelcomePage() {
       if (cancelled) return;
 
       if (profile?.school_id || profile?.advisor_id) {
-        router.replace(withBasePath("/assessment"));
+        window.location.replace(appPath("/assessment"));
         return;
       }
 
@@ -59,7 +57,7 @@ export default function WelcomePage() {
     return () => {
       cancelled = true;
     };
-  }, [router]);
+  }, []);
 
   const filteredAdvisors = useMemo(() => {
     if (!schoolId) return [];
@@ -73,8 +71,7 @@ export default function WelcomePage() {
   }, [advisorId, filteredAdvisors]);
 
   const goToAssessment = () => {
-    router.push(withBasePath("/assessment"));
-    router.refresh();
+    window.location.assign(appPath("/assessment"));
   };
 
   const handleContinue = async (e: React.FormEvent) => {

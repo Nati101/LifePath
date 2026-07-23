@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import AuthBrandMark from "@/components/AuthBrandMark";
 import {
@@ -9,10 +8,9 @@ import {
   passwordHint,
   validatePassword,
 } from "@/lib/auth/password";
-import { createClient, withBasePath } from "@/lib/supabase/client";
+import { appPath, createClient, withBasePath } from "@/lib/supabase/client";
 
 export default function UpdatePasswordPage() {
-  const router = useRouter();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
@@ -61,17 +59,21 @@ export default function UpdatePasswordPage() {
     }
 
     setLoading(true);
-    const supabase = createClient();
-    const { error: updateError } = await supabase.auth.updateUser({ password });
+    try {
+      const supabase = createClient();
+      const { error: updateError } = await supabase.auth.updateUser({ password });
 
-    if (updateError) {
-      setError(updateError.message);
+      if (updateError) {
+        setError(updateError.message);
+        return;
+      }
+
+      window.location.assign(appPath("/assessment"));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not update password.");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    router.push(withBasePath("/assessment"));
-    router.refresh();
   };
 
   if (!ready) {

@@ -1,14 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import AuthBrandMark from "@/components/AuthBrandMark";
 import { useRedirectIfAuthenticated } from "@/hooks/useRedirectIfAuthenticated";
-import { createClient, withBasePath } from "@/lib/supabase/client";
+import { appPath, createClient, withBasePath } from "@/lib/supabase/client";
 
 export default function LoginPage() {
-  const router = useRouter();
   useRedirectIfAuthenticated("/assessment");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,20 +18,25 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
 
-    const supabase = createClient();
-    const { error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const supabase = createClient();
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (authError) {
-      setError(authError.message);
+      if (authError) {
+        setError(authError.message);
+        return;
+      }
+
+      // Hard navigation: soft router.push/refresh can hang on static GitHub Pages.
+      window.location.assign(appPath("/assessment"));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Sign in failed. Please try again.");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    router.push(withBasePath("/assessment"));
-    router.refresh();
   };
 
   return (

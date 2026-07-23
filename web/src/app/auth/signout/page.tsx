@@ -1,12 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { createClient, withBasePath } from "@/lib/supabase/client";
+import { appPath, createClient } from "@/lib/supabase/client";
 
 export default function SignOutPage() {
-  const router = useRouter();
-
   useEffect(() => {
     let cancelled = false;
 
@@ -15,7 +12,7 @@ export default function SignOutPage() {
       await supabase.auth.signOut();
 
       if (!cancelled) {
-        router.replace(withBasePath("/"));
+        window.location.replace(appPath("/"));
       }
     }
 
@@ -24,7 +21,7 @@ export default function SignOutPage() {
     return () => {
       cancelled = true;
     };
-  }, [router]);
+  }, []);
 
   return (
     <div className="page-shell centered">
