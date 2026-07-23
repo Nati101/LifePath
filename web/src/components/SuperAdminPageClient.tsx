@@ -79,7 +79,7 @@ export default function SuperAdminPageClient() {
             aria-labelledby="tab-people"
             hidden={activeTab !== "people"}
           >
-            {activeTab === "people" && <ManageUsers />}
+            <ManageUsers />
           </div>
           <div
             id="panel-schools"
@@ -87,7 +87,7 @@ export default function SuperAdminPageClient() {
             aria-labelledby="tab-schools"
             hidden={activeTab !== "schools"}
           >
-            {activeTab === "schools" && <ManageSchools />}
+            <ManageSchools />
           </div>
         </div>
       </div>

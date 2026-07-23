@@ -780,6 +780,14 @@ body {
   .admin-stat-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
+
+  .admin-stat-grid--1 {
+    grid-template-columns: minmax(0, 280px);
+  }
+
+  .admin-stat-grid--3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 .admin-stat-card {
@@ -1084,7 +1092,7 @@ body {
 
 @media (min-width: 720px) {
   .admin-row-edit__fields {
-    grid-template-columns: minmax(140px, 180px) minmax(180px, 1fr) auto;
+    grid-template-columns: minmax(160px, 1.1fr) minmax(140px, 180px) minmax(180px, 1.2fr) auto;
     align-items: end;
   }
 }
@@ -1094,10 +1102,21 @@ body {
   min-width: 0;
 }
 
+.admin-row-edit__field--wide {
+  grid-column: 1 / -1;
+}
+
 .admin-row-edit__select {
   height: 44px !important;
   font-size: 14px !important;
   min-width: 0;
+}
+
+/* inputs use same height as compact selects in edit panels */
+input.admin-row-edit__select {
+  height: 44px;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 .admin-row-edit__check {

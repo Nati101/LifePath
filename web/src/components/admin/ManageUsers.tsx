@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import AdminConfirmModal from "@/components/admin/AdminConfirmModal";
 import { createClient } from "@/lib/supabase/client";
 
 interface User {
@@ -18,10 +19,19 @@ interface School {
   name: string;
 }
 
+type PendingConfirm =
+  | { kind: "demote"; user: User; label: string }
+  | { kind: "grant_sa"; user: User; label: string }
+  | { kind: "revoke_sa"; user: User; label: string };
+
 const PAGE_SIZE = 50;
 
 function roleLabel(role: "student" | "admin") {
   return role === "admin" ? "Advisor" : "Student";
+}
+
+function displayName(user: Pick<User, "full_name" | "email">) {
+  return user.full_name?.trim() || user.email;
 }
 
 function NameCell({
@@ -61,9 +71,12 @@ export default function ManageUsers() {
   const [promoteError, setPromoteError] = useState("");
 
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
   const [editRole, setEditRole] = useState<"student" | "admin">("student");
   const [editSchoolId, setEditSchoolId] = useState("");
   const [editSuperAdmin, setEditSuperAdmin] = useState(false);
+  const [pendingConfirm, setPendingConfirm] = useState<PendingConfirm | null>(null);
+  const [confirmBusy, setConfirmBusy] = useState(false);
 
   const loadData = useCallback(async () => {
     setLoadError("");
@@ -113,6 +126,7 @@ export default function ManageUsers() {
 
   function startEdit(user: User) {
     setEditingId(user.id);
+    setEditName(user.full_name?.trim() || "");
     setEditRole(user.role);
     setEditSchoolId(user.school_id || "");
     setEditSuperAdmin(user.is_super_admin);
@@ -122,12 +136,74 @@ export default function ManageUsers() {
   function cancelEdit() {
     setEditingId(null);
     setRowBusyId(null);
+    setPendingConfirm(null);
+  }
+
+  async function applyEdit(user: User) {
+    const nextSuperAdmin = editSuperAdmin;
+    const nextRole: "student" | "admin" = nextSuperAdmin ? "admin" : editRole;
+    const nextName = editName.trim();
+    const roleChanged = nextRole !== user.role;
+    const schoolChanged = (editSchoolId || null) !== user.school_id;
+    const superChanged = nextSuperAdmin !== user.is_super_admin;
+    const nameChanged = nextName !== (user.full_name?.trim() || "");
+
+    setRowError("");
+    setBannerSuccess("");
+    setRowBusyId(user.id);
+    const supabase = createClient();
+
+    const updates: {
+      role?: "student" | "admin";
+      school_id?: string | null;
+      is_super_admin?: boolean;
+      full_name?: string;
+    } = {};
+    if (roleChanged) updates.role = nextRole;
+    if (schoolChanged) updates.school_id = editSchoolId || null;
+    if (nameChanged) updates.full_name = nextName;
+    if (superChanged) {
+      updates.is_super_admin = nextSuperAdmin;
+      if (nextSuperAdmin) updates.role = "admin";
+    }
+
+    const { error } = await supabase.from("profiles").update(updates).eq("id", user.id);
+
+    if (error) {
+      setRowError(error.message);
+      setRowBusyId(null);
+      setConfirmBusy(false);
+      setPendingConfirm(null);
+      return;
+    }
+
+    if (roleChanged && nextRole === "student") {
+      try {
+        await clearAdvisorAssignments(supabase, user.id);
+      } catch (err) {
+        setRowError(err instanceof Error ? err.message : "Failed to clear advisor links");
+        setRowBusyId(null);
+        setConfirmBusy(false);
+        setPendingConfirm(null);
+        setEditingId(null);
+        await loadData();
+        return;
+      }
+    }
+
+    setEditingId(null);
+    setRowBusyId(null);
+    setConfirmBusy(false);
+    setPendingConfirm(null);
+    await loadData();
   }
 
   async function saveEdit(user: User) {
     const isSelf = currentUserId === user.id;
     const nextSuperAdmin = editSuperAdmin;
     const nextRole: "student" | "admin" = nextSuperAdmin ? "admin" : editRole;
+    const nextName = editName.trim();
+    const label = nextName || displayName(user);
 
     if (isSelf && user.is_super_admin && !nextSuperAdmin) {
       setRowError("You can’t remove your own super admin access.");
@@ -142,76 +218,35 @@ export default function ManageUsers() {
     const roleChanged = nextRole !== user.role;
     const schoolChanged = (editSchoolId || null) !== user.school_id;
     const superChanged = nextSuperAdmin !== user.is_super_admin;
+    const nameChanged = nextName !== (user.full_name?.trim() || "");
 
-    if (!roleChanged && !schoolChanged && !superChanged) {
+    if (!roleChanged && !schoolChanged && !superChanged && !nameChanged) {
       cancelEdit();
       return;
     }
 
     if (user.role === "admin" && nextRole === "student") {
-      const label = user.full_name?.trim() || user.email;
-      const confirmed = window.confirm(
-        `Demote ${label} to student? Students assigned to this advisor will be unassigned.`,
-      );
-      if (!confirmed) return;
-    }
-
-    if (!user.is_super_admin && nextSuperAdmin) {
-      const label = user.full_name?.trim() || user.email;
-      const confirmed = window.confirm(
-        `Make ${label} a super admin? They will be able to manage all users and schools.`,
-      );
-      if (!confirmed) return;
-    }
-
-    if (user.is_super_admin && !nextSuperAdmin) {
-      const label = user.full_name?.trim() || user.email;
-      const confirmed = window.confirm(
-        `Remove super admin access from ${label}? They will remain an advisor.`,
-      );
-      if (!confirmed) return;
-    }
-
-    setRowError("");
-    setBannerSuccess("");
-    setRowBusyId(user.id);
-    const supabase = createClient();
-
-    const updates: {
-      role?: "student" | "admin";
-      school_id?: string | null;
-      is_super_admin?: boolean;
-    } = {};
-    if (roleChanged) updates.role = nextRole;
-    if (schoolChanged) updates.school_id = editSchoolId || null;
-    if (superChanged) {
-      updates.is_super_admin = nextSuperAdmin;
-      if (nextSuperAdmin) updates.role = "admin";
-    }
-
-    const { error } = await supabase.from("profiles").update(updates).eq("id", user.id);
-
-    if (error) {
-      setRowError(error.message);
-      setRowBusyId(null);
+      setPendingConfirm({ kind: "demote", user, label });
       return;
     }
 
-    if (roleChanged && nextRole === "student") {
-      try {
-        await clearAdvisorAssignments(supabase, user.id);
-      } catch (err) {
-        setRowError(err instanceof Error ? err.message : "Failed to clear advisor links");
-        setRowBusyId(null);
-        setEditingId(null);
-        await loadData();
-        return;
-      }
+    if (!user.is_super_admin && nextSuperAdmin) {
+      setPendingConfirm({ kind: "grant_sa", user, label });
+      return;
     }
 
-    setEditingId(null);
-    setRowBusyId(null);
-    await loadData();
+    if (user.is_super_admin && !nextSuperAdmin) {
+      setPendingConfirm({ kind: "revoke_sa", user, label });
+      return;
+    }
+
+    await applyEdit(user);
+  }
+
+  async function handleConfirmPending() {
+    if (!pendingConfirm) return;
+    setConfirmBusy(true);
+    await applyEdit(pendingConfirm.user);
   }
 
   async function promoteAdvisor(e: React.FormEvent) {
@@ -350,7 +385,7 @@ export default function ManageUsers() {
 
   return (
     <div className="space-y-4">
-      <div className="admin-stat-grid">
+      <div className="admin-stat-grid admin-stat-grid--3">
         <div className="admin-stat-card">
           <p className="admin-stat-card__label">Total</p>
           <p className="admin-stat-card__value">{users.length}</p>
@@ -511,13 +546,13 @@ export default function ManageUsers() {
             {visibleUsers.map((user) => {
               const busy = rowBusyId === user.id;
               const editing = editingId === user.id;
-              const label = user.full_name?.trim() || user.email;
+              const label = displayName(user);
               const isSelf = currentUserId === user.id;
               return (
                 <Fragment key={user.id}>
                   <tr className={`admin-row${editing ? " admin-row--editing" : ""}`}>
                     <td className="admin-col-name">
-                      <NameCell name={user.full_name || "—"} isSuperAdmin={user.is_super_admin} />
+                      <NameCell name={label} isSuperAdmin={user.is_super_admin} />
                     </td>
                     <td className="admin-row__email" style={{ marginTop: 0 }}>
                       {user.email}
@@ -551,6 +586,18 @@ export default function ManageUsers() {
                       <td colSpan={6}>
                         <div className="admin-row-edit__panel">
                           <div className="admin-row-edit__fields">
+                            <label className="admin-row-edit__field">
+                              <span className="field-label">Display name</span>
+                              <input
+                                type="text"
+                                value={editName}
+                                onChange={(e) => setEditName(e.target.value)}
+                                disabled={busy}
+                                className="input-field admin-row-edit__select"
+                                placeholder={user.email}
+                                aria-label={`Display name for ${label}`}
+                              />
+                            </label>
                             <label className="admin-row-edit__field">
                               <span className="field-label">Role</span>
                               <div className="select-wrap">
@@ -642,13 +689,13 @@ export default function ManageUsers() {
         {visibleUsers.map((user) => {
           const busy = rowBusyId === user.id;
           const editing = editingId === user.id;
-          const label = user.full_name?.trim() || user.email;
+          const label = displayName(user);
           const isSelf = currentUserId === user.id;
           return (
             <div key={user.id} className="admin-manage-card surface-card">
               <div className="mb-3 flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
-                  <NameCell name={user.full_name || "—"} isSuperAdmin={user.is_super_admin} />
+                  <NameCell name={label} isSuperAdmin={user.is_super_admin} />
                   <p className="mt-1 text-[13px] text-muted">{user.email}</p>
                   {!editing && (
                     <p className="mt-1 text-[12px] text-muted-light">
@@ -671,6 +718,18 @@ export default function ManageUsers() {
               {editing && (
                 <div className="admin-row-edit__panel admin-row-edit__panel--card">
                   <div className="admin-row-edit__fields">
+                    <label className="admin-row-edit__field">
+                      <span className="field-label">Display name</span>
+                      <input
+                        type="text"
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        disabled={busy}
+                        className="input-field admin-row-edit__select"
+                        placeholder={user.email}
+                        aria-label={`Display name for ${label}`}
+                      />
+                    </label>
                     <label className="admin-row-edit__field">
                       <span className="field-label">Role</span>
                       <div className="select-wrap">
@@ -759,6 +818,52 @@ export default function ManageUsers() {
           Show more ({filteredUsers.length - visibleCount} remaining)
         </button>
       )}
+
+      <AdminConfirmModal
+        open={pendingConfirm?.kind === "demote"}
+        title="Demote to student?"
+        body={
+          <>
+            Demote <span className="font-semibold text-foreground">{pendingConfirm?.label}</span> to
+            student? Students assigned to this advisor will be unassigned.
+          </>
+        }
+        confirmLabel="Demote"
+        danger
+        busy={confirmBusy}
+        onCancel={() => setPendingConfirm(null)}
+        onConfirm={() => void handleConfirmPending()}
+      />
+      <AdminConfirmModal
+        open={pendingConfirm?.kind === "grant_sa"}
+        title="Grant super admin?"
+        body={
+          <>
+            Make <span className="font-semibold text-foreground">{pendingConfirm?.label}</span> a
+            super admin? They will be able to manage all users and schools.
+          </>
+        }
+        confirmLabel="Grant access"
+        busy={confirmBusy}
+        onCancel={() => setPendingConfirm(null)}
+        onConfirm={() => void handleConfirmPending()}
+      />
+      <AdminConfirmModal
+        open={pendingConfirm?.kind === "revoke_sa"}
+        title="Remove super admin?"
+        body={
+          <>
+            Remove super admin access from{" "}
+            <span className="font-semibold text-foreground">{pendingConfirm?.label}</span>? They
+            will remain an advisor.
+          </>
+        }
+        confirmLabel="Remove access"
+        danger
+        busy={confirmBusy}
+        onCancel={() => setPendingConfirm(null)}
+        onConfirm={() => void handleConfirmPending()}
+      />
     </div>
   );
 }

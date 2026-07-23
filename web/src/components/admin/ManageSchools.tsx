@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import AdminConfirmModal from "@/components/admin/AdminConfirmModal";
 import { createClient } from "@/lib/supabase/client";
 
 interface School {
@@ -23,6 +24,7 @@ export default function ManageSchools() {
   const [editingName, setEditingName] = useState("");
   const [rowBusyId, setRowBusyId] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<School | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
 
   const loadSchools = useCallback(async () => {
     setLoadError("");
@@ -77,7 +79,22 @@ export default function ManageSchools() {
     await loadSchools();
   }
 
-  async function updateSchool(id: string, name: string) {
+  function startEdit(school: School) {
+    setEditingId(school.id);
+    setEditingName(school.name);
+    setFormError("");
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setEditingName("");
+    setRowBusyId(null);
+  }
+
+  async function updateSchool(id: string) {
+    const name = editingName.trim();
+    if (!name) return;
+
     setFormError("");
     setFormSuccess("");
     setRowBusyId(id);
@@ -101,6 +118,7 @@ export default function ManageSchools() {
     if (!pendingDelete) return;
     setFormError("");
     setFormSuccess("");
+    setDeleteBusy(true);
     setRowBusyId(pendingDelete.id);
 
     const supabase = createClient();
@@ -109,6 +127,7 @@ export default function ManageSchools() {
     if (error) {
       setFormError(error.message);
       setRowBusyId(null);
+      setDeleteBusy(false);
       setPendingDelete(null);
       return;
     }
@@ -116,6 +135,8 @@ export default function ManageSchools() {
     setFormSuccess(`Deleted "${pendingDelete.name}".`);
     setPendingDelete(null);
     setRowBusyId(null);
+    setDeleteBusy(false);
+    if (editingId === pendingDelete.id) cancelEdit();
     await loadSchools();
   }
 
@@ -143,7 +164,7 @@ export default function ManageSchools() {
 
   return (
     <div className="space-y-4">
-      <div className="admin-stat-grid">
+      <div className="admin-stat-grid admin-stat-grid--1">
         <div className="admin-stat-card">
           <p className="admin-stat-card__label">Schools</p>
           <p className="admin-stat-card__value admin-stat-card__value--accent">
@@ -211,50 +232,6 @@ export default function ManageSchools() {
         </form>
       )}
 
-      {pendingDelete && (
-        <div
-          className="admin-modal-backdrop"
-          role="presentation"
-          onClick={() => {
-            if (rowBusyId !== pendingDelete.id) setPendingDelete(null);
-          }}
-        >
-          <div
-            className="admin-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="delete-school-title"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 id="delete-school-title" className="admin-modal__title">
-              Delete school?
-            </h2>
-            <p className="admin-modal__body">
-              Delete <span className="font-semibold text-foreground">{pendingDelete.name}</span>?
-              Advisors and students at this school will be unassigned.
-            </p>
-            <div className="admin-modal__actions">
-              <button
-                type="button"
-                className="btn-secondary-sm"
-                disabled={rowBusyId === pendingDelete.id}
-                onClick={() => setPendingDelete(null)}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="btn-danger-sm"
-                disabled={rowBusyId === pendingDelete.id}
-                onClick={() => void confirmDeleteSchool()}
-              >
-                {rowBusyId === pendingDelete.id ? "Deleting…" : "Delete"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       <div className="admin-results-meta">
         Showing {filteredSchools.length} of {schools.length}
       </div>
@@ -273,75 +250,82 @@ export default function ManageSchools() {
               const busy = rowBusyId === school.id;
               const editing = editingId === school.id;
               return (
-                <tr key={school.id} className="admin-row">
-                  <td className="admin-col-name">
-                    {editing ? (
-                      <input
-                        type="text"
-                        value={editingName}
-                        onChange={(e) => setEditingName(e.target.value)}
-                        className="input-field"
-                        aria-label={`Edit name for ${school.name}`}
-                      />
-                    ) : (
+                <Fragment key={school.id}>
+                  <tr className={`admin-row${editing ? " admin-row--editing" : ""}`}>
+                    <td className="admin-col-name">
                       <div className="admin-name-cell">
                         <span className="admin-name-cell__text">{school.name}</span>
                       </div>
-                    )}
-                  </td>
-                  <td className="admin-row__meta text-[13px] text-muted">
-                    {new Date(school.created_at).toLocaleDateString()}
-                  </td>
-                  <td className="admin-row__action">
-                    {editing ? (
-                      <div className="flex justify-end gap-3">
-                        <button
-                          type="button"
-                          className="admin-link"
-                          disabled={busy || !editingName.trim()}
-                          onClick={() => void updateSchool(school.id, editingName.trim())}
-                        >
-                          {busy ? "Saving…" : "Save"}
-                        </button>
-                        <button
-                          type="button"
-                          className="admin-link"
-                          disabled={busy}
-                          onClick={() => {
-                            setEditingId(null);
-                            setEditingName("");
-                          }}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex justify-end gap-3">
-                        <button
-                          type="button"
-                          className="admin-link"
-                          disabled={busy}
-                          onClick={() => {
-                            setEditingId(school.id);
-                            setEditingName(school.name);
-                          }}
-                          aria-label={`Edit ${school.name}`}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          className="admin-link text-danger"
-                          disabled={busy}
-                          onClick={() => setPendingDelete(school)}
-                          aria-label={`Delete ${school.name}`}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    )}
-                  </td>
-                </tr>
+                    </td>
+                    <td className="admin-row__meta text-[13px] text-muted">
+                      {new Date(school.created_at).toLocaleDateString()}
+                    </td>
+                    <td className="admin-row__action">
+                      {editing ? (
+                        <span className="text-[13px] text-muted">Editing…</span>
+                      ) : (
+                        <div className="flex justify-end gap-3">
+                          <button
+                            type="button"
+                            className="admin-link"
+                            disabled={busy}
+                            onClick={() => startEdit(school)}
+                            aria-label={`Edit ${school.name}`}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            className="admin-link text-danger"
+                            disabled={busy}
+                            onClick={() => setPendingDelete(school)}
+                            aria-label={`Delete ${school.name}`}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                  {editing && (
+                    <tr className="admin-row-edit">
+                      <td colSpan={3}>
+                        <div className="admin-row-edit__panel">
+                          <div className="admin-row-edit__fields">
+                            <label className="admin-row-edit__field admin-row-edit__field--wide">
+                              <span className="field-label">School name</span>
+                              <input
+                                type="text"
+                                value={editingName}
+                                onChange={(e) => setEditingName(e.target.value)}
+                                className="input-field admin-row-edit__select"
+                                aria-label={`Edit name for ${school.name}`}
+                              />
+                            </label>
+                          </div>
+                          <div className="admin-row-edit__actions">
+                            <button
+                              type="button"
+                              className="btn-primary-sm"
+                              disabled={busy || !editingName.trim()}
+                              onClick={() => void updateSchool(school.id)}
+                            >
+                              {busy ? "Saving…" : "Save"}
+                            </button>
+                            <button
+                              type="button"
+                              className="btn-secondary-sm"
+                              disabled={busy}
+                              onClick={cancelEdit}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
               );
             })}
             {filteredSchools.length === 0 && (
@@ -363,56 +347,22 @@ export default function ManageSchools() {
           const editing = editingId === school.id;
           return (
             <div key={school.id} className="admin-manage-card surface-card">
-              {editing ? (
-                <div className="space-y-3">
-                  <input
-                    type="text"
-                    value={editingName}
-                    onChange={(e) => setEditingName(e.target.value)}
-                    className="input-field"
-                    aria-label={`Edit name for ${school.name}`}
-                  />
-                  <div className="flex gap-3">
-                    <button
-                      type="button"
-                      className="admin-link"
-                      disabled={busy || !editingName.trim()}
-                      onClick={() => void updateSchool(school.id, editingName.trim())}
-                    >
-                      {busy ? "Saving…" : "Save"}
-                    </button>
-                    <button
-                      type="button"
-                      className="admin-link"
-                      disabled={busy}
-                      onClick={() => {
-                        setEditingId(null);
-                        setEditingName("");
-                      }}
-                    >
-                      Cancel
-                    </button>
+              <div className="mb-3 flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="admin-name-cell">
+                    <span className="admin-name-cell__text">{school.name}</span>
                   </div>
+                  <p className="mt-1 text-[12px] text-muted-light">
+                    Created {new Date(school.created_at).toLocaleDateString()}
+                  </p>
                 </div>
-              ) : (
-                <>
-                  <div className="mb-3">
-                    <div className="admin-name-cell">
-                      <span className="admin-name-cell__text">{school.name}</span>
-                    </div>
-                    <p className="mt-1 text-[12px] text-muted-light">
-                      Created {new Date(school.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div className="flex gap-3">
+                {!editing && (
+                  <div className="flex shrink-0 gap-3">
                     <button
                       type="button"
                       className="admin-link"
                       disabled={busy}
-                      onClick={() => {
-                        setEditingId(school.id);
-                        setEditingName(school.name);
-                      }}
+                      onClick={() => startEdit(school)}
                     >
                       Edit
                     </button>
@@ -425,7 +375,42 @@ export default function ManageSchools() {
                       Delete
                     </button>
                   </div>
-                </>
+                )}
+              </div>
+
+              {editing && (
+                <div className="admin-row-edit__panel admin-row-edit__panel--card">
+                  <div className="admin-row-edit__fields">
+                    <label className="admin-row-edit__field admin-row-edit__field--wide">
+                      <span className="field-label">School name</span>
+                      <input
+                        type="text"
+                        value={editingName}
+                        onChange={(e) => setEditingName(e.target.value)}
+                        className="input-field admin-row-edit__select"
+                        aria-label={`Edit name for ${school.name}`}
+                      />
+                    </label>
+                  </div>
+                  <div className="admin-row-edit__actions">
+                    <button
+                      type="button"
+                      className="btn-primary-sm"
+                      disabled={busy || !editingName.trim()}
+                      onClick={() => void updateSchool(school.id)}
+                    >
+                      {busy ? "Saving…" : "Save"}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-secondary-sm"
+                      disabled={busy}
+                      onClick={cancelEdit}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
           );
@@ -438,6 +423,24 @@ export default function ManageSchools() {
           </div>
         )}
       </div>
+
+      <AdminConfirmModal
+        open={!!pendingDelete}
+        title="Delete school?"
+        body={
+          <>
+            Delete <span className="font-semibold text-foreground">{pendingDelete?.name}</span>?
+            Advisors and students at this school will be unassigned.
+          </>
+        }
+        confirmLabel="Delete"
+        danger
+        busy={deleteBusy}
+        onCancel={() => {
+          if (!deleteBusy) setPendingDelete(null);
+        }}
+        onConfirm={() => void confirmDeleteSchool()}
+      />
     </div>
   );
 }

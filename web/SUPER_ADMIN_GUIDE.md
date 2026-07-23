@@ -8,6 +8,7 @@ The Manage page lets designated super admins:
 
 - Promote existing users to advisor (they must register first)
 - Demote advisors back to students
+- Grant or revoke super admin access
 - Assign users to schools
 - Create, rename, and delete schools
 - Search and filter all accounts
@@ -18,11 +19,21 @@ It does **not** create login credentials. Advisors sign up normally, then you pr
 
 ### 1. Run migrations (Supabase SQL Editor)
 
-Run in order:
+Run in this order for a complete install:
 
 1. `web/supabase/schema.sql` (if starting fresh)
-2. `web/supabase/add_super_admin.sql`
-3. **`web/supabase/lock_profile_privileges.sql`** (required — locks roles, blocks self-promotion, restricts school CRUD to super admins)
+2. `web/supabase/add_schools.sql` (schools table + `school_id` on profiles)
+3. `web/supabase/add_super_admin.sql` (`is_super_admin` column, helpers, RLS)
+4. **`web/supabase/lock_profile_privileges.sql`** (required — locks roles / super-admin flag, restricts school CRUD to super admins)
+5. Recommended: `web/supabase/restrict_advisor_student_access.sql` (advisors only see assigned students)
+
+Then verify:
+
+```text
+web/supabase/verify_super_admin.sql
+```
+
+**Do not re-run `fix_rls.sql` after the super-admin migrations** unless you immediately re-run `add_super_admin.sql` and `lock_profile_privileges.sql`. `fix_rls.sql` can reset `is_admin()` to ignore `is_super_admin`.
 
 ### 2. Create your first super admin
 
@@ -34,7 +45,7 @@ SET is_super_admin = true, role = 'admin'
 WHERE email = 'your-admin-email@school.edu';
 ```
 
-`is_super_admin` can be set in SQL (bootstrap) or by an existing super admin via **Manage → People → Edit**.
+After the first super admin exists, others can be granted from **Manage → People → Edit → Super admin**.
 
 ### 3. Verify access
 
@@ -43,61 +54,55 @@ WHERE email = 'your-admin-email@school.edu';
 3. Header nav should show **Manage**
 4. Open `/admin/manage`
 
+## Security model
+
+| Layer | What it does |
+|-------|----------------|
+| Client guard | `useAuthGuard({ superAdmin: true })` redirects non–super-admins away from `/admin/manage` |
+| Nav | Manage links only render for `is_super_admin` |
+| RLS + privilege trigger | Real enforcement for role / `is_super_admin` / school mutations |
+
+This app is often deployed as a **static export** (GitHub Pages). Next.js middleware is **not** the gate there. Correct Supabase SQL (especially `lock_profile_privileges.sql`) is required for production security.
+
 ## Using the interface
 
 ### People tab
 
 **Promote advisor**
 
-1. Ask the person to register on LifePath (student signup is fine)
-2. Click **Promote advisor** in the toolbar
-3. Enter their email, optional display name, and school
+1. Ask the person to register on LifePath
+2. Click **Promote advisor**
+3. Enter email, optional display name, and school
 4. Click **Make advisor**
 
 **Edit a person**
 
-1. Click **Edit** on their row
-2. Change role and/or school, then **Save**
-3. Check **Super admin** to grant full Manage access (requires re-running `lock_profile_privileges.sql` if that migration is older)
-4. Demoting an advisor asks for confirmation and clears students who had that person as advisor
-5. You can’t remove your own super admin access from the app
+1. Click **Edit** — a full-width panel opens under their row
+2. Update display name, role, school, and/or **Super admin**
+3. Confirm destructive changes in the modal (demote / grant / revoke)
+4. Demoting an advisor clears students who had that person as `advisor_id`
+5. You can’t remove your own super admin access or demote yourself to student
 
 **Filters**
 
 - Search by name or email
-- Filter by role (All / Advisors / Students)
-- Filter by school (including “No school”)
-- Large lists load 50 at a time — use **Show more**
+- Filter by role and school
+- Lists load 50 at a time — use **Show more**
 
 ### Schools tab
 
-1. **Add school** in the toolbar to create
-2. Search schools by name
-3. **Edit** to rename
-4. **Delete** confirms first — profiles at that school are unassigned (`school_id` set null)
+1. **Add school** in the toolbar
+2. Search by name
+3. **Edit** opens a full-width rename panel
+4. **Delete** uses a confirm modal (Escape to cancel). Profiles at that school are unassigned (`school_id` set null)
 
 ## Recommended onboarding workflow
 
 1. **Schools** → add the school  
-2. Have the advisor **register** at `/register`  
-3. **People** → Promote advisor with their email and school  
-4. Tell them to sign in at `/login` (they use the password they chose at registration)  
-5. Students register, then pick that advisor on Account / Welcome
-
-## Security
-
-| Role | Access |
-|------|--------|
-| Super admin | Dashboard + Manage (users & schools) |
-| Advisor (`role = admin`) | Dashboard for assigned students only |
-| Student | Own assessment data only |
-
-Enforcement:
-
-- Client guard on `/admin/manage` (`is_super_admin`)
-- RLS: super admins can manage profiles/schools
-- Trigger: only super admins change `role` and `is_super_admin` (bootstrap still via SQL)
-- Static GitHub Pages hosting does not run Next.js middleware — **RLS + privilege lock are the real gate**
+2. Advisor **registers** at `/register`  
+3. **People** → Promote advisor + assign school  
+4. They sign in at `/login` with the password they chose  
+5. Students register and pick that advisor on Account / Welcome  
 
 ## Troubleshooting
 
@@ -109,7 +114,7 @@ FROM public.profiles
 WHERE email = 'your-email@school.edu';
 ```
 
-If `is_super_admin` is false, run the UPDATE in step 2 above. Confirm `lock_profile_privileges.sql` has been applied.
+If `is_super_admin` is false, run the UPDATE in step 2. Confirm `lock_profile_privileges.sql` and `verify_super_admin.sql`.
 
 ### Promote says “No account with that email”
 
@@ -117,11 +122,11 @@ They must register first. Check Auth → Users and `public.profiles`.
 
 ### Advisors can still create/edit schools
 
-The old “Admins manage schools” policy is still active. Re-run `lock_profile_privileges.sql`.
+Old “Admins manage schools” policy may still exist. Re-run `lock_profile_privileges.sql`, then `verify_super_admin.sql`.
 
-### Role change fails with “Only super admins…”
+### Super admin checkbox fails
 
-Expected if a non–super-admin client tries to change roles. Confirm your account has `is_super_admin = true`.
+Re-run `lock_profile_privileges.sql` so `is_super_admin` can be changed by existing super admins (not only the SQL editor).
 
 ## Useful SQL
 
@@ -147,7 +152,7 @@ WHERE role = 'admin' AND school_id IS NULL;
 ## Best practices
 
 1. Keep the super-admin set small  
-2. Prefer promote-after-register over sharing temporary passwords  
+2. Prefer promote-after-register  
 3. Assign schools when promoting  
 4. Periodically review advisors and school assignments  
-5. Re-run `lock_profile_privileges.sql` after restoring an old database dump
+5. Re-run `lock_profile_privileges.sql` after restoring an old database dump  
