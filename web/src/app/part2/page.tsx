@@ -74,7 +74,7 @@ export default function Part2Page() {
       }
 
       await resetPart2Assessment(supabase, user.id);
-      router.push(withBasePath("/part2/assessment"));
+      router.push(withBasePath("/part2/assessment/school_setup"));
       router.refresh();
     } catch (err) {
       setRetakeError(err instanceof Error ? err.message : "Could not reset assessment");
@@ -109,67 +109,17 @@ export default function Part2Page() {
   }
 
   return (
-    <div className="page-shell py-10 sm:py-12">
-      <div className="page-content mx-auto max-w-2xl">
-        <div className="text-center">
-          <h1 className="mb-4 text-[2rem] font-semibold tracking-tight">
-            My Path After High School
-          </h1>
-          <p className="mb-8 text-[16px] leading-relaxed text-muted">
-            Plan your next steps after high school. Get personalized route recommendations based on
-            your readiness, preferences, and life situation.
-          </p>
-        </div>
+    <div className="page-shell centered">
+      <div className="page-content animate-fade-in mx-auto max-w-md text-center">
+        <h1 className="mb-3 text-[28px] font-semibold tracking-tight text-foreground">
+          My Path After High School
+        </h1>
+        <p className="mb-8 text-[16px] leading-relaxed text-muted">
+          Get personalized post-secondary route recommendations across four short sections — about
+          10–15 minutes.
+        </p>
 
-        <div className="space-y-4">
-          <div className="rounded-[20px] bg-card p-6 shadow-[var(--shadow)]">
-            <h2 className="mb-3 text-[17px] font-semibold">What you&apos;ll discover</h2>
-            <ul className="space-y-2">
-              {[
-                "Which post-secondary routes fit your situation best",
-                "Your action readiness score",
-                "Specific next steps for each route",
-                "Timeline and considerations for each path",
-              ].map((item, i) => (
-                <li key={i} className="flex gap-3 text-[14px] text-muted-light">
-                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="rounded-[20px] bg-card p-6 shadow-[var(--shadow)]">
-            <h2 className="mb-3 text-[17px] font-semibold">The 6 Routes</h2>
-            <div className="space-y-2 text-[14px]">
-              <p className="text-muted-light">• University Degree Route</p>
-              <p className="text-muted-light">• College / Polytechnic Route</p>
-              <p className="text-muted-light">• Trades / Apprenticeship Route</p>
-              <p className="text-muted-light">• Work-First + Upgrade Route</p>
-              <p className="text-muted-light">• Gap / Explore Route</p>
-              <p className="text-muted-light">• Entrepreneur / Create Route</p>
-            </div>
-          </div>
-
-          <div className="rounded-[20px] bg-card p-6 shadow-[var(--shadow)]">
-            <h2 className="mb-3 text-[17px] font-semibold">How it works</h2>
-            <ul className="space-y-2">
-              {[
-                "Answer 31 questions across 4 sections (10-15 minutes)",
-                "Questions cover school readiness, preferences, and life factors",
-                "Get your top 3 route recommendations",
-                "See detailed next steps for each route",
-              ].map((item, i) => (
-                <li key={i} className="flex gap-3 text-[14px] text-muted-light">
-                  <span className="shrink-0 font-semibold text-primary">{i + 1}.</span>
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-
-        <div className="mt-8 space-y-3 text-center">
+        <div className="space-y-3">
           {!part2Started && (
             <Link href={withBasePath("/part2/assessment")} className="btn-primary block">
               Start My Path
@@ -187,6 +137,9 @@ export default function Part2Page() {
               <Link href={withBasePath("/part2/results")} className="btn-primary block">
                 View My Path Results
               </Link>
+              <Link href={withBasePath("/part2/assessment")} className="btn-secondary block">
+                Review sections
+              </Link>
               <button
                 type="button"
                 onClick={handleRetake}
@@ -199,7 +152,7 @@ export default function Part2Page() {
             </>
           )}
 
-          <Link href={withBasePath("/")} className="block text-[14px] text-primary hover:underline">
+          <Link href={withBasePath("/")} className="block pt-2 text-[14px] text-primary hover:underline">
             ← Back to home
           </Link>
         </div>

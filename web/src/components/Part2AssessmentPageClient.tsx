@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import Part2SectionFlow from "@/components/Part2SectionFlow";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
@@ -14,12 +14,23 @@ import {
   savePart2Results,
   hasPart1Completed,
 } from "@/lib/part2-persistence";
-import { getPart2SectionItems, getPart2SectionCompletion, getPart2SectionOrder } from "@/lib/part2-scoring";
+import {
+  getPart2SectionItems,
+  getPart2SectionCompletion,
+  getPart2SectionOrder,
+} from "@/lib/part2-scoring";
 import type { Part2SectionKey, Part2Responses } from "@/lib/part2-types";
+
+function findFirstIncompleteIndex(
+  items: { id: string }[],
+  responses: Part2Responses,
+) {
+  const idx = items.findIndex((item) => responses[item.id] == null);
+  return idx === -1 ? Math.max(items.length - 1, 0) : idx;
+}
 
 export default function Part2AssessmentPageClient() {
   const ready = useAuthGuard({ admin: false });
-  const router = useRouter();
   const params = useParams();
   const sectionParam = params?.section as string | undefined;
 
@@ -30,6 +41,7 @@ export default function Part2AssessmentPageClient() {
   const [currentSection, setCurrentSection] = useState<Part2SectionKey>("school_setup");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [responses, setResponses] = useState<Part2Responses>({});
+  const [allSectionsComplete, setAllSectionsComplete] = useState(false);
 
   useEffect(() => {
     if (!ready) return;
@@ -38,11 +50,12 @@ export default function Part2AssessmentPageClient() {
 
     async function load() {
       const supabase = createClient();
-      
-      const { data: { user } } = await supabase.auth.getUser();
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user || cancelled) return;
 
-      // Check Part 1 completion
       const part1Complete = await hasPart1Completed(supabase, user.id);
       if (!part1Complete) {
         setPart1Incomplete(true);
@@ -55,26 +68,23 @@ export default function Part2AssessmentPageClient() {
 
       if (cancelled) return;
 
-      setSessionId(session.id);
-      setUserId(user.id);
-      setResponses(loadedResponses);
-
-      // Determine section from URL or session
-      let targetSection: Part2SectionKey = session.current_section;
       const sectionOrder = getPart2SectionOrder();
+      let targetSection: Part2SectionKey = session.current_section;
 
       if (sectionParam && sectionOrder.includes(sectionParam as Part2SectionKey)) {
         targetSection = sectionParam as Part2SectionKey;
       }
 
       const sectionItems = getPart2SectionItems(targetSection);
-      const safeIndex =
-        targetSection === session.current_section
-          ? Math.min(Math.max(session.current_index, 0), Math.max(sectionItems.length - 1, 0))
-          : 0;
+      const safeIndex = findFirstIncompleteIndex(sectionItems, loadedResponses);
+      const completion = getPart2SectionCompletion(loadedResponses);
 
+      setSessionId(session.id);
+      setUserId(user.id);
+      setResponses(loadedResponses);
       setCurrentSection(targetSection);
       setCurrentIndex(safeIndex);
+      setAllSectionsComplete(Object.values(completion).every((c) => c >= 1));
       setLoading(false);
     }
 
@@ -92,6 +102,9 @@ export default function Part2AssessmentPageClient() {
     const newResponses = { ...responses, [itemId]: rating };
     setResponses(newResponses);
 
+    const completion = getPart2SectionCompletion(newResponses);
+    setAllSectionsComplete(Object.values(completion).every((c) => c >= 1));
+
     try {
       await savePart2Response(supabase, {
         sessionId,
@@ -100,53 +113,68 @@ export default function Part2AssessmentPageClient() {
         section: currentSection,
         rating,
       });
+      await updatePart2Session(supabase, {
+        sessionId,
+        currentSection,
+        currentIndex,
+      });
     } catch (error) {
       console.error("Failed to save Part 2 response:", error);
     }
   };
 
-  const handleNavigate = async (nextSection: Part2SectionKey | null, nextIndex: number) => {
+  const handleIndexChange = async (nextIndex: number) => {
     if (!sessionId) return;
 
-    const supabase = createClient();
-    const sectionOrder = getPart2SectionOrder();
-    const currentSectionIndex = sectionOrder.indexOf(currentSection);
+    setCurrentIndex(nextIndex);
 
-    if (nextSection === null) {
-      // Completed all sections
-      const completion = getPart2SectionCompletion(responses);
-      const allComplete = Object.values(completion).every((c) => c >= 1);
-
-      if (allComplete) {
-        try {
-          await savePart2Results(supabase, { sessionId, userId: userId!, responses });
-          await updatePart2Session(supabase, {
-            sessionId,
-            currentSection,
-            currentIndex: nextIndex,
-            status: "completed",
-          });
-          router.push(withBasePath("/part2/results"));
-        } catch (error) {
-          console.error("Failed to save Part 2 results:", error);
-        }
-      }
-      return;
-    }
-
-    // Update session state
     try {
+      const supabase = createClient();
       await updatePart2Session(supabase, {
         sessionId,
-        currentSection: nextSection,
+        currentSection,
         currentIndex: nextIndex,
       });
-      
-      setCurrentSection(nextSection);
-      setCurrentIndex(nextIndex);
-      router.push(withBasePath(`/part2/assessment/${nextSection}`));
     } catch (error) {
       console.error("Failed to update Part 2 session:", error);
+    }
+  };
+
+  const handleSectionFinished = async () => {
+    if (!sessionId || !userId) return false;
+
+    const supabase = createClient();
+    const completion = getPart2SectionCompletion(responses);
+    const allComplete = Object.values(completion).every((c) => c >= 1);
+    setAllSectionsComplete(allComplete);
+
+    try {
+      if (allComplete) {
+        await savePart2Results(supabase, { sessionId, userId, responses });
+        await updatePart2Session(supabase, {
+          sessionId,
+          currentSection,
+          currentIndex,
+          status: "completed",
+        });
+      } else {
+        const sectionOrder = getPart2SectionOrder();
+        const currentSectionIndex = sectionOrder.indexOf(currentSection);
+        const nextSection =
+          currentSectionIndex < sectionOrder.length - 1
+            ? sectionOrder[currentSectionIndex + 1]
+            : currentSection;
+
+        await updatePart2Session(supabase, {
+          sessionId,
+          currentSection: nextSection,
+          currentIndex: 0,
+        });
+      }
+      return true;
+    } catch (error) {
+      console.error("Failed to finish Part 2 section:", error);
+      return false;
     }
   };
 
@@ -166,7 +194,8 @@ export default function Part2AssessmentPageClient() {
             Complete Part 1 First
           </h1>
           <p className="mb-6 text-[15px] leading-relaxed text-muted">
-            My Path After High School requires you to complete Part 1 (LifePath Career Assessment) first.
+            My Path After High School requires you to complete Part 1 (LifePath Career Assessment)
+            first.
           </p>
           <Link href={withBasePath("/assessment")} className="btn-primary">
             Go to Part 1
@@ -180,12 +209,15 @@ export default function Part2AssessmentPageClient() {
 
   return (
     <Part2SectionFlow
+      key={currentSection}
       section={currentSection}
       items={items}
       currentIndex={currentIndex}
       responses={responses}
+      allSectionsComplete={allSectionsComplete}
       onAnswer={handleAnswer}
-      onNavigate={handleNavigate}
+      onIndexChange={handleIndexChange}
+      onSectionFinished={handleSectionFinished}
     />
   );
 }

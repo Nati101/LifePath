@@ -1,5 +1,5 @@
-import Part2AssessmentResumeClient from "@/components/Part2AssessmentResumeClient";
+import Part2AssessmentHub from "@/components/Part2AssessmentHub";
 
 export default function Part2AssessmentPage() {
-  return <Part2AssessmentResumeClient />;
+  return <Part2AssessmentHub />;
 }

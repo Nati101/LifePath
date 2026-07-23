@@ -143,7 +143,7 @@ export default function Part2ResultsPageClient() {
             Complete all My Path sections to see your post-high-school route recommendations.
           </p>
           <Link href={withBasePath("/part2/assessment")} className="btn-primary">
-            Go to My Path
+            Go to My Path sections
           </Link>
         </div>
       </div>

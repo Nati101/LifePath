@@ -72,7 +72,7 @@ export default function Header() {
                     Career Paths
                   </Link>
                   <Link
-                    href={withBasePath("/part2")}
+                    href={withBasePath("/part2/assessment")}
                     className={`nav-link ${isActive("/part2") ? "nav-link-active" : ""}`}
                   >
                     My Path

@@ -56,7 +56,7 @@ export default function LoggedInHome({
               <p className="mb-4 text-[14px] text-muted">
                 Get personalized post-secondary route recommendations and next steps.
               </p>
-              <Link href={withBasePath("/part2")} className="btn-secondary block">
+              <Link href={withBasePath("/part2/assessment")} className="btn-secondary block">
                 Go to My Path
               </Link>
             </div>
