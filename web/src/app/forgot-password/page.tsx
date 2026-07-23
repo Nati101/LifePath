@@ -1,19 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import AuthBrandMark from "@/components/AuthBrandMark";
 import { useRedirectIfAuthenticated } from "@/hooks/useRedirectIfAuthenticated";
+import { getAuthCallbackUrl } from "@/lib/supabase/env";
 import { createClient, withBasePath } from "@/lib/supabase/client";
 
-export default function LoginPage() {
-  const router = useRouter();
+export default function ForgotPasswordPage() {
   useRedirectIfAuthenticated("/assessment");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,39 +20,58 @@ export default function LoginPage() {
     setLoading(true);
 
     const supabase = createClient();
-    const { error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: getAuthCallbackUrl("/auth/update-password"),
     });
 
-    if (authError) {
-      setError(authError.message);
+    if (resetError) {
+      setError(resetError.message);
       setLoading(false);
       return;
     }
 
-    router.push(withBasePath("/assessment"));
-    router.refresh();
+    setSent(true);
+    setLoading(false);
   };
+
+  if (sent) {
+    return (
+      <div className="page-shell centered">
+        <div className="page-content animate-fade-in text-center">
+          <AuthBrandMark />
+          <h1 className="mb-2 text-[28px] font-semibold tracking-tight text-foreground">
+            Check your email
+          </h1>
+          <p className="mx-auto mb-8 max-w-[340px] text-[15px] leading-relaxed text-muted">
+            If an account exists for <span className="font-medium text-foreground">{email}</span>,
+            we sent a link to reset your password.
+          </p>
+          <Link href={withBasePath("/login")} className="btn-primary">
+            Back to sign in
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="page-shell centered">
       <div className="page-content animate-fade-in">
         <AuthBrandMark />
         <h1 className="mb-2 text-center text-[28px] font-semibold tracking-tight text-foreground">
-          Sign in
+          Reset password
         </h1>
         <p className="mx-auto mb-8 max-w-[320px] text-center text-[15px] leading-relaxed text-muted">
-          Pick up your LifePath career assessment where you left off.
+          Enter your email and we&apos;ll send a link to choose a new password.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="form-field">
-            <label htmlFor="login-email" className="field-label">
+            <label htmlFor="forgot-email" className="field-label">
               Email
             </label>
             <input
-              id="login-email"
+              id="forgot-email"
               type="email"
               required
               autoComplete="email"
@@ -64,43 +82,18 @@ export default function LoginPage() {
             />
           </div>
 
-          <div className="form-field">
-            <div className="mb-1.5 flex items-center justify-between gap-3">
-              <label htmlFor="login-password" className="field-label mb-0">
-                Password
-              </label>
-              <Link
-                href={withBasePath("/forgot-password")}
-                className="text-[13px] font-medium text-muted transition-colors hover:text-primary"
-              >
-                Forgot password?
-              </Link>
-            </div>
-            <input
-              id="login-password"
-              type="password"
-              required
-              autoComplete="current-password"
-              placeholder="Your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="input-field"
-            />
-          </div>
-
           {error && (
             <p className="pt-1 text-center text-[14px] text-danger">{error}</p>
           )}
 
           <button type="submit" disabled={loading} className="btn-primary mt-2">
-            {loading ? "Signing in…" : "Sign in"}
+            {loading ? "Sending…" : "Send reset link"}
           </button>
         </form>
 
         <p className="mt-8 text-center text-[15px] text-muted">
-          No account?{" "}
-          <Link href={withBasePath("/register")} className="font-semibold text-primary">
-            Create one
+          <Link href={withBasePath("/login")} className="font-semibold text-primary">
+            Back to sign in
           </Link>
         </p>
       </div>

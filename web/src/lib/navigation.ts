@@ -1,6 +1,11 @@
 import { getBasePath } from "@/lib/supabase/client";
 
-export const AUTH_PATHS = ["/login", "/register"] as const;
+export const AUTH_PATHS = [
+  "/login",
+  "/register",
+  "/forgot-password",
+  "/auth/update-password",
+] as const;
 
 export function normalizeAppPath(pathname: string): string {
   const base = getBasePath();
@@ -21,6 +26,7 @@ export function isProtectedPage(pathname: string): boolean {
     path.startsWith("/assessment") ||
     path.startsWith("/account") ||
     path.startsWith("/results") ||
-    path.startsWith("/admin")
+    path.startsWith("/admin") ||
+    path.startsWith("/welcome")
   );
 }

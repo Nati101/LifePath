@@ -6,6 +6,26 @@ export function getSupabaseUrl(): string {
   return url;
 }
 
+/** Public origin including base path (e.g. https://nati101.github.io/LifePath). */
+export function getSiteUrl(): string {
+  const configured = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
+  if (configured) return configured;
+
+  if (typeof window !== "undefined") {
+    const base = process.env.NEXT_PUBLIC_BASE_PATH || "";
+    return `${window.location.origin}${base}`;
+  }
+
+  return "http://localhost:3000";
+}
+
+/** Absolute callback URL for Supabase email confirm / password recovery. */
+export function getAuthCallbackUrl(nextPath: string): string {
+  const url = new URL(`${getSiteUrl()}/auth/callback`);
+  url.searchParams.set("next", nextPath.startsWith("/") ? nextPath : `/${nextPath}`);
+  return url.toString();
+}
+
 export function getSupabaseAnonKey(): string {
   const key =
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||

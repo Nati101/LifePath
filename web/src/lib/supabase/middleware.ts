@@ -33,7 +33,14 @@ export async function updateSession(request: NextRequest) {
   const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
   const pathname = request.nextUrl.pathname.replace(basePath, "") || "/";
 
-  const publicPaths = ["/", "/login", "/register", "/auth/callback"];
+  const publicPaths = [
+    "/",
+    "/login",
+    "/register",
+    "/forgot-password",
+    "/auth/callback",
+    "/auth/update-password",
+  ];
   const isPublic = publicPaths.some(
     (p) => pathname === p || pathname.startsWith(p + "/"),
   );
@@ -44,9 +51,14 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (user && (pathname === "/login" || pathname === "/register")) {
+  if (
+    user &&
+    (pathname === "/login" ||
+      pathname === "/register" ||
+      pathname === "/forgot-password")
+  ) {
     const url = request.nextUrl.clone();
-    url.pathname = `${basePath}/`;
+    url.pathname = `${basePath}/assessment`;
     return NextResponse.redirect(url);
   }
 

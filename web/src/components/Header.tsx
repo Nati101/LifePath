@@ -113,7 +113,7 @@ export default function Header() {
               </div>
             </>
           ) : onAuthPage ? (
-            appPath.startsWith("/login") ? (
+            appPath.startsWith("/login") || appPath.startsWith("/forgot-password") ? (
               <Link href={withBasePath("/register")} className="btn-secondary-sm">
                 Get started
               </Link>

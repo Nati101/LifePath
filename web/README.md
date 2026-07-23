@@ -16,7 +16,8 @@ A career exploration assessment web app built with **Next.js** and **Supabase**,
 1. Create a project at [supabase.com](https://supabase.com)
 2. Run `supabase/schema.sql` in the SQL Editor
 3. If saves fail or progress stays at 0%, also run `supabase/fix_rls.sql`
-4. Create your first admin user via the Auth dashboard, then run:
+4. For retakes / result history on an existing project, run `supabase/add_results_history.sql`
+5. Create your first admin user via the Auth dashboard, then run:
 
 ```sql
 UPDATE profiles SET role = 'admin' WHERE email = 'your@email.com';
@@ -51,7 +52,10 @@ The site is published at **https://nati101.github.io/LifePath/** via GitHub Acti
 
 2. In **Supabase → Authentication → URL configuration**, set:
    - **Site URL:** `https://nati101.github.io/LifePath`
-   - **Redirect URLs:** `https://nati101.github.io/LifePath/auth/callback/`
+   - **Redirect URLs:**
+     - `https://nati101.github.io/LifePath/auth/callback`
+     - `https://nati101.github.io/LifePath/auth/callback/`
+     - `http://localhost:3000/auth/callback` (local)
 
 3. In **GitHub → Settings → Pages**, set source to **GitHub Actions** (if not already).
 
