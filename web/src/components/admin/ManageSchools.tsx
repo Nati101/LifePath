@@ -274,7 +274,7 @@ export default function ManageSchools() {
               const editing = editingId === school.id;
               return (
                 <tr key={school.id} className="admin-row">
-                  <td>
+                  <td className="admin-col-name">
                     {editing ? (
                       <input
                         type="text"

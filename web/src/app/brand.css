@@ -1020,24 +1020,46 @@ body {
 
 .admin-name-cell {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px 8px;
-  min-width: 0;
-  max-width: 220px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 10rem;
 }
 
 .admin-name-cell__text {
   font-weight: 600;
   letter-spacing: -0.01em;
   color: #111827;
-  overflow-wrap: anywhere;
-  word-break: break-word;
   white-space: normal;
+  overflow-wrap: break-word;
+  word-break: normal;
+  line-height: 1.35;
+}
+
+.admin-table td.admin-col-name {
+  min-width: 12rem;
+}
+
+.admin-table td.admin-col-school {
+  min-width: 11rem;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: normal;
+  line-height: 1.35;
+}
+
+.admin-table td {
+  vertical-align: middle;
+  padding: 14px 16px;
 }
 
 .admin-manage-card .admin-name-cell {
-  max-width: none;
+  min-width: 0;
+  width: 100%;
+}
+
+.admin-manage-card .admin-name-cell__text {
+  font-size: 15px;
 }
 
 .admin-modal-backdrop {
@@ -1132,20 +1154,12 @@ body {
   border-bottom: 1px solid #e5e7eb;
 }
 
-.admin-table td {
-  vertical-align: middle;
-}
-
 .admin-row {
   border-bottom: 1px solid #e5e7eb;
 }
 
 .admin-row:last-child {
   border-bottom: none;
-}
-
-.admin-row__student {
-  padding: 14px 16px;
 }
 
 .admin-row__identity {
@@ -1180,7 +1194,6 @@ body {
 
 .admin-row__meta,
 .admin-row__path {
-  padding: 14px 16px;
   color: #4b5563;
 }
 
@@ -1189,16 +1202,10 @@ body {
 }
 
 .admin-row__progress {
-  padding: 14px 16px;
   min-width: 140px;
 }
 
-.admin-row__status {
-  padding: 14px 16px;
-}
-
 .admin-row__action {
-  padding: 14px 16px;
   text-align: right;
 }
 

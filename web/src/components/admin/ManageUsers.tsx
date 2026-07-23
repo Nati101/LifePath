@@ -515,7 +515,7 @@ export default function ManageUsers() {
               const isSelf = currentUserId === user.id;
               return (
                 <tr key={user.id} className="admin-row">
-                  <td>
+                  <td className="admin-col-name">
                     <NameCell name={user.full_name || "—"} isSuperAdmin={user.is_super_admin} />
                   </td>
                   <td className="admin-row__email" style={{ marginTop: 0 }}>
@@ -557,7 +557,7 @@ export default function ManageUsers() {
                       <span className="text-[14px]">{roleLabel(user.role)}</span>
                     )}
                   </td>
-                  <td>
+                  <td className="admin-col-school">
                     {editing ? (
                       <div className="select-wrap">
                         <select
@@ -576,9 +576,7 @@ export default function ManageUsers() {
                         </select>
                       </div>
                     ) : (
-                      <span className="text-[14px] text-muted" style={{ overflowWrap: "anywhere" }}>
-                        {schoolName(user.school_id)}
-                      </span>
+                      <span className="text-[14px] text-muted">{schoolName(user.school_id)}</span>
                     )}
                   </td>
                   <td className="admin-row__meta text-[12px] text-muted">
@@ -640,9 +638,7 @@ export default function ManageUsers() {
               <div className="mb-3 flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <NameCell name={user.full_name || "—"} isSuperAdmin={user.is_super_admin} />
-                  <p className="mt-1 text-[13px] text-muted" style={{ overflowWrap: "anywhere" }}>
-                    {user.email}
-                  </p>
+                  <p className="mt-1 text-[13px] text-muted">{user.email}</p>
                   {!editing && (
                     <p className="mt-1 text-[12px] text-muted-light">
                       {roleLabel(user.role)} · {schoolName(user.school_id)} · Joined{" "}
