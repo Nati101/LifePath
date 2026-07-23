@@ -34,7 +34,7 @@ SET is_super_admin = true, role = 'admin'
 WHERE email = 'your-admin-email@school.edu';
 ```
 
-`is_super_admin` can only be changed in the SQL editor (not from the app).
+`is_super_admin` can be set in SQL (bootstrap) or by an existing super admin via **Manage → People → Edit**.
 
 ### 3. Verify access
 
@@ -58,8 +58,9 @@ WHERE email = 'your-admin-email@school.edu';
 
 1. Click **Edit** on their row
 2. Change role and/or school, then **Save**
-3. Demoting an advisor asks for confirmation and clears students who had that person as advisor
-4. Super admin rows cannot be edited here
+3. Check **Super admin** to grant full Manage access (requires re-running `lock_profile_privileges.sql` if that migration is older)
+4. Demoting an advisor asks for confirmation and clears students who had that person as advisor
+5. You can’t remove your own super admin access from the app
 
 **Filters**
 
@@ -95,7 +96,7 @@ Enforcement:
 
 - Client guard on `/admin/manage` (`is_super_admin`)
 - RLS: super admins can manage profiles/schools
-- Trigger: only super admins change `role`; `is_super_admin` only via SQL editor
+- Trigger: only super admins change `role` and `is_super_admin` (bootstrap still via SQL)
 - Static GitHub Pages hosting does not run Next.js middleware — **RLS + privilege lock are the real gate**
 
 ## Troubleshooting

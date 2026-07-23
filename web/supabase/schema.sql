@@ -284,11 +284,20 @@ begin
     end if;
   end if;
 
-  -- is_super_admin only via SQL editor (auth.uid() is null)
+  -- is_super_admin: SQL editor OR an existing super admin
   begin
     if new.is_super_admin is distinct from old.is_super_admin then
-      if auth.uid() is not null then
-        raise exception 'is_super_admin can only be changed in the SQL editor';
+      if auth.uid() is null then
+        null; -- SQL editor / service role
+      else
+        begin
+          if not public.is_super_admin() then
+            raise exception 'Only super admins can change is_super_admin';
+          end if;
+        exception
+          when undefined_function then
+            raise exception 'Only the SQL editor can change is_super_admin';
+        end;
       end if;
     end if;
   exception

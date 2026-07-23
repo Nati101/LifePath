@@ -167,10 +167,10 @@ export default function ManageSchools() {
           />
         </label>
 
-        <div className="admin-toolbar__filters">
+        <div className="admin-toolbar__cta">
           <button
             type="button"
-            className="btn-primary-sm admin-toolbar__action"
+            className="btn-primary-sm"
             onClick={() => {
               setShowCreateForm((open) => !open);
               setFormError("");
@@ -212,28 +212,45 @@ export default function ManageSchools() {
       )}
 
       {pendingDelete && (
-        <div className="admin-manage-panel surface-card border border-danger/30">
-          <p className="text-[15px] text-foreground">
-            Delete <span className="font-semibold">{pendingDelete.name}</span>? Advisors and
-            students at this school will be unassigned.
-          </p>
-          <div className="mt-3 flex flex-wrap gap-3">
-            <button
-              type="button"
-              className="btn-danger"
-              disabled={rowBusyId === pendingDelete.id}
-              onClick={() => void confirmDeleteSchool()}
-            >
-              {rowBusyId === pendingDelete.id ? "Deleting…" : "Delete school"}
-            </button>
-            <button
-              type="button"
-              className="btn-secondary"
-              disabled={rowBusyId === pendingDelete.id}
-              onClick={() => setPendingDelete(null)}
-            >
-              Cancel
-            </button>
+        <div
+          className="admin-modal-backdrop"
+          role="presentation"
+          onClick={() => {
+            if (rowBusyId !== pendingDelete.id) setPendingDelete(null);
+          }}
+        >
+          <div
+            className="admin-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-school-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id="delete-school-title" className="admin-modal__title">
+              Delete school?
+            </h2>
+            <p className="admin-modal__body">
+              Delete <span className="font-semibold text-foreground">{pendingDelete.name}</span>?
+              Advisors and students at this school will be unassigned.
+            </p>
+            <div className="admin-modal__actions">
+              <button
+                type="button"
+                className="btn-secondary-sm"
+                disabled={rowBusyId === pendingDelete.id}
+                onClick={() => setPendingDelete(null)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn-danger-sm"
+                disabled={rowBusyId === pendingDelete.id}
+                onClick={() => void confirmDeleteSchool()}
+              >
+                {rowBusyId === pendingDelete.id ? "Deleting…" : "Delete"}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -267,7 +284,9 @@ export default function ManageSchools() {
                         aria-label={`Edit name for ${school.name}`}
                       />
                     ) : (
-                      <span className="admin-row__name">{school.name}</span>
+                      <div className="admin-name-cell">
+                        <span className="admin-name-cell__text">{school.name}</span>
+                      </div>
                     )}
                   </td>
                   <td className="admin-row__meta text-[13px] text-muted">
@@ -378,8 +397,10 @@ export default function ManageSchools() {
               ) : (
                 <>
                   <div className="mb-3">
-                    <p className="admin-row__name">{school.name}</p>
-                    <p className="text-[12px] text-muted-light">
+                    <div className="admin-name-cell">
+                      <span className="admin-name-cell__text">{school.name}</span>
+                    </div>
+                    <p className="mt-1 text-[12px] text-muted-light">
                       Created {new Date(school.created_at).toLocaleDateString()}
                     </p>
                   </div>

@@ -24,9 +24,25 @@ function roleLabel(role: "student" | "admin") {
   return role === "admin" ? "Advisor" : "Student";
 }
 
+function NameCell({
+  name,
+  isSuperAdmin,
+}: {
+  name: string;
+  isSuperAdmin?: boolean;
+}) {
+  return (
+    <div className="admin-name-cell">
+      <span className="admin-name-cell__text">{name}</span>
+      {isSuperAdmin && <span className="admin-super-badge">Super admin</span>}
+    </div>
+  );
+}
+
 export default function ManageUsers() {
   const [users, setUsers] = useState<User[]>([]);
   const [schools, setSchools] = useState<School[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [filter, setFilter] = useState<"all" | "admin" | "student">("all");
@@ -47,12 +63,14 @@ export default function ManageUsers() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editRole, setEditRole] = useState<"student" | "admin">("student");
   const [editSchoolId, setEditSchoolId] = useState("");
+  const [editSuperAdmin, setEditSuperAdmin] = useState(false);
 
   const loadData = useCallback(async () => {
     setLoadError("");
     const supabase = createClient();
 
-    const [usersRes, schoolsRes] = await Promise.all([
+    const [{ data: authData }, usersRes, schoolsRes] = await Promise.all([
+      supabase.auth.getUser(),
       supabase
         .from("profiles")
         .select("id, email, full_name, role, school_id, is_super_admin, created_at")
@@ -68,6 +86,7 @@ export default function ManageUsers() {
       return;
     }
 
+    setCurrentUserId(authData.user?.id ?? null);
     setUsers(usersRes.data ?? []);
     setSchools(schoolsRes.data ?? []);
     setLoading(false);
@@ -93,10 +112,10 @@ export default function ManageUsers() {
   }
 
   function startEdit(user: User) {
-    if (user.is_super_admin) return;
     setEditingId(user.id);
     setEditRole(user.role);
     setEditSchoolId(user.school_id || "");
+    setEditSuperAdmin(user.is_super_admin);
     setRowError("");
   }
 
@@ -106,20 +125,49 @@ export default function ManageUsers() {
   }
 
   async function saveEdit(user: User) {
-    if (user.is_super_admin) return;
+    const isSelf = currentUserId === user.id;
+    const nextSuperAdmin = editSuperAdmin;
+    const nextRole: "student" | "admin" = nextSuperAdmin ? "admin" : editRole;
 
-    const roleChanged = editRole !== user.role;
+    if (isSelf && user.is_super_admin && !nextSuperAdmin) {
+      setRowError("You can’t remove your own super admin access.");
+      return;
+    }
+
+    if (isSelf && nextRole === "student") {
+      setRowError("You can’t demote your own account to student.");
+      return;
+    }
+
+    const roleChanged = nextRole !== user.role;
     const schoolChanged = (editSchoolId || null) !== user.school_id;
+    const superChanged = nextSuperAdmin !== user.is_super_admin;
 
-    if (!roleChanged && !schoolChanged) {
+    if (!roleChanged && !schoolChanged && !superChanged) {
       cancelEdit();
       return;
     }
 
-    if (user.role === "admin" && editRole === "student") {
+    if (user.role === "admin" && nextRole === "student") {
       const label = user.full_name?.trim() || user.email;
       const confirmed = window.confirm(
         `Demote ${label} to student? Students assigned to this advisor will be unassigned.`,
+      );
+      if (!confirmed) return;
+    }
+
+    if (!user.is_super_admin && nextSuperAdmin) {
+      const label = user.full_name?.trim() || user.email;
+      const confirmed = window.confirm(
+        `Make ${label} a super admin? They will be able to manage all users and schools.`,
+      );
+      if (!confirmed) return;
+    }
+
+    if (user.is_super_admin && !nextSuperAdmin) {
+      const label = user.full_name?.trim() || user.email;
+      const confirmed = window.confirm(
+        `Remove super admin access from ${label}? They will remain an advisor.`,
       );
       if (!confirmed) return;
     }
@@ -129,9 +177,17 @@ export default function ManageUsers() {
     setRowBusyId(user.id);
     const supabase = createClient();
 
-    const updates: { role?: "student" | "admin"; school_id?: string | null } = {};
-    if (roleChanged) updates.role = editRole;
+    const updates: {
+      role?: "student" | "admin";
+      school_id?: string | null;
+      is_super_admin?: boolean;
+    } = {};
+    if (roleChanged) updates.role = nextRole;
     if (schoolChanged) updates.school_id = editSchoolId || null;
+    if (superChanged) {
+      updates.is_super_admin = nextSuperAdmin;
+      if (nextSuperAdmin) updates.role = "admin";
+    }
 
     const { error } = await supabase.from("profiles").update(updates).eq("id", user.id);
 
@@ -141,7 +197,7 @@ export default function ManageUsers() {
       return;
     }
 
-    if (roleChanged && editRole === "student") {
+    if (roleChanged && nextRole === "student") {
       try {
         await clearAdvisorAssignments(supabase, user.id);
       } catch (err) {
@@ -193,7 +249,7 @@ export default function ManageUsers() {
     }
 
     if (existing.is_super_admin) {
-      setPromoteError("That account is a super admin and cannot be changed here.");
+      setPromoteError("That account is already a super admin.");
       setPromoting(false);
       return;
     }
@@ -313,9 +369,7 @@ export default function ManageUsers() {
         </div>
       </div>
 
-      {bannerSuccess && (
-        <p className="admin-manage-banner">{bannerSuccess}</p>
-      )}
+      {bannerSuccess && <p className="admin-manage-banner">{bannerSuccess}</p>}
       {rowError && <p className="text-[14px] text-danger">{rowError}</p>}
 
       <div className="admin-toolbar surface-card">
@@ -355,9 +409,12 @@ export default function ManageUsers() {
               </option>
             ))}
           </select>
+        </div>
+
+        <div className="admin-toolbar__cta">
           <button
             type="button"
-            className="btn-primary-sm admin-toolbar__action"
+            className="btn-primary-sm"
             onClick={() => {
               setShowPromoteForm((open) => !open);
               setPromoteError("");
@@ -374,7 +431,7 @@ export default function ManageUsers() {
           <p className="admin-manage-panel__title">Promote existing user</p>
           <p className="admin-manage-panel__hint">
             They must already have a LifePath account. This grants advisor access; it does not
-            create a login.
+            create a login. To grant super admin, edit the person after promoting.
           </p>
           <div className="admin-manage-panel__fields">
             <div className="form-field">
@@ -455,28 +512,46 @@ export default function ManageUsers() {
               const busy = rowBusyId === user.id;
               const editing = editingId === user.id;
               const label = user.full_name?.trim() || user.email;
+              const isSelf = currentUserId === user.id;
               return (
                 <tr key={user.id} className="admin-row">
-                  <td className="admin-row__name">
-                    {user.full_name || "—"}
-                    {user.is_super_admin && (
-                      <span className="admin-super-badge">Super admin</span>
-                    )}
+                  <td>
+                    <NameCell name={user.full_name || "—"} isSuperAdmin={user.is_super_admin} />
                   </td>
-                  <td className="admin-row__email">{user.email}</td>
+                  <td className="admin-row__email" style={{ marginTop: 0 }}>
+                    {user.email}
+                  </td>
                   <td>
                     {editing ? (
-                      <div className="select-wrap">
-                        <select
-                          value={editRole}
-                          onChange={(e) => setEditRole(e.target.value as "student" | "admin")}
-                          disabled={busy}
-                          className="select-field text-[13px]"
-                          aria-label={`Role for ${label}`}
-                        >
-                          <option value="student">Student</option>
-                          <option value="admin">Advisor</option>
-                        </select>
+                      <div className="space-y-2">
+                        <div className="select-wrap">
+                          <select
+                            value={editSuperAdmin ? "admin" : editRole}
+                            onChange={(e) => {
+                              const value = e.target.value as "student" | "admin";
+                              setEditRole(value);
+                              if (value === "student") setEditSuperAdmin(false);
+                            }}
+                            disabled={busy || (isSelf && user.is_super_admin)}
+                            className="select-field text-[13px]"
+                            aria-label={`Role for ${label}`}
+                          >
+                            <option value="student">Student</option>
+                            <option value="admin">Advisor</option>
+                          </select>
+                        </div>
+                        <label className="flex items-center gap-2 text-[13px] text-muted">
+                          <input
+                            type="checkbox"
+                            checked={editSuperAdmin}
+                            disabled={busy || (isSelf && user.is_super_admin)}
+                            onChange={(e) => {
+                              setEditSuperAdmin(e.target.checked);
+                              if (e.target.checked) setEditRole("admin");
+                            }}
+                          />
+                          Super admin
+                        </label>
                       </div>
                     ) : (
                       <span className="text-[14px]">{roleLabel(user.role)}</span>
@@ -501,14 +576,16 @@ export default function ManageUsers() {
                         </select>
                       </div>
                     ) : (
-                      <span className="text-[14px] text-muted">{schoolName(user.school_id)}</span>
+                      <span className="text-[14px] text-muted" style={{ overflowWrap: "anywhere" }}>
+                        {schoolName(user.school_id)}
+                      </span>
                     )}
                   </td>
                   <td className="admin-row__meta text-[12px] text-muted">
                     {new Date(user.created_at).toLocaleDateString()}
                   </td>
                   <td className="admin-row__action">
-                    {user.is_super_admin ? null : editing ? (
+                    {editing ? (
                       <div className="flex justify-end gap-3">
                         <button
                           type="button"
@@ -557,17 +634,15 @@ export default function ManageUsers() {
           const busy = rowBusyId === user.id;
           const editing = editingId === user.id;
           const label = user.full_name?.trim() || user.email;
+          const isSelf = currentUserId === user.id;
           return (
             <div key={user.id} className="admin-manage-card surface-card">
               <div className="mb-3 flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="admin-row__name">{user.full_name || "—"}</p>
-                    {user.is_super_admin && (
-                      <span className="admin-super-badge">Super admin</span>
-                    )}
-                  </div>
-                  <p className="text-[13px] text-muted">{user.email}</p>
+                <div className="min-w-0 flex-1">
+                  <NameCell name={user.full_name || "—"} isSuperAdmin={user.is_super_admin} />
+                  <p className="mt-1 text-[13px] text-muted" style={{ overflowWrap: "anywhere" }}>
+                    {user.email}
+                  </p>
                   {!editing && (
                     <p className="mt-1 text-[12px] text-muted-light">
                       {roleLabel(user.role)} · {schoolName(user.school_id)} · Joined{" "}
@@ -575,7 +650,7 @@ export default function ManageUsers() {
                     </p>
                   )}
                 </div>
-                {!user.is_super_admin && !editing && (
+                {!editing && (
                   <button
                     type="button"
                     className="admin-link shrink-0"
@@ -593,9 +668,13 @@ export default function ManageUsers() {
                       <span className="field-label">Role</span>
                       <div className="select-wrap">
                         <select
-                          value={editRole}
-                          onChange={(e) => setEditRole(e.target.value as "student" | "admin")}
-                          disabled={busy}
+                          value={editSuperAdmin ? "admin" : editRole}
+                          onChange={(e) => {
+                            const value = e.target.value as "student" | "admin";
+                            setEditRole(value);
+                            if (value === "student") setEditSuperAdmin(false);
+                          }}
+                          disabled={busy || (isSelf && user.is_super_admin)}
                           className="select-field text-[13px]"
                           aria-label={`Role for ${label}`}
                         >
@@ -624,6 +703,18 @@ export default function ManageUsers() {
                       </div>
                     </label>
                   </div>
+                  <label className="flex items-center gap-2 text-[14px] text-muted">
+                    <input
+                      type="checkbox"
+                      checked={editSuperAdmin}
+                      disabled={busy || (isSelf && user.is_super_admin)}
+                      onChange={(e) => {
+                        setEditSuperAdmin(e.target.checked);
+                        if (e.target.checked) setEditRole("admin");
+                      }}
+                    />
+                    Super admin
+                  </label>
                   <div className="flex gap-3">
                     <button
                       type="button"
