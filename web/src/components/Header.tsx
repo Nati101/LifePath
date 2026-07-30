@@ -75,7 +75,7 @@ export default function Header() {
                     href={withBasePath("/part2/assessment")}
                     className={`nav-link ${isActive("/part2") ? "nav-link-active" : ""}`}
                   >
-                    My Path
+                    My Post Secondary
                   </Link>
                 </>
               )}
