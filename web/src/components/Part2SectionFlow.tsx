@@ -13,6 +13,7 @@ import {
   getPart2SectionCompletion,
   getPart2SectionOrder,
 } from "@/lib/part2-scoring";
+import { QUESTIONS_PER_STEP } from "@/lib/scale";
 import { withBasePath } from "@/lib/supabase/client";
 import type { Part2AssessmentItem, Part2Responses, Part2SectionKey } from "@/lib/part2-types";
 
@@ -27,6 +28,26 @@ interface Part2SectionFlowProps {
   onAnswer: (itemId: string, rating: number) => Promise<void>;
   onIndexChange: (index: number) => Promise<void>;
   onSectionFinished: () => Promise<boolean>;
+}
+
+const sectionPageDescriptions: Record<Part2SectionKey, string> = {
+  school_setup:
+    "These questions look at your courses, grades, and school habits right now.",
+  training_style:
+    "These questions ask what kind and length of training feels like a fit for you.",
+  life_factors:
+    "These questions cover real-life reasons that shape which route makes sense for you.",
+  exploration:
+    "These questions check what you've already explored and what you're ready to do next.",
+};
+
+function getTotalSteps(itemCount: number) {
+  return Math.ceil(itemCount / QUESTIONS_PER_STEP);
+}
+
+function getStepItems(items: Part2AssessmentItem[], step: number) {
+  const start = step * QUESTIONS_PER_STEP;
+  return items.slice(start, start + QUESTIONS_PER_STEP);
 }
 
 export default function Part2SectionFlow({
@@ -48,51 +69,51 @@ export default function Part2SectionFlow({
     items.every((i) => responses[i.id] != null) ? "complete" : "intro",
   );
 
-  const currentItem = items[currentIndex];
+  const totalSteps = getTotalSteps(items.length);
+  const currentStep = Math.min(
+    Math.floor(currentIndex / QUESTIONS_PER_STEP),
+    Math.max(totalSteps - 1, 0),
+  );
+  const stepItems = getStepItems(items, currentStep);
   const answered = items.filter((i) => responses[i.id] != null).length;
   const percent = Math.round((answered / items.length) * 100);
   const isComplete = answered === items.length;
+  const stepComplete = stepItems.every((i) => responses[i.id] != null);
+  const isLastStep = currentStep >= totalSteps - 1;
   const currentSectionIndex = sectionOrder.indexOf(section);
-  const currentAnswered = responses[currentItem?.id] != null;
-  const isLastQuestion = currentIndex >= items.length - 1;
   const prompt = "Choose how accurately each statement reflects you.";
 
-  const handleAnswer = async (rating: number) => {
-    if (!currentItem || saving) return;
-
+  const handleAnswer = async (itemId: string, rating: number) => {
+    if (saving) return;
     setSaving(true);
-    await onAnswer(currentItem.id, rating);
+    await onAnswer(itemId, rating);
     setSaving(false);
-
-    if (currentIndex < items.length - 1) {
-      await onIndexChange(currentIndex + 1);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
   };
 
   const handlePrevious = () => {
-    if (currentIndex > 0) {
-      void onIndexChange(currentIndex - 1);
+    if (currentStep > 0) {
+      void onIndexChange((currentStep - 1) * QUESTIONS_PER_STEP);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
-  const handleNext = () => {
-    if (currentIndex < items.length - 1) {
-      void onIndexChange(currentIndex + 1);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  };
+  const handleContinue = async () => {
+    if (!stepComplete || saving || finishing) return;
 
-  const handleFinishSection = async () => {
-    if (finishing || !isComplete) return;
-    setFinishing(true);
-    try {
-      await onSectionFinished();
-      setPhase("complete");
-    } finally {
-      setFinishing(false);
+    if (isLastStep) {
+      if (!isComplete) return;
+      setFinishing(true);
+      try {
+        await onSectionFinished();
+        setPhase("complete");
+      } finally {
+        setFinishing(false);
+      }
+      return;
     }
+
+    await onIndexChange((currentStep + 1) * QUESTIONS_PER_STEP);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   if (phase === "intro") {
@@ -129,7 +150,7 @@ export default function Part2SectionFlow({
     );
   }
 
-  if (!currentItem) {
+  if (stepItems.length === 0) {
     return (
       <div className="page-shell justify-center">
         <p className="text-sm text-muted">Loading…</p>
@@ -143,18 +164,13 @@ export default function Part2SectionFlow({
         <div className="mx-auto flex w-full max-w-sm flex-col items-center gap-3">
           <button
             type="button"
-            onClick={isLastQuestion ? () => void handleFinishSection() : handleNext}
-            disabled={
-              saving ||
-              finishing ||
-              !currentAnswered ||
-              (isLastQuestion && !isComplete)
-            }
+            onClick={() => void handleContinue()}
+            disabled={saving || finishing || !stepComplete}
             className="btn-primary"
           >
             {saving || finishing
               ? "Saving…"
-              : isLastQuestion
+              : isLastStep
                 ? "Finish section"
                 : "Continue"}
           </button>
@@ -162,7 +178,7 @@ export default function Part2SectionFlow({
             <button
               type="button"
               onClick={handlePrevious}
-              disabled={currentIndex === 0}
+              disabled={currentStep === 0}
               className="cursor-pointer font-medium text-muted transition-colors hover:text-foreground disabled:pointer-events-none disabled:opacity-0"
             >
               Back
@@ -188,24 +204,33 @@ export default function Part2SectionFlow({
           Section {currentSectionIndex + 1} of {sectionOrder.length}
         </p>
 
-        <ProgressBar percent={percent} step={currentIndex + 1} totalSteps={items.length} />
+        <ProgressBar
+          percent={percent}
+          step={currentStep + 1}
+          totalSteps={totalSteps}
+        />
 
         <h1 className="my-7 px-1 text-center text-[22px] font-semibold leading-snug tracking-tight text-foreground sm:my-8 sm:text-[24px]">
           {prompt}
         </h1>
 
-        <ScaleLegend />
+        <ScaleLegend description={sectionPageDescriptions[section]} />
 
         <div className="space-y-4">
-          <StatementCard
-            statement={currentItem.text}
-            value={responses[currentItem.id] ?? null}
-            onChange={handleAnswer}
-          />
+          {stepItems.map((item) => (
+            <StatementCard
+              key={item.id}
+              statement={item.text}
+              value={responses[item.id] ?? null}
+              onChange={(rating) => void handleAnswer(item.id, rating)}
+            />
+          ))}
         </div>
 
-        {!currentAnswered && (
-          <p className="mt-8 text-center text-[13px] text-muted-light">Answer to continue</p>
+        {!stepComplete && (
+          <p className="mt-8 text-center text-[13px] text-muted-light">
+            Answer all {stepItems.length} statements to continue
+          </p>
         )}
       </div>
     </AssessmentShell>

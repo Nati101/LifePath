@@ -25,7 +25,7 @@ import {
   getSectionOrder,
 } from "@/lib/scoring";
 import { QUESTIONS_PER_STEP } from "@/lib/scale";
-import { sectionLabels } from "@/data/instructions";
+import { sectionInstructions, sectionLabels } from "@/data/instructions";
 import { createClient, withBasePath } from "@/lib/supabase/client";
 import type { AssessmentItem, Responses, SectionKey } from "@/lib/types";
 
@@ -314,7 +314,7 @@ export default function SectionFlow({ section }: SectionFlowProps) {
           {prompt}
         </h1>
 
-        <ScaleLegend />
+        <ScaleLegend description={sectionInstructions[section].pageDescription} />
 
         <div className="space-y-4">
           {stepItems.map((item) => (

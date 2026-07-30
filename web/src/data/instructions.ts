@@ -28,6 +28,7 @@ export const sectionInstructions: Record<
   {
     title: string;
     subtitle: string;
+    pageDescription: string;
     guidelines: string[];
     scaleNote: string;
     completionNote: string;
@@ -36,6 +37,8 @@ export const sectionInstructions: Record<
   interests: {
     title: "Interests — What You Enjoy Doing",
     subtitle: "Rate how much each activity sounds like you — or how willing you would be to try it.",
+    pageDescription:
+      "These questions are about what you enjoy doing and would be willing to try.",
     guidelines: [
       "Answer based on your honest gut reaction. There are no right or wrong answers.",
       "If you have never tried something, rate how willing you would be to explore it.",
@@ -48,6 +51,8 @@ export const sectionInstructions: Record<
   strengths: {
     title: "Strengths — What You Can Do Well",
     subtitle: "Rate how true each statement is for you right now.",
+    pageDescription:
+      "These questions are about skills you can do well now, or feel confident learning.",
     guidelines: [
       "If you have not tried something yet, rate how confident you feel you could learn it.",
       "Think about real examples from school, home, sports, work, or activities.",
@@ -60,6 +65,8 @@ export const sectionInstructions: Record<
   drivers: {
     title: "Drivers (Fuel) — Why You Care",
     subtitle: "Rate how true each motivator feels for you right now.",
+    pageDescription:
+      "These questions are about what energizes you and makes work feel meaningful.",
     guidelines: [
       "Think about what actually energizes you, not what you think you should care about.",
       "There are no right or wrong answers — everyone is motivated by different things.",
@@ -73,6 +80,8 @@ export const sectionInstructions: Record<
     title: "Work Style & Environment — What Work Feels Like",
     subtitle:
       "Rate each statement for what you would want on MOST work days — not just your best or worst day.",
+    pageDescription:
+      "These questions are about the work settings and day-to-day conditions you prefer.",
     guidelines: [
       "This section is about preferred conditions, not current abilities.",
       "If two answers both feel true, choose what you would want MOST days.",

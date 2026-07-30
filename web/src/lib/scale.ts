@@ -1,4 +1,4 @@
-export const QUESTIONS_PER_STEP = 3;
+export const QUESTIONS_PER_STEP = 4;
 
 export const scaleOptions = [
   {
