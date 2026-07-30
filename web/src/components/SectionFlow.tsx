@@ -310,9 +310,9 @@ export default function SectionFlow({ section }: SectionFlowProps) {
           totalSteps={totalSteps}
         />
 
-        <h1 className="my-7 px-1 text-center text-[22px] font-semibold leading-snug tracking-tight text-foreground sm:my-8 sm:text-[24px]">
+        <p className="my-5 px-1 text-center text-[15px] leading-snug text-muted sm:my-6">
           {prompt}
-        </h1>
+        </p>
 
         <ScaleLegend description={sectionInstructions[section].pageDescription} />
 
