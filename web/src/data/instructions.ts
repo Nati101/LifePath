@@ -35,7 +35,7 @@ export const sectionInstructions: Record<
   }
 > = {
   interests: {
-    title: "Interests — What You Enjoy Doing",
+    title: "What You Enjoy Doing",
     subtitle: "Rate how much each activity sounds like you — or how willing you would be to try it.",
     pageDescription:
       "These questions are about what you enjoy doing and would be willing to try.",
@@ -49,7 +49,7 @@ export const sectionInstructions: Record<
     completionNote: "Complete all 36 questions before moving to the next section.",
   },
   strengths: {
-    title: "Strengths — What You Can Do Well",
+    title: "What You Can Do Well",
     subtitle: "Rate how true each statement is for you right now.",
     pageDescription:
       "These questions are about skills you can do well now, or feel confident learning.",
@@ -63,7 +63,7 @@ export const sectionInstructions: Record<
     completionNote: "Complete all 36 questions before moving to the next section.",
   },
   drivers: {
-    title: "Drivers (Fuel) — Why You Care",
+    title: "Why You Care",
     subtitle: "Rate how true each motivator feels for you right now.",
     pageDescription:
       "These questions are about what energizes you and makes work feel meaningful.",
@@ -77,7 +77,7 @@ export const sectionInstructions: Record<
     completionNote: "Complete all 36 questions before moving to the next section.",
   },
   conditions: {
-    title: "Work Style & Environment — What Work Feels Like",
+    title: "What Work Feels Like",
     subtitle:
       "Rate each statement for what you would want on MOST work days — not just your best or worst day.",
     pageDescription:
