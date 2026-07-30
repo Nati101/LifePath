@@ -40,7 +40,7 @@ export default function LoggedInHome({
           <div className="rounded-[20px] bg-card p-5 shadow-[var(--shadow)]">
             <h2 className="mb-2 text-[17px] font-semibold">Part 1: LifePath Career Assessment</h2>
             <p className="mb-4 text-[14px] text-muted">
-              Discover your strongest career paths across nine LifePath areas.
+              Discover your strongest career paths across Interests, Strengths, Drivers, and Work Style.
             </p>
             <Link
               href={withBasePath(completed ? "/results" : "/assessment")}

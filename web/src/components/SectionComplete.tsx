@@ -45,7 +45,7 @@ export default function SectionComplete({
         </h2>
         <p className="mx-auto mb-10 max-w-sm text-[16px] leading-relaxed text-muted">
           {allSectionsComplete
-            ? "All nine career path sections are done. Your results are ready to view."
+            ? "All four sections are done. Your results are ready to view."
             : "Nice work. Continue to the next career path section."}
         </p>
 

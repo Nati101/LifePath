@@ -145,11 +145,11 @@ export default function ResultsPageClient() {
             No results yet
           </h1>
           <p className="mb-2 text-[15px] leading-relaxed text-muted">
-            Complete all nine career path sections to unlock your LifePath snapshot.
+            Complete all four sections to unlock your LifePath snapshot.
           </p>
           {answeredCount > 0 && (
             <p className="mb-8 text-[13px] text-muted-light">
-              You&apos;ve answered {answeredCount} of 36 questions so far.
+              You&apos;ve answered {answeredCount} of 144 questions so far.
             </p>
           )}
           {answeredCount === 0 && <div className="mb-8" />}

@@ -35,6 +35,7 @@ export function getPart2SectionOrder(): Part2SectionKey[] {
 }
 
 // Calculate factor scores from responses (0-100 scale)
+// Excel: ROUND(AVERAGE(ratings) / 4 * 100, 0)
 function calculateFactorScores(responses: Part2Responses): Record<string, number> {
   const factorScores: Record<string, number> = {};
   const factorValues: Record<string, number[]> = {};
@@ -54,14 +55,15 @@ function calculateFactorScores(responses: Part2Responses): Record<string, number
   // Calculate average for each factor and convert to 0-100 scale
   for (const [factor, values] of Object.entries(factorValues)) {
     const avg = values.reduce((a, b) => a + b, 0) / values.length;
-    // Convert 1-4 scale to 0-100: ((avg - 1) / 3) * 100
-    factorScores[factor] = Math.round(((avg - 1) / 3) * 100);
+    factorScores[factor] = Math.round((avg / 4) * 100);
   }
 
   return factorScores;
 }
 
 // Calculate route scores using factor weights
+// Excel: clamp(50 + SUMPRODUCT(centered_scores, weights), 0–100)
+// where centered_score = factor_score - 50
 function calculateRouteScores(
   factorScores: Record<string, number>,
 ): Part2RouteScore[] {
@@ -77,15 +79,18 @@ function calculateRouteScores(
     let weightedSum = 0;
     const factorContributions: Record<string, number> = {};
 
-    // Sum weighted contributions from each factor
+    // Sum weighted contributions from each factor (centered scores)
     for (const [factor, score] of Object.entries(factorScores)) {
       const weight = config.factorWeights[factor]?.[routeCode] ?? 0;
-      const contribution = score * weight;
+      const centered = score - 50;
+      const contribution = centered * weight;
       weightedSum += contribution;
       factorContributions[factor] = contribution;
     }
 
-    // Base score is 50, then add weighted sum
+    // Also apply weights for factors present in the matrix but unanswered (centered 0)
+    // — already handled since missing factors contribute 0.
+
     const finalScore = Math.max(0, Math.min(100, Math.round(50 + weightedSum)));
 
     // Determine fit level

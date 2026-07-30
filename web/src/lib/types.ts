@@ -1,13 +1,4 @@
-export type SectionKey = 
-  | "clinical_care"
-  | "protection"
-  | "learning_support"
-  | "build_fix"
-  | "stem_systems"
-  | "business_leadership"
-  | "creative"
-  | "experience_service"
-  | "outdoor_systems";
+export type SectionKey = "interests" | "strengths" | "drivers" | "conditions";
 export type UserRole = "student" | "admin";
 
 export interface AssessmentItem {
@@ -36,7 +27,7 @@ export interface AssessmentConfig {
   pathNames: Record<string, string>;
   pathCodes: string[];
   sections: Record<SectionKey, SectionConfig>;
-  weights?: Record<string, number>;
+  weights: Record<SectionKey, number>;
   thresholds: {
     veryStrong: number;
     strong: number;
@@ -53,8 +44,13 @@ export type Responses = Record<string, number>;
 
 export interface PathScore {
   path: string;
-  score: number;
+  interests: number;
+  strengths: number;
+  drivers: number;
+  conditions: number;
+  overall: number;
   fitLevel: string;
+  topContributor: string;
 }
 
 export interface AssessmentResult {

@@ -58,7 +58,7 @@ export async function getOrCreateSession(
     .from("assessment_sessions")
     .insert({
       user_id: userId,
-      current_section: section ?? "clinical_care",
+      current_section: section ?? "interests",
     })
     .select()
     .single();
@@ -158,7 +158,12 @@ export async function saveResults(
       path_scores: result.pathScores,
       top_paths: result.topPaths,
       construct_scores: result.constructScores,
-      section_scores: result.pathScores,
+      section_scores: {
+        interests: result.pathScores,
+        strengths: result.pathScores,
+        drivers: result.pathScores,
+        conditions: result.constructScores,
+      },
     },
     { onConflict: "session_id" },
   );
@@ -235,15 +240,10 @@ export function toAssessmentResult(stored: StoredAssessmentResult): AssessmentRe
     topPaths: stored.top_paths,
     constructScores: stored.construct_scores ?? {},
     sectionCompletion: {
-      clinical_care: 1,
-      protection: 1,
-      learning_support: 1,
-      build_fix: 1,
-      stem_systems: 1,
-      business_leadership: 1,
-      creative: 1,
-      experience_service: 1,
-      outdoor_systems: 1,
+      interests: 1,
+      strengths: 1,
+      drivers: 1,
+      conditions: 1,
     },
     allComplete: true,
   };
@@ -304,7 +304,7 @@ export async function resetAssessment(
     throw new Error(deleteError.message);
   }
 
-  return getOrCreateSession(supabase, userId, "clinical_care");
+  return getOrCreateSession(supabase, userId, "interests");
 }
 
 /** Clear answers for one section so the student can retake it. */

@@ -99,7 +99,7 @@ export default function AssessmentHub() {
       await resetAssessment(supabase, user.id);
       setResponses({});
       setAllComplete(false);
-      window.location.assign(appPath("/assessment/clinical_care"));
+      window.location.assign(appPath("/assessment/interests"));
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : "Could not reset assessment");
       setRetaking(false);
@@ -127,7 +127,7 @@ export default function AssessmentHub() {
           Your sections
         </h1>
         <p className="mb-8 text-[14px] text-muted">
-          Complete all nine career path sections to unlock your results. You can reopen any
+          Complete all four sections to unlock your results. You can reopen any
           finished section to change answers.
         </p>
 
